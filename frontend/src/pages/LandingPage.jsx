@@ -1,0 +1,468 @@
+import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+
+/* ─── tiny hook: count-up on mount ─── */
+function useCountUp(target, duration = 1800) {
+  const [val, setVal] = useState(0)
+  useEffect(() => {
+    let start = null
+    const step = (ts) => {
+      if (!start) start = ts
+      const progress = Math.min((ts - start) / duration, 1)
+      setVal(Math.floor(progress * target))
+      if (progress < 1) requestAnimationFrame(step)
+    }
+    requestAnimationFrame(step)
+  }, [target, duration])
+  return val
+}
+
+const FEATURES = [
+  {
+    icon: '⚡',
+    title: 'Real-time Orders',
+    desc: 'New orders hit your dashboard the instant a customer places them. No refresh needed — Socket.io keeps you live.',
+    color: '#7c3aed',
+  },
+  {
+    icon: '📱',
+    title: 'Scan & Browse — No App',
+    desc: 'Customers scan your QR code and browse your full menu in their phone browser. Nothing to install.',
+    color: '#6d28d9',
+  },
+  {
+    icon: '🍽️',
+    title: 'Rich Menu Builder',
+    desc: 'Upload photos, set prices, tag veg/non-veg, toggle availability — all from a clean, simple dashboard.',
+    color: '#4f46e5',
+  },
+  {
+    icon: '💳',
+    title: 'Cash & UPI Payments',
+    desc: 'Display your UPI QR at checkout or let customers choose cash. Zero payment gateway fees.',
+    color: '#7c3aed',
+  },
+  {
+    icon: '⭐',
+    title: 'Customer Feedback',
+    desc: 'Auto-collect star ratings and reviews after each order. Know what customers love.',
+    color: '#8b5cf6',
+  },
+  {
+    icon: '📊',
+    title: 'Daily Analytics',
+    desc: "See today's revenue, pending orders, popular items, and ratings — all on one screen.",
+    color: '#4f46e5',
+  },
+]
+
+const STEPS = [
+  { num: '01', icon: '🖊️', title: 'Build Your Menu', desc: 'Add items, photos and prices in minutes. No design skills needed.' },
+  { num: '02', icon: '🖨️', title: 'Print Your QR Code', desc: 'Download and place your unique QR code on every table.' },
+  { num: '03', icon: '🚀', title: 'Watch Orders Come In', desc: 'Accept, prepare and complete orders from your live dashboard.' },
+]
+
+const DEFAULT_PLANS = [
+  {
+    name: 'Starter',
+    price: '₹299',
+    period: '/month',
+    desc: 'Perfect to get started.',
+    features: ['Unlimited menu items', 'Real-time orders', 'Cash & UPI support', 'Customer feedback', 'QR code download'],
+    cta: 'Start Free Trial',
+    popular: false,
+    id: 'starter'
+  },
+  {
+    name: 'Pro',
+    price: '₹499',
+    period: '/month',
+    desc: 'For growing cafés.',
+    features: ['Everything in Starter', 'Advanced analytics', 'Priority support', 'Custom branding', 'Unlimited QR regeneration'],
+    cta: 'Get Pro',
+    popular: true,
+    id: 'pro'
+  },
+]
+
+export default function LandingPage() {
+  const [scrolled, setScrolled] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [plans, setPlans] = useState(DEFAULT_PLANS)
+  const cafes  = useCountUp(500)
+  const orders = useCountUp(10000)
+
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 30)
+    window.addEventListener('scroll', fn)
+    
+    // Fetch dynamic plans and pricing
+    import('../services/api').then(({ publicAPI }) => {
+      publicAPI.getSettings().then(res => {
+        const d = res.data?.data;
+        if (d) {
+          setPlans([
+            {
+              ...DEFAULT_PLANS[0],
+              price: `₹${d.starter_price || 299}`,
+              features: d.starter_features?.length > 0 ? d.starter_features : DEFAULT_PLANS[0].features
+            },
+            {
+              ...DEFAULT_PLANS[1],
+              price: `₹${d.pro_price || 499}`,
+              features: d.pro_features?.length > 0 ? d.pro_features : DEFAULT_PLANS[1].features
+            }
+          ])
+        }
+      }).catch(() => {})
+    })
+    
+    return () => window.removeEventListener('scroll', fn)
+  }, [])
+
+  return (
+    <div style={{ background: '#080c14', color: '#fff', fontFamily: "'Inter', system-ui, sans-serif", overflowX: 'hidden' }}>
+
+      {/* ═══════════════ NAVBAR ═══════════════ */}
+      <header style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        background: scrolled ? 'rgba(8,12,20,0.92)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(16px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
+        transition: 'all 0.3s ease',
+      }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Logo */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM17 17h4M17 21v-4M21 14h-4v4"/></svg>
+            </div>
+            <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.5px', fontFamily: "'Outfit',sans-serif" }}>
+              QRMenu<span style={{ color: '#a78bfa' }}>.</span>
+            </span>
+          </div>
+
+          {/* Desktop links */}
+          <nav style={{ display: 'flex', gap: 32, alignItems: 'center' }} className="hidden-mobile">
+            {['Features','How it works','Pricing'].map(l => (
+              <a key={l} href={`#${l.toLowerCase().replace(/ /g,'-')}`}
+                style={{ fontSize: 14, fontWeight: 500, color: '#9ca3af', textDecoration: 'none', transition: 'color 0.2s' }}
+                onMouseEnter={e => e.target.style.color='#fff'}
+                onMouseLeave={e => e.target.style.color='#9ca3af'}>{l}</a>
+            ))}
+          </nav>
+
+          {/* CTA */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Link to="/owner/login" style={{ fontSize: 14, fontWeight: 500, color: '#9ca3af', textDecoration: 'none', padding: '8px 4px' }}
+              className="hidden-mobile">Owner Login</Link>
+            <Link to="/owner/register" style={{
+              fontSize: 14, fontWeight: 700, color: '#fff', textDecoration: 'none',
+              padding: '10px 22px', borderRadius: 12,
+              background: 'linear-gradient(135deg,#7c3aed,#4f46e5)',
+              boxShadow: '0 4px 20px rgba(124,58,237,0.4)',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform='scale(1.04)'; e.currentTarget.style.boxShadow='0 8px 30px rgba(124,58,237,0.5)' }}
+            onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 4px 20px rgba(124,58,237,0.4)' }}>
+              Get Started →
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* ═══════════════ HERO ═══════════════ */}
+      <section style={{ paddingTop: 160, paddingBottom: 100, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        {/* Radial glow */}
+        <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(124,58,237,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        {/* Grid dots */}
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(124,58,237,0.12) 1px, transparent 1px)', backgroundSize: '40px 40px', pointerEvents: 'none', zIndex: 0 }} />
+
+        <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 1 }}>
+          {/* Live badge */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 50, border: '1px solid rgba(124,58,237,0.35)', background: 'rgba(124,58,237,0.1)', marginBottom: 32 }}>
+            <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: '#a78bfa', animation: 'pulse 2s infinite' }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#a78bfa' }}>Platform is live — v1.0</span>
+          </div>
+
+          <h1 style={{ fontSize: 'clamp(36px, 6vw, 68px)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-2px', margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>
+            The Smartest Way to<br />
+            <span style={{ background: 'linear-gradient(135deg,#a78bfa,#818cf8,#c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              Run Your Café Menu
+            </span>
+          </h1>
+
+          <p style={{ fontSize: 'clamp(15px, 2vw, 19px)', color: '#9ca3af', lineHeight: 1.7, maxWidth: 580, margin: '0 auto 40px', fontWeight: 400 }}>
+            Go digital in minutes. Customers scan, browse, and order from their phone — no app needed. You manage everything from one powerful dashboard.
+          </p>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link to="/owner/register" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '14px 32px', borderRadius: 14, textDecoration: 'none',
+              fontSize: 15, fontWeight: 700, color: '#fff',
+              background: 'linear-gradient(135deg,#7c3aed,#4f46e5)',
+              boxShadow: '0 8px 32px rgba(124,58,237,0.45)',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='0 16px 40px rgba(124,58,237,0.55)' }}
+            onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 8px 32px rgba(124,58,237,0.45)' }}>
+              Start For Free
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/></svg>
+            </Link>
+            <Link to="/owner/login" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '14px 32px', borderRadius: 14, textDecoration: 'none',
+              fontSize: 15, fontWeight: 600, color: '#d1d5db',
+              border: '1px solid rgba(255,255,255,0.12)',
+              background: 'rgba(255,255,255,0.04)',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color='#fff'; e.currentTarget.style.borderColor='rgba(124,58,237,0.5)'; e.currentTarget.style.background='rgba(124,58,237,0.08)' }}
+            onMouseLeave={e => { e.currentTarget.style.color='#d1d5db'; e.currentTarget.style.borderColor='rgba(255,255,255,0.12)'; e.currentTarget.style.background='rgba(255,255,255,0.04)' }}>
+              Owner Login
+            </Link>
+          </div>
+        </div>
+
+        {/* ── MOCK DASHBOARD CARD ── */}
+        <div style={{ maxWidth: 900, margin: '64px auto 0', padding: '0 24px', position: 'relative', zIndex: 1 }}>
+          <div style={{
+            borderRadius: 24, overflow: 'hidden',
+            border: '1px solid rgba(124,58,237,0.25)',
+            background: 'rgba(12,15,28,0.8)',
+            boxShadow: '0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,58,237,0.1), inset 0 1px 0 rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(20px)',
+          }}>
+            {/* Title bar */}
+            <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(124,58,237,0.05)' }}>
+              <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#ff5f57', display: 'inline-block' }}/>
+              <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#febc2e', display: 'inline-block' }}/>
+              <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#28c840', display: 'inline-block' }}/>
+              <span style={{ flex: 1, textAlign: 'center', fontSize: 12, color: '#4b5563' }}>Brew &amp; Bite Café — Dashboard</span>
+            </div>
+            {/* Dashboard body */}
+            <div style={{ padding: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
+              {[
+                { label: "Today's Revenue", val: '₹4,820', icon: '💰', trend: '+12%', color: '#10b981' },
+                { label: 'Orders Today', val: '34', icon: '📋', trend: '+5', color: '#6366f1' },
+                { label: 'Pending', val: '6', icon: '⏳', trend: 'live', color: '#f59e0b' },
+                { label: 'Avg Rating', val: '4.8 ★', icon: '⭐', trend: '+0.2', color: '#f59e0b' },
+              ].map(s => (
+                <div key={s.label} style={{ padding: '16px 18px', borderRadius: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', textAlign: 'left' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: 22 }}>{s.icon}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: s.color, background: `${s.color}18`, padding: '2px 8px', borderRadius: 50 }}>{s.trend}</span>
+                  </div>
+                  <p style={{ fontSize: 22, fontWeight: 800, color: '#fff', margin: '10px 0 4px', fontFamily: "'Outfit',sans-serif" }}>{s.val}</p>
+                  <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{s.label}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: '0 24px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+              {[
+                { name: 'Cappuccino × 3', table: 'Table 4', status: 'Preparing', col: '#f59e0b' },
+                { name: 'Avocado Toast × 1', table: 'Table 2', status: 'Ready ✓', col: '#10b981' },
+                { name: 'Cold Brew × 2', table: 'Table 7', status: 'New', col: '#6366f1' },
+              ].map(o => (
+                <div key={o.name} style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#e5e7eb', margin: '0 0 2px' }}>{o.name}</p>
+                    <p style={{ fontSize: 11, color: '#6b7280', margin: 0 }}>{o.table}</p>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: o.col, background: `${o.col}18`, padding: '3px 10px', borderRadius: 50, whiteSpace: 'nowrap' }}>{o.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ STATS ═══════════════ */}
+      <section style={{ padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, textAlign: 'center' }}>
+          {[
+            { val: `${cafes}+`, label: 'Cafés Onboarded' },
+            { val: `${orders.toLocaleString()}+`, label: 'Orders Processed' },
+            { val: '4.9/5', label: 'Average Rating' },
+          ].map((s, i) => (
+            <div key={s.label} style={{ padding: '20px 32px', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+              <p style={{ fontSize: 'clamp(32px,5vw,48px)', fontWeight: 900, margin: '0 0 6px', fontFamily: "'Outfit',sans-serif", background: 'linear-gradient(135deg,#a78bfa,#818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.val}</p>
+              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══════════════ HOW IT WORKS ═══════════════ */}
+      <section id="how-it-works" style={{ padding: '100px 24px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <p style={{ color: '#7c3aed', fontSize: 13, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 12 }}>How it works</p>
+            <h2 style={{ fontSize: 'clamp(28px,4vw,44px)', fontWeight: 800, margin: '0 0 16px', fontFamily: "'Outfit',sans-serif" }}>Up and running in 3 steps</h2>
+            <p style={{ fontSize: 16, color: '#6b7280', maxWidth: 500, margin: '0 auto' }}>No tech skills required. Faster than brewing a coffee.</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+            {STEPS.map((s, i) => (
+              <div key={s.num} style={{
+                padding: '36px 32px', borderRadius: 20,
+                border: '1px solid rgba(255,255,255,0.07)',
+                background: 'rgba(255,255,255,0.02)',
+                position: 'relative', overflow: 'hidden',
+                transition: 'transform 0.3s, border-color 0.3s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.borderColor='rgba(124,58,237,0.4)' }}
+              onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.07)' }}>
+                <div style={{ position: 'absolute', top: 20, right: 24, fontSize: 52, fontWeight: 900, color: 'rgba(124,58,237,0.08)', fontFamily: "'Outfit',sans-serif", lineHeight: 1 }}>{s.num}</div>
+                <div style={{ fontSize: 36, marginBottom: 20 }}>{s.icon}</div>
+                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 10, fontFamily: "'Outfit',sans-serif" }}>{s.title}</h3>
+                <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.7, margin: 0 }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ FEATURES ═══════════════ */}
+      <section id="features" style={{ padding: '100px 24px', background: 'rgba(255,255,255,0.01)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <p style={{ color: '#7c3aed', fontSize: 13, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 12 }}>Features</p>
+            <h2 style={{ fontSize: 'clamp(28px,4vw,44px)', fontWeight: 800, margin: 0, fontFamily: "'Outfit',sans-serif" }}>Everything your café needs</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+            {FEATURES.map(f => (
+              <div key={f.title} style={{
+                padding: '28px 28px', borderRadius: 18,
+                border: '1px solid rgba(255,255,255,0.07)',
+                background: 'rgba(255,255,255,0.02)',
+                transition: 'transform 0.3s, border-color 0.3s, box-shadow 0.3s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.borderColor=`${f.color}45`; e.currentTarget.style.boxShadow=`0 20px 60px ${f.color}12` }}
+              onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.07)'; e.currentTarget.style.boxShadow='none' }}>
+                <div style={{ width: 48, height: 48, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 18, background: `${f.color}15` }}>
+                  {f.icon}
+                </div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, fontFamily: "'Outfit',sans-serif" }}>{f.title}</h3>
+                <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.7, margin: 0 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ PRICING ═══════════════ */}
+      <section id="pricing" style={{ padding: '100px 24px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ maxWidth: 860, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <p style={{ color: '#7c3aed', fontSize: 13, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 12 }}>Pricing</p>
+            <h2 style={{ fontSize: 'clamp(28px,4vw,44px)', fontWeight: 800, margin: '0 0 16px', fontFamily: "'Outfit',sans-serif" }}>Simple, honest pricing</h2>
+            <p style={{ fontSize: 16, color: '#6b7280' }}>No hidden fees. Cancel anytime.</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+            {plans.map(p => (
+              <div key={p.name} style={{
+                padding: '36px 32px', borderRadius: 22, position: 'relative',
+                border: p.popular ? '1px solid rgba(124,58,237,0.5)' : '1px solid rgba(255,255,255,0.08)',
+                background: p.popular ? 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(79,70,229,0.08))' : 'rgba(255,255,255,0.02)',
+                boxShadow: p.popular ? '0 0 60px rgba(124,58,237,0.15)' : 'none',
+              }}>
+                {p.popular && (
+                  <div style={{ position: 'absolute', top: -1, right: 28, transform: 'translateY(-50%)', padding: '5px 16px', borderRadius: 50, fontSize: 12, fontWeight: 700, color: '#fff', background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+                    Most Popular
+                  </div>
+                )}
+                <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 6, fontFamily: "'Outfit',sans-serif" }}>{p.name}</h3>
+                <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 24 }}>{p.desc}</p>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 28 }}>
+                  <span style={{ fontSize: 42, fontWeight: 900, fontFamily: "'Outfit',sans-serif" }}>{p.price}</span>
+                  <span style={{ fontSize: 14, color: '#6b7280' }}>{p.period}</span>
+                </div>
+                <ul style={{ listStyle: 'none', margin: '0 0 32px', padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {p.features.map(f => (
+                    <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#d1d5db' }}>
+                      <span style={{ width: 20, height: 20, borderRadius: '50%', background: p.popular ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: p.popular ? '#a78bfa' : '#6b7280', flexShrink: 0 }}>✓</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link to="/owner/register" style={{
+                  display: 'block', textAlign: 'center', padding: '14px', borderRadius: 14,
+                  textDecoration: 'none', fontSize: 15, fontWeight: 700, color: '#fff',
+                  background: p.popular ? 'linear-gradient(135deg,#7c3aed,#4f46e5)' : 'rgba(255,255,255,0.07)',
+                  border: p.popular ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                  boxShadow: p.popular ? '0 8px 30px rgba(124,58,237,0.4)' : 'none',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)' }}>
+                  {p.cta}
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ CTA BANNER ═══════════════ */}
+      <section style={{ padding: '100px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 50%, rgba(124,58,237,0.18), transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: 680, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          <h2 style={{ fontSize: 'clamp(28px,4vw,50px)', fontWeight: 900, lineHeight: 1.2, marginBottom: 20, fontFamily: "'Outfit',sans-serif" }}>
+            Your café deserves a{' '}
+            <span style={{ background: 'linear-gradient(135deg,#a78bfa,#818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              smarter menu.
+            </span>
+          </h2>
+          <p style={{ fontSize: 17, color: '#9ca3af', marginBottom: 40, lineHeight: 1.7 }}>
+            Set it up in 5 minutes. No tech knowledge required.
+          </p>
+          <Link to="/owner/register" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '16px 40px', borderRadius: 16, textDecoration: 'none',
+            fontSize: 16, fontWeight: 700, color: '#fff',
+            background: 'linear-gradient(135deg,#7c3aed,#4f46e5)',
+            boxShadow: '0 16px 50px rgba(124,58,237,0.5)',
+            transition: 'transform 0.2s, box-shadow 0.2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.boxShadow='0 24px 60px rgba(124,58,237,0.6)' }}
+          onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 16px 50px rgba(124,58,237,0.5)' }}>
+            Create Your Free Account
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"/></svg>
+          </Link>
+        </div>
+      </section>
+
+      {/* ═══════════════ FOOTER ═══════════════ */}
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '32px 24px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            </div>
+            <span style={{ fontWeight: 800, fontFamily: "'Outfit',sans-serif" }}>QRMenu.</span>
+          </div>
+          <p style={{ fontSize: 13, color: '#4b5563', margin: 0 }}>© {new Date().getFullYear()} QRMenu SaaS. All rights reserved.</p>
+          <div style={{ display: 'flex', gap: 24 }}>
+            <Link to="/owner/login" style={{ fontSize: 13, color: '#4b5563', textDecoration: 'none' }}>Owner Login</Link>
+            <Link to="/owner/register" style={{ fontSize: 13, color: '#4b5563', textDecoration: 'none' }}>Register Café</Link>
+          </div>
+        </div>
+      </footer>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@700;800;900&display=swap');
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+        * { box-sizing: border-box; }
+        body { margin: 0; }
+        @media (max-width: 640px) {
+          .hidden-mobile { display: none !important; }
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #080c14; }
+        ::-webkit-scrollbar-thumb { background: #7c3aed; border-radius: 3px; }
+      `}</style>
+    </div>
+  )
+}

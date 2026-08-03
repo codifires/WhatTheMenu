@@ -1,0 +1,644 @@
+Below is a structured specification you can give to any AI (ChatGPT, Claude, Gemini, Cursor, Copilot, etc.). It explains the project clearly, the modules, workflows, database, and scope without ambiguity.
+
+---
+
+# QR Menu SaaS Platform (MVP)
+
+## Complete Project Documentation for AI Development
+
+## Project Overview
+
+### Project Name
+
+QR Menu SaaS Platform
+
+### Project Type
+
+Multi-Tenant SaaS Web Application
+
+### Purpose
+
+The platform enables cafés and restaurants to create digital QR code menus, receive customer orders without requiring customer login, and manage orders through a business dashboard.
+
+The system is designed as an MVP (Minimum Viable Product) for startup launch. Only essential features are included. Advanced features like loyalty programs, customer wallets, marketing tools, and analytics are intentionally excluded from Version 1.
+
+---
+
+# User Roles
+
+There are only three user roles.
+
+## 1. Super Admin
+
+Purpose:
+Manage the entire SaaS platform.
+
+Responsibilities:
+
+* Create cafés
+* Activate or deactivate subscriptions
+* Manage café accounts
+* View subscription status
+* Handle support requests
+* Manage platform settings
+
+Only one Super Admin exists.
+
+---
+
+## 2. Café Owner
+
+Purpose:
+Manage a single café.
+
+Responsibilities:
+
+* Login securely
+* Manage menu categories
+* Manage menu items
+* Generate QR codes
+* Receive customer orders
+* Verify payments
+* Update order status
+* View customer feedback
+
+Each café owner only accesses their own café data.
+
+---
+
+## 3. Customer
+
+Purpose:
+Browse the menu and place orders.
+
+Customers do not need:
+
+* Account
+* Login
+* Registration
+* Email verification
+* Loyalty wallet
+
+Customers simply:
+
+* Scan QR code
+* Browse menu
+* Add items to cart
+* Place order
+* Pay using Cash or UPI QR
+* Track order status
+* Submit feedback
+
+---
+
+# System Modules
+
+## Module 1: Authentication
+
+Only Super Admin and Café Owners can log in.
+
+Features:
+
+* Secure Login
+* Logout
+* Password Reset
+* Session Management
+
+Customers do not authenticate.
+
+---
+
+## Module 2: Café Management
+
+Super Admin can:
+
+* Create Café
+* Edit Café Information
+* Activate Subscription
+* Suspend Café
+* Delete Café
+
+Each café contains:
+
+* Name
+* Logo
+* Address
+* Contact Number
+* UPI QR
+* Subscription Plan
+
+---
+
+## Module 3: Subscription Management
+
+Plans are managed manually.
+
+Example Plans:
+
+Starter
+
+* ₹299/month
+
+Pro
+
+* ₹499/month
+
+Subscription Status:
+
+* Active
+* Expired
+* Suspended
+
+No online payment gateway is required in MVP.
+
+---
+
+## Module 4: Menu Management
+
+Café Owner can create categories.
+
+Example:
+
+* Coffee
+* Tea
+* Sandwich
+* Pizza
+* Burger
+* Dessert
+
+Each category contains multiple menu items.
+
+---
+
+## Module 5: Menu Item Management
+
+Each menu item contains:
+
+* Name
+* Description
+* Price
+* Image
+* Category
+* Availability Status
+
+Owner can:
+
+* Add Item
+* Edit Item
+* Delete Item
+* Mark Available
+* Mark Out of Stock
+
+---
+
+## Module 6: QR Code Management
+
+Each café receives a unique QR Code.
+
+The QR Code opens the digital menu directly.
+
+Example:
+
+Scan QR
+
+↓
+
+Open Menu
+
+↓
+
+Browse Items
+
+↓
+
+Place Order
+
+QR codes can be downloaded and printed.
+
+---
+
+## Module 7: Customer Ordering
+
+Customer Workflow:
+
+Scan QR
+
+↓
+
+View Menu
+
+↓
+
+Search Items
+
+↓
+
+Filter Categories
+
+↓
+
+Add Items to Cart
+
+↓
+
+Review Cart
+
+↓
+
+Checkout
+
+↓
+
+Choose Payment
+
+Options:
+
+* Cash
+* UPI QR
+
+↓
+
+Place Order
+
+↓
+
+Track Status
+
+No login required.
+
+---
+
+## Module 8: Order Management
+
+Owner receives live orders.
+
+Order Status Flow:
+
+New
+
+↓
+
+Accepted
+
+↓
+
+Preparing
+
+↓
+
+Ready
+
+↓
+
+Completed
+
+Owner can:
+
+* Accept Order
+* Change Status
+* Mark Payment Received
+* Complete Order
+
+---
+
+## Module 9: Payment
+
+Supported Payments:
+
+### Cash
+
+Customer pays at counter.
+
+Owner marks payment received.
+
+---
+
+### UPI QR
+
+Customer scans café UPI QR.
+
+Customer pays.
+
+Owner verifies payment manually.
+
+No payment gateway integration in MVP.
+
+---
+
+## Module 10: Feedback
+
+After order completion,
+
+Customer can:
+
+* Give Rating
+* Write Review
+
+Owner can view all feedback.
+
+---
+
+# Dashboard Design
+
+## Super Admin Dashboard
+
+Display:
+
+* Total Cafés
+* Active Plans
+* Expired Plans
+* Monthly Revenue
+* Support Requests
+
+Sidebar:
+
+* Dashboard
+* Cafés
+* Plans
+* Payments
+* Settings
+
+---
+
+## Café Owner Dashboard
+
+Display:
+
+* Today's Orders
+* Today's Revenue
+* Pending Orders
+* Completed Orders
+
+Sidebar:
+
+* Dashboard
+* Orders
+* Menu
+* Categories
+* QR Code
+* Feedback
+* Settings
+
+---
+
+## Customer Interface
+
+Mobile First Design
+
+Bottom Navigation:
+
+* Menu
+* Search
+* Cart
+* Orders
+* Feedback
+
+---
+
+# Database Design
+
+## Collections
+
+### 1. admins
+
+Stores Super Admin information.
+
+Fields:
+
+* id
+* name
+* email
+* password
+* role
+* created_at
+
+---
+
+### 2. cafes
+
+Stores café information.
+
+Fields:
+
+* id
+* name
+* logo
+* address
+* phone
+* upi_qr
+* subscription_status
+* created_at
+
+---
+
+### 3. categories
+
+Stores menu categories.
+
+Fields:
+
+* id
+* cafe_id
+* name
+
+---
+
+### 4. menu_items
+
+Stores menu products.
+
+Fields:
+
+* id
+* category_id
+* name
+* description
+* price
+* image
+* availability
+
+---
+
+### 5. qr_codes
+
+Stores QR information.
+
+Fields:
+
+* id
+* cafe_id
+* qr_image
+* menu_url
+
+---
+
+### 6. orders
+
+Stores customer orders.
+
+Fields:
+
+* id
+* cafe_id
+* order_number
+* total_amount
+* payment_method
+* payment_status
+* order_status
+* created_at
+
+---
+
+### 7. order_items
+
+Stores ordered products.
+
+Fields:
+
+* id
+* order_id
+* menu_item_id
+* quantity
+* price
+
+---
+
+### 8. feedback
+
+Stores customer reviews.
+
+Fields:
+
+* id
+* order_id
+* rating
+* review
+* created_at
+
+---
+
+### 9. subscriptions
+
+Stores subscription information.
+
+Fields:
+
+* id
+* cafe_id
+* plan_name
+* start_date
+* end_date
+* status
+
+---
+
+# Features Included in MVP
+
+## Super Admin
+
+* Login
+* Dashboard
+* Create Café
+* Manage Cafés
+* Manage Plans
+* Suspend Café
+* Delete Café
+
+---
+
+## Café Owner
+
+* Login
+* Dashboard
+* Categories
+* Menu Items
+* QR Code
+* Orders
+* Payment Verification
+* Feedback
+
+---
+
+## Customer
+
+* Scan QR
+* View Menu
+* Search
+* Filter
+* Cart
+* Checkout
+* Cash Payment
+* UPI QR Payment
+* Track Order
+* Feedback
+
+---
+
+# Features Excluded from MVP
+
+The following features are intentionally excluded to keep Version 1 simple and reduce development complexity:
+
+* Customer Login
+* Customer Registration
+* Email Verification
+* Loyalty Coins
+* Reward Points
+* Wallet System
+* Referral Program
+* Coupons
+* Discount Engine
+* Push Notifications
+* Email Marketing
+* Sales Analytics
+* Inventory Management
+* Employee Management
+* Kitchen Display System
+* Online Payment Gateway
+* AI Recommendations
+
+These features can be introduced in future versions after validating the product with real café businesses.
+
+---
+
+# Technology Stack
+
+## Frontend
+
+* React.js
+* Tailwind CSS
+* React Router
+* Axios
+
+## Backend
+
+* Node.js
+* Express.js
+
+## Database
+
+* MongoDB
+
+## Authentication
+
+* JWT
+
+## File Storage
+
+* Cloudinary (or local storage during development)
+
+## QR Code Generation
+
+* QR Code Library
+
+## Deployment
+
+* Frontend: Vercel
+* Backend: Render
+* Database: MongoDB
+* Domain: .in Domain
+
+---
+
+# Project Goal
+
+The primary objective of this MVP is to provide cafés with a fast, affordable, and easy-to-use digital menu and QR ordering system. The application prioritizes simplicity, rapid deployment, and low operational cost while delivering the core functionality required for real-world café operations. Advanced customer engagement and business intelligence features are intentionally deferred to future releases after market validation.
