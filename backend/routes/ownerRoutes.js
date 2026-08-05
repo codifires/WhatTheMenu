@@ -24,8 +24,6 @@ const {
   handleSubscriptionWebhook,
   checkSubscriptionStatus,
   cancelSubscriptionSession,
-  subscriptionPaymentCallback,
-  verifySubscriptionPayment,
   getGlobalMedia
 } = require('../controllers/ownerController');
 const { protect, authorize } = require('../middleware/auth');
@@ -40,9 +38,8 @@ const {
   initiateSubscriptionSessionValidator
 } = require('../validators/ownerValidators');
 
-// Public webhook / callback & status routes (No auth required for payment callbacks/polling)
+// Public webhook & status routes (No auth required for payment webhooks/polling)
 router.post('/subscription/webhook', handleSubscriptionWebhook);
-router.post('/subscription/payment-callback', subscriptionPaymentCallback);
 router.get('/subscription/check-status/:sessionId', checkSubscriptionStatus);
 router.post('/subscription/cancel-session/:sessionId', cancelSubscriptionSession);
 
@@ -93,7 +90,6 @@ router.put('/settings', upload.single('logo'), settingsValidator, updateSettings
 // Subscription Requests & Automated UPI Sessions
 router.post('/subscription/initiate-session', initiateSubscriptionSessionValidator, initiateSubscriptionSession);
 router.post('/subscription/request', subscriptionRequestValidator, submitSubscriptionRequest);
-router.post('/subscription/verify', verifySubscriptionPayment);
 
 // Global Media
 router.get('/media/global', getGlobalMedia);

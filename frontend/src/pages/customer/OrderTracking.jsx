@@ -81,23 +81,6 @@ const OrderTracking = () => {
     }
   }
 
-  const handleRetryPayment = async () => {
-    if (!order) return
-    setLoading(true)
-    try {
-      const res = await customerAPI.retryPayment(order.order_number)
-      if (res.data.payment_url) {
-        window.location.href = res.data.payment_url
-        // Reload page after delay
-        setTimeout(() => window.location.reload(), 1500)
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to initiate payment')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const getStepIndex = (status) => STATUS_STEPS.findIndex(s => s.key === status)
 
   return (

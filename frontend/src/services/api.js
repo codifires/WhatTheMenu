@@ -119,7 +119,6 @@ export const ownerAPI = {
   cancelSubscriptionSession: (sessionId) => api.post(`/owner/subscription/cancel-session/${sessionId}`),
   simulateSubscriptionWebhook: (data) => api.post('/owner/subscription/webhook', data),
   submitSubscriptionRequest: (data) => api.post('/owner/subscription/request', data),
-  verifySubscriptionPayment: (data) => api.post('/owner/subscription/verify', data),
   getGlobalMedia: () => api.get('/owner/media/global'),
   // Revenue History (permanent ledger)
   getRevenue: (params) => api.get('/owner/revenue', { params }),
@@ -135,7 +134,6 @@ export const customerAPI = {
   cancelUpiSession: (sessionId) => api.post(`/orders/cancel-upi-session/${sessionId}`),
   simulateUpiWebhook: (data) => api.post('/orders/upi-webhook', data),
   trackOrder: (orderNumber) => api.get(`/orders/${orderNumber}/track`),
-  retryPayment: (orderNumber) => api.post(`/orders/${orderNumber}/retry-payment`),
   submitFeedback: (data) => api.post('/feedback', data),
 }
 

@@ -4,14 +4,6 @@ const Cafe = require('../models/Cafe');
 const Order = require('../models/Order');
 const OrderRevenue = require('../models/OrderRevenue');
 const Feedback = require('../models/Feedback');
-const crypto = require('crypto');
-const axios = require('axios');
-
-// PhonePe Configuration (fallback to UAT Test Credentials if not in .env)
-const PHONEPE_MERCHANT_ID = (process.env.PHONEPE_MERCHANT_ID || "PGTESTPAYUAT86").trim();
-const PHONEPE_SALT_KEY = (process.env.PHONEPE_SALT_KEY || "96434309-7796-489d-8924-ab56988a6076").trim();
-const PHONEPE_SALT_INDEX = (process.env.PHONEPE_SALT_INDEX || "1").trim();
-const PHONEPE_API_URL = (process.env.PHONEPE_API_URL || "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay").trim();
 
 
 // @desc    Get café info and full menu
@@ -222,57 +214,6 @@ const trackOrder = async (req, res, next) => {
       });
     }
 
-    // Auto-check PhonePe status if still pending or failed
-    if (order.payment_method === 'online' && (order.payment_status === 'pending' || order.payment_status === 'failed') && order.payment_transaction_id) {
-      const endpoint = `/pg/v1/status/${PHONEPE_MERCHANT_ID}/${order.payment_transaction_id}`;
-      const stringToHash = endpoint + PHONEPE_SALT_KEY;
-      const sha256 = crypto.createHash('sha256').update(stringToHash).digest('hex');
-      const checksum = sha256 + "###" + PHONEPE_SALT_INDEX;
-      
-      try {
-        const baseUrl = PHONEPE_API_URL.replace('/pg/v1/pay', '');
-        const statusRes = await axios.get(`${baseUrl}${endpoint}`, {
-          headers: {
-            'Content-Type': 'application/json',
-            'X-VERIFY': checksum,
-            'X-MERCHANT-ID': PHONEPE_MERCHANT_ID
-          }
-        });
-
-        if (statusRes.data && statusRes.data.success && statusRes.data.code === 'PAYMENT_SUCCESS') {
-          order.payment_status = 'received';
-          
-          if (!order.token_number) {
-            const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
-
-            const todaysOrders = await Order.find({ 
-              cafe_id: order.cafe_id, 
-              created_at: { $gte: startOfDay },
-              token_number: { $ne: '' }
-            }).select('token_number');
-
-            let maxToken = 0;
-            todaysOrders.forEach(o => {
-              if (o.token_number) {
-                const num = parseInt(o.token_number.replace('#', ''), 10);
-                if (!isNaN(num) && num > maxToken) {
-                  maxToken = num;
-                }
-              }
-            });
-            order.token_number = `#${maxToken + 1}`;
-          }
-
-          await order.save();
-          const io = req.app.get('io');
-          io.to(`cafe-${order.cafe_id}`).emit('new-order', order);
-        }
-      } catch (err) {
-        console.error("Status Check Error:", err.message);
-      }
-    }
-
     res.json({
       success: true,
       data: {
@@ -320,163 +261,6 @@ const submitFeedback = async (req, res, next) => {
     });
 
     res.status(201).json({ success: true, data: feedback });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    PhonePe Payment Callback
-// @route   POST /api/orders/payment-callback
-const paymentCallback = async (req, res) => {
-  try {
-    const { response } = req.body;
-    if (!response) {
-      return res.status(400).send('Invalid callback');
-    }
-
-    const decodedResponse = Buffer.from(response, 'base64').toString('utf-8');
-    const parsedResponse = JSON.parse(decodedResponse);
-
-    const providedChecksum = req.headers['x-verify'];
-    const calculatedChecksum = crypto.createHash('sha256').update(response + PHONEPE_SALT_KEY).digest('hex') + "###" + PHONEPE_SALT_INDEX;
-
-    if (providedChecksum === calculatedChecksum) {
-      const order = await Order.findOne({ payment_transaction_id: parsedResponse.data.merchantTransactionId });
-      
-      if (order) {
-        if (parsedResponse.success && parsedResponse.code === 'PAYMENT_SUCCESS') {
-          order.payment_status = 'received';
-          
-          // Generate token number now that payment is successful (if it doesn't have one)
-          if (!order.token_number) {
-            const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
-
-            const todaysOrders = await Order.find({ 
-              cafe_id: order.cafe_id, 
-              created_at: { $gte: startOfDay },
-              token_number: { $ne: '' }
-            }).select('token_number');
-
-            let maxToken = 0;
-            todaysOrders.forEach(o => {
-              if (o.token_number) {
-                const num = parseInt(o.token_number.replace('#', ''), 10);
-                if (!isNaN(num) && num > maxToken) {
-                  maxToken = num;
-                }
-              }
-            });
-            order.token_number = `#${maxToken + 1}`;
-          }
-
-          await order.save();
-
-          // Save to permanent revenue ledger (survives order TTL deletion)
-          try {
-            await OrderRevenue.findOneAndUpdate(
-              { order_number: order.order_number },
-              {
-                cafe_id: order.cafe_id,
-                order_number: order.order_number,
-                total_amount: order.total_amount,
-                payment_method: order.payment_method,
-                table_number: order.table_number || '',
-                items_count: order.items?.length || 0,
-                payment_date: new Date()
-              },
-              { upsert: true, new: true }
-            );
-          } catch (revErr) {
-            console.error('OrderRevenue save failed (callback):', revErr.message);
-          }
-          
-          // Emit real-time notification to café owner
-          const io = req.app.get('io');
-          io.to(`cafe-${order.cafe_id}`).emit('new-order', order);
-        } else {
-          order.payment_status = 'failed';
-          await order.save();
-        }
-      }
-      return res.status(200).send('OK');
-    } else {
-      return res.status(400).send('Checksum mismatch');
-    }
-  } catch (error) {
-    console.error("Callback Error:", error);
-    return res.status(500).send('Internal Server Error');
-  }
-};
-
-// @desc    Retry failed/pending payment
-// @route   POST /api/orders/:orderNumber/retry-payment
-const retryPayment = async (req, res, next) => {
-  try {
-    const order = await Order.findOne({
-      order_number: req.params.orderNumber
-    });
-
-    if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found' });
-    }
-
-    if (order.payment_status === 'completed' || order.payment_status === 'received') {
-      return res.status(400).json({ success: false, message: 'Payment already completed' });
-    }
-
-    if (order.payment_method !== 'online') {
-      return res.status(400).json({ success: false, message: 'Not an online order' });
-    }
-
-    // Generate new transaction ID
-    const transactionId = "T" + Date.now();
-    order.payment_transaction_id = transactionId;
-    // Set status back to pending if it was failed
-    order.payment_status = 'pending';
-    await order.save();
-
-    const payload = {
-      merchantId: PHONEPE_MERCHANT_ID,
-      merchantTransactionId: transactionId,
-      merchantUserId: order.customer_phone || "MUID" + Date.now(),
-      amount: Math.round(order.total_amount * 100),
-      redirectUrl: `http://localhost:3000/menu/${order.cafe_id}/orders?track=${order.order_number}`,
-      redirectMode: "REDIRECT",
-      callbackUrl: `http://localhost:5000/api/orders/payment-callback`,
-      mobileNumber: order.customer_phone || "9999999999",
-      paymentInstrument: {
-        type: "UPI_INTENT",
-        targetApp: ""
-      }
-    };
-
-    const payloadString = JSON.stringify(payload);
-    const payloadBase64 = Buffer.from(payloadString).toString('base64');
-    const stringToHash = payloadBase64 + "/pg/v1/pay" + PHONEPE_SALT_KEY;
-    const sha256 = crypto.createHash('sha256').update(stringToHash).digest('hex');
-    const checksum = sha256 + "###" + PHONEPE_SALT_INDEX;
-
-    try {
-      const response = await axios.post(PHONEPE_API_URL, { request: payloadBase64 }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-VERIFY': checksum
-        }
-      });
-
-      if (response.data && response.data.success) {
-        const redirectUrl = response.data.data.instrumentResponse?.intentUrl || response.data.data.instrumentResponse?.redirectInfo?.url;
-        return res.status(200).json({
-          success: true,
-          payment_url: redirectUrl
-        });
-      }
-    } catch (err) {
-      console.error("PhonePe Retry Error:", err.response?.data || err.message);
-      return res.status(500).json({ success: false, message: 'Payment gateway error' });
-    }
-
   } catch (error) {
     next(error);
   }
@@ -574,7 +358,7 @@ const initiateUpiSession = async (req, res, next) => {
 const handleUpiWebhook = async (req, res, next) => {
   try {
     const { session_id, transaction_id, status = 'SUCCESS', amount } = req.body;
-    const trId = session_id || req.body.tr || req.body.merchantTransactionId || req.body.payment_transaction_id;
+    const trId = session_id || req.body.sessionId || req.body.tr || req.body.merchantTransactionId || req.body.payment_transaction_id;
 
     if (!trId) {
       return res.status(400).json({ success: false, message: 'Session / Transaction ID required' });
@@ -746,9 +530,7 @@ module.exports = {
   searchMenu,
   placeOrder,
   trackOrder,
-  paymentCallback,
   submitFeedback,
-  retryPayment,
   initiateUpiSession,
   handleUpiWebhook,
   checkUpiStatus,
