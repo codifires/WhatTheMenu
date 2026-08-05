@@ -129,9 +129,10 @@ const startSubscriptionCron = () => {
       const fourDaysAgo = new Date();
       fourDaysAgo.setDate(fourDaysAgo.getDate() - 4);
 
-      // Find paid orders older than 4 days not yet in OrderRevenue
+      // Find paid, non-cancelled orders older than 4 days not yet in OrderRevenue
       const existingNumbers = await OrderRevenue.distinct('order_number');
       const missedOrders = await Order.find({
+        order_status: { $ne: 'cancelled' },
         payment_status: { $in: ['received', 'completed'] },
         created_at: { $lte: fourDaysAgo },
         order_number: { $nin: existingNumbers }

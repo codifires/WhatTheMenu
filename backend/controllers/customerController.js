@@ -179,7 +179,7 @@ const placeOrder = async (req, res, next) => {
       token_number: tokenNumber,
       payment_method: finalPaymentMethod,
       payment_transaction_id: payment_transaction_id || '',
-      payment_status: isUPI ? 'received' : 'pending',
+      payment_status: 'pending',
       notes: notes || ''
     });
 
@@ -189,26 +189,7 @@ const placeOrder = async (req, res, next) => {
       upiString = `upi://pay?pa=${encodeURIComponent(cafe.upi_id.trim())}&pn=${encodeURIComponent(cafe.name.trim())}&am=${finalTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Order ${tokenNumber} - ${cafe.name}`)}&tr=ORD_${order.order_number}`;
     }
 
-    // If UPI, also log into permanent revenue history
-    if (isUPI) {
-      try {
-        await OrderRevenue.findOneAndUpdate(
-          { order_number: order.order_number },
-          {
-            cafe_id: order.cafe_id,
-            order_number: order.order_number,
-            total_amount: order.total_amount,
-            payment_method: finalPaymentMethod,
-            table_number: order.table_number || '',
-            items_count: order.items?.length || 0,
-            payment_date: new Date()
-          },
-          { upsert: true, new: true }
-        );
-      } catch (revErr) {
-        console.error('OrderRevenue save failed (upi order):', revErr.message);
-      }
-    }
+    // Note: OrderRevenue is strictly populated ONLY when payment_status is confirmed 'received' via webhook or manual verification.
 
     // Emit real-time notification to café owner
     const io = req.app.get('io');

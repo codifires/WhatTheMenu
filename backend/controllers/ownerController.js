@@ -455,13 +455,24 @@ const updateOrderStatus = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
+    // If order is cancelled, ensure it is completely removed from the revenue ledger
+    if (order_status === 'cancelled') {
+      try {
+        await OrderRevenue.deleteOne({ order_number: order.order_number });
+      } catch (revDelErr) {
+        console.error('OrderRevenue delete failed (order cancelled):', revDelErr.message);
+      }
+    }
+
     // Emit real-time update
     const io = req.app.get('io');
-    io.to(`order-${order.order_number}`).emit('order-status-update', {
-      order_number: order.order_number,
-      status: order.order_status
-    });
-    io.to(`cafe-${req.user._id}`).emit('order-updated', order);
+    if (io) {
+      io.to(`order-${order.order_number}`).emit('order-status-update', {
+        order_number: order.order_number,
+        status: order.order_status
+      });
+      io.to(`cafe-${req.user._id}`).emit('order-updated', order);
+    }
 
     res.json({ success: true, data: order });
   } catch (error) {
@@ -473,9 +484,10 @@ const updateOrderStatus = async (req, res, next) => {
 // @route   PUT /api/owner/orders/:id/payment
 const updatePaymentStatus = async (req, res, next) => {
   try {
+    const { payment_status = 'received' } = req.body;
     const order = await Order.findOneAndUpdate(
       { _id: req.params.id, cafe_id: req.user._id },
-      { payment_status: 'received' },
+      { payment_status },
       { new: true }
     );
 
@@ -483,24 +495,32 @@ const updatePaymentStatus = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    // Save to permanent revenue ledger (survives order deletion)
-    try {
-      await OrderRevenue.findOneAndUpdate(
-        { order_number: order.order_number },
-        {
-          cafe_id: order.cafe_id,
-          order_number: order.order_number,
-          total_amount: order.total_amount,
-          payment_method: order.payment_method,
-          table_number: order.table_number || '',
-          items_count: order.items?.length || 0,
-          payment_date: new Date()
-        },
-        { upsert: true, new: true }
-      );
-    } catch (revErr) {
-      // Non-fatal: log but don't fail the payment update
-      console.error('OrderRevenue save failed (payment):', revErr.message);
+    // Save to permanent revenue ledger only if payment is received and order is NOT cancelled
+    if (payment_status === 'received' && order.order_status !== 'cancelled') {
+      try {
+        await OrderRevenue.findOneAndUpdate(
+          { order_number: order.order_number },
+          {
+            cafe_id: order.cafe_id,
+            order_number: order.order_number,
+            total_amount: order.total_amount,
+            payment_method: order.payment_method,
+            table_number: order.table_number || '',
+            items_count: order.items?.length || 0,
+            payment_date: new Date()
+          },
+          { upsert: true, new: true }
+        );
+      } catch (revErr) {
+        console.error('OrderRevenue save failed (payment):', revErr.message);
+      }
+    } else {
+      // If payment is not received or order is cancelled, remove from revenue ledger
+      try {
+        await OrderRevenue.deleteOne({ order_number: order.order_number });
+      } catch (revDelErr) {
+        console.error('OrderRevenue delete failed (non-received payment):', revDelErr.message);
+      }
     }
 
     res.json({ success: true, data: order });

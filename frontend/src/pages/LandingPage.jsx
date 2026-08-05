@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
+import { publicAPI } from '../services/api'
 
 /* ─── tiny hook: count-up on mount ─── */
 function useCountUp(target, duration = 1800) {
@@ -97,25 +98,23 @@ export default function LandingPage() {
     window.addEventListener('scroll', fn)
     
     // Fetch dynamic plans and pricing
-    import('../services/api').then(({ publicAPI }) => {
-      publicAPI.getSettings().then(res => {
-        const d = res.data?.data;
-        if (d) {
-          setPlans([
-            {
-              ...DEFAULT_PLANS[0],
-              price: `₹${d.starter_price || 299}`,
-              features: d.starter_features?.length > 0 ? d.starter_features : DEFAULT_PLANS[0].features
-            },
-            {
-              ...DEFAULT_PLANS[1],
-              price: `₹${d.pro_price || 499}`,
-              features: d.pro_features?.length > 0 ? d.pro_features : DEFAULT_PLANS[1].features
-            }
-          ])
-        }
-      }).catch(() => {})
-    })
+    publicAPI.getSettings().then(res => {
+      const d = res.data?.data;
+      if (d) {
+        setPlans([
+          {
+            ...DEFAULT_PLANS[0],
+            price: `₹${d.starter_price || 299}`,
+            features: d.starter_features?.length > 0 ? d.starter_features : DEFAULT_PLANS[0].features
+          },
+          {
+            ...DEFAULT_PLANS[1],
+            price: `₹${d.pro_price || 499}`,
+            features: d.pro_features?.length > 0 ? d.pro_features : DEFAULT_PLANS[1].features
+          }
+        ])
+      }
+    }).catch(() => {})
     
     return () => window.removeEventListener('scroll', fn)
   }, [])
