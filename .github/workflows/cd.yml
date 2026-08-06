@@ -1,23 +1,15 @@
 name: Continuous Deployment (CD)
 
+# This workflow only triggers when a version tag (e.g. v1.0.0) is published.
+# Normal commits are deployed automatically by Vercel (Frontend) and Render (Backend).
 on:
   push:
-    branches:
-      - main
-      - master
     tags:
       - 'v*.*.*'
 
-concurrency:
-  group: production-deployment
-  cancel-in-progress: false
-
 jobs:
-  # ==========================================
-  # 1. CI Validation Gatekeeper
-  # ==========================================
-  validate-ci:
-    name: Validate CI Pipeline Status
+  release-check:
+    name: Production Release Verification
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout Repository
@@ -31,124 +23,11 @@ jobs:
       - name: 🧪 Run Backend Tests
         working-directory: ./backend
         run: |
-          npm ci || npm install
+          npm install
           npm test
 
       - name: 🔨 Run Frontend Build
         working-directory: ./frontend
         run: |
-          npm ci || npm install
+          npm install
           npm run build
-
-  # ==========================================
-  # 2. Deploy Frontend (Vercel / Netlify / CDN)
-  # ==========================================
-  deploy-frontend:
-    name: Deploy Frontend
-    needs: validate-ci
-    runs-on: ubuntu-latest
-    steps:
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: 🟢 Setup Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-
-      - name: 📦 Build Frontend
-        working-directory: ./frontend
-        run: |
-          npm ci || npm install
-          npm run build
-
-      - name: 🚀 Deploy to Vercel (Production)
-        if: ${{ env.VERCEL_TOKEN != '' }}
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        working-directory: ./frontend
-        run: |
-          npx vercel --prod --token=$VERCEL_TOKEN --yes
-
-  # ==========================================
-  # 3. Deploy Backend (Render / Railway / Webhook)
-  # ==========================================
-  deploy-backend:
-    name: Deploy Backend API
-    needs: validate-ci
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🚀 Trigger Render / Railway Deploy Hook
-        if: ${{ env.BACKEND_DEPLOY_WEBHOOK != '' }}
-        env:
-          BACKEND_DEPLOY_WEBHOOK: ${{ secrets.BACKEND_DEPLOY_WEBHOOK }}
-        run: |
-          echo "Triggering automated backend deployment webhook..."
-          curl -X POST "$BACKEND_DEPLOY_WEBHOOK" -H "Content-Type: application/json"
-
-  # ==========================================
-  # 4. Build & Push Docker Container Images
-  # ==========================================
-  publish-docker-images:
-    name: Build & Push Container Images (GHCR)
-    needs: validate-ci
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: 📥 Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: 🐳 Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: 🔑 Log in to GitHub Container Registry (GHCR)
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🏷️ Generate Metadata for Backend
-        id: meta-backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}-backend
-          tags: |
-            type=raw,value=latest
-            type=sha,format=short
-
-      - name: 📦 Build & Push Backend Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          file: ./backend/Dockerfile
-          push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: 🏷️ Generate Metadata for Frontend
-        id: meta-frontend
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}-frontend
-          tags: |
-            type=raw,value=latest
-            type=sha,format=short
-
-      - name: 📦 Build & Push Frontend Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
