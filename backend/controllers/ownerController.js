@@ -615,22 +615,33 @@ const getRevenueHistory = async (req, res, next) => {
 
 // ============ QR CODE ============
 
+// Helper to determine the actual frontend domain for QR menu URLs
+const resolveFrontendUrl = (req) => {
+  let fe = process.env.FRONTEND_URL;
+  if (!fe || fe === '*' || fe.includes('*')) {
+    fe = req.headers.origin || (req.headers.referer ? new URL(req.headers.referer).origin : 'http://localhost:3000');
+  }
+  return fe.replace(/\/$/, '');
+};
+
 // @desc    Get or generate QR code
 // @route   GET /api/owner/qr-code
 const getQRCode = async (req, res, next) => {
   try {
     const cafeId = req.user._id;
     let qrData = await QRCodeModel.findOne({ cafe_id: cafeId });
+    const baseFe = resolveFrontendUrl(req);
+    const expectedMenuUrl = `${baseFe}/menu/${cafeId}`;
 
-    if (!qrData) {
-      const menuUrl = `${process.env.FRONTEND_URL}/menu/${cafeId}`;
-      const qrImage = await generateQRCode(menuUrl);
+    // Auto-heal any invalid legacy URLs (e.g. starting with '*' or missing http)
+    if (!qrData || !qrData.menu_url || qrData.menu_url.startsWith('*') || !qrData.menu_url.startsWith('http')) {
+      const qrImage = await generateQRCode(expectedMenuUrl);
 
-      qrData = await QRCodeModel.create({
-        cafe_id: cafeId,
-        qr_image: qrImage,
-        menu_url: menuUrl
-      });
+      qrData = await QRCodeModel.findOneAndUpdate(
+        { cafe_id: cafeId },
+        { qr_image: qrImage, menu_url: expectedMenuUrl },
+        { new: true, upsert: true }
+      );
     }
 
     res.json({ success: true, data: qrData });
@@ -644,7 +655,8 @@ const getQRCode = async (req, res, next) => {
 const regenerateQRCode = async (req, res, next) => {
   try {
     const cafeId = req.user._id;
-    const menuUrl = `${process.env.FRONTEND_URL}/menu/${cafeId}`;
+    const baseFe = resolveFrontendUrl(req);
+    const menuUrl = `${baseFe}/menu/${cafeId}`;
     const qrImage = await generateQRCode(menuUrl);
 
     const qrData = await QRCodeModel.findOneAndUpdate(

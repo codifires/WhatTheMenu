@@ -1,106 +1,282 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ownerAPI } from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
+import QRCode from 'react-qr-code'
+import { Download, Printer, RefreshCw, ExternalLink, QrCode as QrIcon, Copy, Check } from 'lucide-react'
 
 const QRCodePage = () => {
+  const { user } = useAuth()
   const [qrData, setQrData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [copied, setCopied] = useState(false)
+  const qrRef = useRef(null)
 
-  useEffect(() => { fetchQR() }, [])
+  const cafeId = user?.id || user?._id || qrData?.cafe_id
+  const liveMenuUrl = qrData?.menu_url && !qrData.menu_url.startsWith('*') && qrData.menu_url.startsWith('http')
+    ? qrData.menu_url
+    : (cafeId ? `${window.location.origin}/menu/${cafeId}` : window.location.origin)
+
+  useEffect(() => {
+    fetchQR()
+  }, [])
 
   const fetchQR = async () => {
     try {
       const res = await ownerAPI.getQRCode()
       setQrData(res.data.data)
     } catch (error) {
-      toast.error('Failed to load QR code')
+      console.warn('QR code fallback to client-side generation')
     } finally {
       setLoading(false)
     }
   }
 
   const handleRegenerate = async () => {
+    setLoading(true)
     try {
       const res = await ownerAPI.regenerateQRCode()
       setQrData(res.data.data)
-      toast.success('QR code regenerated')
+      toast.success('QR code updated successfully!')
     } catch (error) {
-      toast.error('Failed to regenerate')
+      toast.error('Failed to regenerate QR code')
+    } finally {
+      setLoading(false)
     }
   }
 
+  const handleCopyUrl = () => {
+    navigator.clipboard.writeText(liveMenuUrl)
+    setCopied(true)
+    toast.success('Menu link copied to clipboard!')
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   const handleDownload = () => {
-    if (!qrData?.qr_image) return
-    const link = document.createElement('a')
-    link.download = 'cafe-qr-menu.png'
-    link.href = qrData.qr_image
-    link.click()
+    try {
+      const svg = document.getElementById('digital-menu-qr-code')
+      if (!svg) return
+
+      const svgData = new XMLSerializer().serializeToString(svg)
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const img = new Image()
+
+      canvas.width = 600
+      canvas.height = 600
+
+      img.onload = () => {
+        // Draw white background
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, 600, 600)
+        // Draw QR code centered with padding
+        ctx.drawImage(img, 50, 50, 500, 500)
+
+        const pngFile = canvas.toDataURL('image/png')
+        const downloadLink = document.createElement('a')
+        downloadLink.download = `${user?.cafe_name || 'cafe'}-qr-menu.png`
+        downloadLink.href = pngFile
+        downloadLink.click()
+        toast.success('High-res QR Code downloaded!')
+      }
+
+      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
+    } catch (e) {
+      toast.error('Could not download QR code')
+    }
   }
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
-        <head><title>QR Menu Code</title></head>
-        <body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;font-family:sans-serif;background:#fff;">
-          <div style="text-align:center;padding:40px;border:2px dashed #ccc;border-radius:20px;">
-            <h2 style="margin:0 0 10px;font-size:24px;">Scan to View Menu</h2>
-            <p style="margin:0 0 30px;color:#666;">Place your order directly from your phone!</p>
-            <img src="${qrData.qr_image}" style="width:300px;height:300px;display:block;margin:0 auto;" />
-            <p style="margin-top:30px;color:#888;font-size:12px;">${qrData.menu_url}</p>
+        <head>
+          <title>Print Menu QR Standee - ${user?.cafe_name || 'Café'}</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;800;900&family=Inter:wght@400;600&display=swap');
+            body {
+              margin: 0;
+              padding: 40px 20px;
+              background: #f8fafc;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              font-family: 'Inter', sans-serif;
+              box-sizing: border-box;
+            }
+            .standee {
+              background: #ffffff;
+              width: 100%;
+              max-width: 440px;
+              padding: 48px 36px;
+              border-radius: 32px;
+              box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+              border: 3px solid #0f172a;
+              text-align: center;
+            }
+            .cafe-title {
+              font-family: 'Outfit', sans-serif;
+              font-size: 28px;
+              font-weight: 900;
+              color: #0f172a;
+              margin: 0 0 6px;
+              text-transform: capitalize;
+            }
+            .sub-title {
+              font-size: 14px;
+              color: #64748b;
+              margin: 0 0 32px;
+              font-weight: 500;
+            }
+            .qr-wrapper {
+              background: #ffffff;
+              padding: 24px;
+              border-radius: 24px;
+              display: inline-block;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+              border: 2px solid #e2e8f0;
+              margin-bottom: 28px;
+            }
+            .action-title {
+              font-family: 'Outfit', sans-serif;
+              font-size: 20px;
+              font-weight: 800;
+              color: #0f172a;
+              margin: 0 0 6px;
+            }
+            .url-text {
+              font-size: 11px;
+              color: #94a3b8;
+              margin: 0;
+              word-break: break-all;
+            }
+            @media print {
+              body { background: transparent; padding: 0; }
+              .standee { box-shadow: none; border-width: 2px; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="standee">
+            <h1 class="cafe-title">${user?.cafe_name || 'Our Digital Menu'}</h1>
+            <p class="sub-title">Scan with any smartphone camera to browse & order</p>
+            <div class="qr-wrapper">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(liveMenuUrl)}" width="240" height="240" alt="QR Menu" />
+            </div>
+            <div class="action-title">📱 Scan to View Menu & Order</div>
+            <p class="url-text">${liveMenuUrl}</p>
           </div>
+          <script>
+            window.onload = () => { setTimeout(() => { window.print(); }, 400); };
+          </script>
         </body>
       </html>
     `)
     printWindow.document.close()
-    printWindow.print()
   }
 
   return (
-    <div style={{ fontFamily: "'Inter',sans-serif", color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: 'calc(100vh - 120px)' }}>
+    <div style={{ fontFamily: "'Inter',sans-serif", color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: 'calc(100vh - 120px)', padding: '20px 16px' }}>
       
       {/* ── Header ── */}
-      <div style={{ textAlign: 'center', marginBottom: 40, animation: 'fadeIn 0.5s ease' }}>
-        <h1 style={{ fontSize: 'clamp(24px,4vw,36px)', fontWeight: 900, margin: '0 0 8px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>Your Digital Menu</h1>
-        <p style={{ fontSize: 15, color: '#9ca3af', margin: 0, maxWidth: 400 }}>Print or share this QR code so customers can easily browse your menu and place orders.</p>
+      <div style={{ textAlign: 'center', marginBottom: 32, animation: 'fadeIn 0.5s ease' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 99, background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.25)', color: '#22d3ee', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>
+          <QrIcon size={16} /> Tabletop QR Standee
+        </div>
+        <h1 style={{ fontSize: 'clamp(26px,4vw,38px)', fontWeight: 900, margin: '0 0 8px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
+          Your Digital Menu QR Code
+        </h1>
+        <p style={{ fontSize: 14, color: '#9ca3af', margin: 0, maxWidth: 460 }}>
+          Customers scan this QR code with their mobile phone camera to view your menu, customize items, and place instant orders.
+        </p>
       </div>
 
       {/* ── QR Card ── */}
-      <div style={{ width: '100%', maxWidth: 420, animation: 'slideUp 0.5s ease 0.1s both' }}>
-        <div style={{ padding: 40, borderRadius: 28, background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ width: '100%', maxWidth: 440, animation: 'slideUp 0.5s ease 0.1s both' }}>
+        <div style={{ padding: '36px 28px', borderRadius: 28, background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
           
-          {/* Decorative glow */}
-          <div style={{ position: 'absolute', top: '50%', left: '50%', width: 200, height: 200, background: 'rgba(6,182,212,0.2)', filter: 'blur(80px)', transform: 'translate(-50%, -50%)', zIndex: 0, pointerEvents: 'none' }} />
+          {/* Decorative Radial Glow */}
+          <div style={{ position: 'absolute', top: '40%', left: '50%', width: 220, height: 220, background: 'rgba(6,182,212,0.22)', filter: 'blur(80px)', transform: 'translate(-50%, -50%)', zIndex: 0, pointerEvents: 'none' }} />
 
           <div style={{ position: 'relative', zIndex: 1 }}>
             {loading ? (
-              <div style={{ width: 240, height: 240, margin: '0 auto 24px', borderRadius: 20, background: 'rgba(255,255,255,0.05)', animation: 'pulse 1.5s ease infinite' }} />
-            ) : qrData ? (
+              <div style={{ width: 220, height: 220, margin: '0 auto 24px', borderRadius: 24, background: 'rgba(255,255,255,0.05)', animation: 'pulse 1.5s ease infinite' }} />
+            ) : (
               <>
-                <div style={{ background: '#fff', padding: 16, borderRadius: 24, display: 'inline-block', marginBottom: 24, boxShadow: '0 10px 30px rgba(6,182,212,0.15)' }}>
-                  <img src={qrData.qr_image} alt="QR Code" style={{ width: 220, height: 220, display: 'block' }} />
+                {/* QR Code Container */}
+                <div style={{ background: '#ffffff', padding: 18, borderRadius: 24, display: 'inline-block', marginBottom: 20, boxShadow: '0 12px 36px rgba(0,0,0,0.35)' }}>
+                  <QRCode
+                    id="digital-menu-qr-code"
+                    value={liveMenuUrl}
+                    size={200}
+                    level="H"
+                    style={{ height: 'auto', maxWidth: '100%', width: '100%', display: 'block' }}
+                  />
                 </div>
-                <p style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>Scan to Order</p>
-                <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 32px', wordBreak: 'break-all' }}>{qrData.menu_url}</p>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <button onClick={handleDownload} style={{ padding: '12px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#06b6d4,#4f46e5)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 16px rgba(6,182,212,0.3)', transition: 'transform 0.2s' }} onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'} onMouseLeave={e => e.currentTarget.style.transform='translateY(0)'}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Download
+                <p style={{ fontSize: 19, fontWeight: 900, color: '#ffffff', margin: '0 0 6px', fontFamily: "'Outfit',sans-serif" }}>
+                  Scan to Order
+                </p>
+
+                {/* Clickable Live URL Box */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', padding: '8px 12px', borderRadius: 12, margin: '0 0 24px', textAlign: 'left' }}>
+                  <span style={{ fontSize: 11, color: '#94a3b8', wordBreak: 'break-all', flex: 1, fontFamily: 'monospace' }}>
+                    {liveMenuUrl}
+                  </span>
+                  <button
+                    onClick={handleCopyUrl}
+                    title="Copy Link"
+                    style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 8, padding: '6px', color: copied ? '#34d399' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
+                  >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
                   </button>
-                  <button onClick={handlePrint} style={{ padding: '12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.05)'}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                    Print
+                  <a
+                    href={liveMenuUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Open Live Menu"
+                    style={{ background: 'rgba(6,182,212,0.15)', border: '1px solid rgba(6,182,212,0.3)', borderRadius: 8, padding: '6px', color: '#22d3ee', display: 'flex', alignItems: 'center' }}
+                  >
+                    <ExternalLink size={14} />
+                  </a>
+                </div>
+
+                {/* Primary Action Buttons */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <button
+                    onClick={handleDownload}
+                    style={{ padding: '13px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg,#06b6d4,#4f46e5)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 6px 20px rgba(6,182,212,0.3)', transition: 'transform 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform='translateY(0)'}
+                  >
+                    <Download size={16} /> Download PNG
+                  </button>
+                  <button
+                    onClick={handlePrint}
+                    style={{ padding: '13px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.12)'}
+                    onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.06)'}
+                  >
+                    <Printer size={16} /> Print Standee
                   </button>
                 </div>
                 
-                <button onClick={handleRegenerate} style={{ width: '100%', marginTop: 12, padding: '12px', borderRadius: 12, border: 'none', background: 'transparent', color: '#9ca3af', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color='#fff'} onMouseLeave={e => e.currentTarget.style.color='#9ca3af'}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                  Generate New Code
-                </button>
+                {/* Secondary Actions */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 18 }}>
+                  <button
+                    onClick={handleRegenerate}
+                    style={{ border: 'none', background: 'transparent', color: '#9ca3af', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'color 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.color='#fff'}
+                    onMouseLeave={e => e.currentTarget.style.color='#9ca3af'}
+                  >
+                    <RefreshCw size={13} /> Refresh Cloud QR
+                  </button>
+                </div>
               </>
-            ) : (
-              <p style={{ color: '#ef4444', fontSize: 14 }}>Failed to load QR code</p>
             )}
           </div>
         </div>
