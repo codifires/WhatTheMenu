@@ -45,6 +45,7 @@ const { publicLimiter } = require('./middleware/rateLimiter');
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/owner', require('./routes/ownerRoutes'));
+app.use('/api/support', require('./routes/supportRoutes'));
 
 // Public routes with rate limiting
 app.use('/api/menu', publicLimiter, require('./routes/menuRoutes'));

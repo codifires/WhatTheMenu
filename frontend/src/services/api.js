@@ -75,6 +75,8 @@ export const adminAPI = {
   }),
   deleteGlobalMedia: (id) => api.delete(`/admin/media/${id}`),
   getRevenue: (params) => api.get('/admin/revenue', { params }),
+  getSupportTickets: (params) => api.get('/support/admin/tickets', { params }),
+  replySupportTicket: (id, data) => api.put(`/support/admin/tickets/${id}`, data),
 }
 
 // ============ PUBLIC SETTINGS ============
@@ -109,6 +111,10 @@ export const ownerAPI = {
   regenerateQRCode: () => api.post('/owner/qr-code/regenerate'),
   // Feedback
   getFeedback: () => api.get('/owner/feedback'),
+  // Support
+  getSupportInfo: () => api.get('/support/owner/info'),
+  getSupportTickets: () => api.get('/support/owner/tickets'),
+  createSupportTicket: (data) => api.post('/support/owner/tickets', data),
   // Settings
   updateSettings: (data) => api.put('/owner/settings', data, {
     headers: { 'Content-Type': 'multipart/form-data' }

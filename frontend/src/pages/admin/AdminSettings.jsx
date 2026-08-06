@@ -62,12 +62,303 @@ function Toggle({ checked, onChange, label, description }) {
   )
 }
 
+const DAYS = [
+  { short: 'Mon', full: 'Monday' },
+  { short: 'Tue', full: 'Tuesday' },
+  { short: 'Wed', full: 'Wednesday' },
+  { short: 'Thu', full: 'Thursday' },
+  { short: 'Fri', full: 'Friday' },
+  { short: 'Sat', full: 'Saturday' },
+  { short: 'Sun', full: 'Sunday' }
+]
+
+const TIMEZONES = [
+  { code: 'IST', label: 'IST (India Standard Time - UTC+5:30)' },
+  { code: 'UTC', label: 'UTC (Coordinated Universal Time)' },
+  { code: 'EST', label: 'EST (US Eastern - UTC-5)' },
+  { code: 'PST', label: 'PST (US Pacific - UTC-8)' },
+  { code: 'GMT', label: 'GMT (Greenwich Mean Time)' },
+  { code: 'GST', label: 'GST (Gulf / Dubai - UTC+4)' },
+  { code: 'SGT', label: 'SGT (Singapore - UTC+8)' }
+]
+
+function format12Hour(time24) {
+  if (!time24) return ''
+  const [hStr, mStr] = time24.split(':')
+  let h = parseInt(hStr, 10)
+  if (isNaN(h)) return time24
+  const m = mStr || '00'
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  h = h % 12
+  h = h ? h : 12
+  return `${h}:${m} ${ampm}`
+}
+
+function ScheduleHoursPicker({ value, onChange }) {
+  const [mode, setMode] = useState('calendar') // 'calendar' | 'custom'
+  const [startDay, setStartDay] = useState('Mon')
+  const [endDay, setEndDay] = useState('Sun')
+  const [startTime, setStartTime] = useState('09:00')
+  const [endTime, setEndTime] = useState('22:00')
+  const [timezone, setTimezone] = useState('IST')
+  const [is24x7, setIs24x7] = useState(false)
+
+  const updateSchedule = (newStartDay, newEndDay, newStartTime, newEndTime, newTz, isAlways) => {
+    if (isAlways) {
+      onChange('24/7 Always Active Support')
+      return
+    }
+    const formatted = `${newStartDay} - ${newEndDay}, ${format12Hour(newStartTime)} - ${format12Hour(newEndTime)} ${newTz}`
+    onChange(formatted)
+  }
+
+  const handleStartDay = (d) => { setStartDay(d); updateSchedule(d, endDay, startTime, endTime, timezone, is24x7) }
+  const handleEndDay = (d) => { setEndDay(d); updateSchedule(startDay, d, startTime, endTime, timezone, is24x7) }
+  const handleStartTime = (t) => { setStartTime(t); updateSchedule(startDay, endDay, t, endTime, timezone, is24x7) }
+  const handleEndTime = (t) => { setEndTime(t); updateSchedule(startDay, endDay, startTime, t, timezone, is24x7) }
+  const handleTz = (tz) => { setTimezone(tz); updateSchedule(startDay, endDay, startTime, endTime, tz, is24x7) }
+
+  const applyPreset = (preset) => {
+    if (preset === 'all_week') {
+      setIs24x7(false)
+      setStartDay('Mon')
+      setEndDay('Sun')
+      updateSchedule('Mon', 'Sun', startTime, endTime, timezone, false)
+    } else if (preset === 'weekdays') {
+      setIs24x7(false)
+      setStartDay('Mon')
+      setEndDay('Fri')
+      updateSchedule('Mon', 'Fri', startTime, endTime, timezone, false)
+    } else if (preset === '24x7') {
+      setIs24x7(true)
+      updateSchedule(startDay, endDay, startTime, endTime, timezone, true)
+    }
+  }
+
+  return (
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.02)',
+      border: '1px solid rgba(255, 255, 255, 0.08)',
+      borderRadius: 16,
+      padding: '20px 22px',
+      marginTop: 16,
+      marginBottom: 20
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <label style={{ fontSize: 13, fontWeight: 700, color: '#e5e7eb', display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
+            <span>📅 Support Operating Schedule & Calendar Hours</span>
+          </label>
+          <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0' }}>
+            Set operating days & calendar time schedule for café helpdesk.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setMode(m => m === 'calendar' ? 'custom' : 'calendar')}
+          style={{
+            background: 'rgba(124, 58, 237, 0.15)',
+            border: '1px solid rgba(124, 58, 237, 0.3)',
+            color: '#c4b5fd',
+            borderRadius: 8,
+            padding: '6px 12px',
+            fontSize: 12,
+            fontWeight: 600,
+            cursor: 'pointer'
+          }}
+        >
+          {mode === 'calendar' ? '✏️ Custom Text' : '📅 Calendar Mode'}
+        </button>
+      </div>
+
+      {mode === 'calendar' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Quick Presets */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => applyPreset('all_week')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: !is24x7 && startDay === 'Mon' && endDay === 'Sun' ? '#7c3aed' : 'rgba(255,255,255,0.05)',
+                color: '#fff',
+                border: '1px solid rgba(255,255,255,0.1)',
+                transition: 'all 0.15s'
+              }}
+            >
+              🗓️ Mon - Sun (All Week)
+            </button>
+            <button
+              type="button"
+              onClick={() => applyPreset('weekdays')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: !is24x7 && startDay === 'Mon' && endDay === 'Fri' ? '#7c3aed' : 'rgba(255,255,255,0.05)',
+                color: '#fff',
+                border: '1px solid rgba(255,255,255,0.1)',
+                transition: 'all 0.15s'
+              }}
+            >
+              💼 Mon - Fri (Weekdays)
+            </button>
+            <button
+              type="button"
+              onClick={() => applyPreset('24x7')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: is24x7 ? '#7c3aed' : 'rgba(255,255,255,0.05)',
+                color: '#fff',
+                border: '1px solid rgba(255,255,255,0.1)',
+                transition: 'all 0.15s'
+              }}
+            >
+              ⚡ 24/7 Always Active
+            </button>
+          </div>
+
+          {!is24x7 && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+              {/* Start Day */}
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', display: 'block', marginBottom: 6 }}>
+                  Start Day 📆
+                </label>
+                <select
+                  value={startDay}
+                  onChange={e => handleStartDay(e.target.value)}
+                  style={{ ...INPUT, cursor: 'pointer' }}
+                >
+                  {DAYS.map(d => (
+                    <option key={d.short} value={d.short} style={{ background: '#0f172a' }}>{d.full}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* End Day */}
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', display: 'block', marginBottom: 6 }}>
+                  End Day 📆
+                </label>
+                <select
+                  value={endDay}
+                  onChange={e => handleEndDay(e.target.value)}
+                  style={{ ...INPUT, cursor: 'pointer' }}
+                >
+                  {DAYS.map(d => (
+                    <option key={d.short} value={d.short} style={{ background: '#0f172a' }}>{d.full}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Opening Time Clock */}
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', display: 'block', marginBottom: 6 }}>
+                  Opening Time ⏰
+                </label>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={e => handleStartTime(e.target.value)}
+                  style={{ ...INPUT, cursor: 'pointer' }}
+                />
+              </div>
+
+              {/* Closing Time Clock */}
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', display: 'block', marginBottom: 6 }}>
+                  Closing Time ⏰
+                </label>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={e => handleEndTime(e.target.value)}
+                  style={{ ...INPUT, cursor: 'pointer' }}
+                />
+              </div>
+
+              {/* Timezone */}
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', display: 'block', marginBottom: 6 }}>
+                  Timezone / Region 🌐
+                </label>
+                <select
+                  value={timezone}
+                  onChange={e => handleTz(e.target.value)}
+                  style={{ ...INPUT, cursor: 'pointer' }}
+                >
+                  {TIMEZONES.map(tz => (
+                    <option key={tz.code} value={tz.code} style={{ background: '#0f172a' }}>{tz.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Formatted Live Preview */}
+          <div style={{
+            padding: '12px 16px',
+            borderRadius: 12,
+            background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(79, 70, 229, 0.08))',
+            border: '1px solid rgba(124, 58, 237, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 8
+          }}>
+            <div style={{ fontSize: 12, color: '#c4b5fd', fontWeight: 600 }}>
+              Live Support Schedule Preview:
+            </div>
+            <div style={{
+              fontSize: 13,
+              fontWeight: 800,
+              color: '#fff',
+              background: 'rgba(0,0,0,0.35)',
+              padding: '4px 12px',
+              borderRadius: 8,
+              fontFamily: 'monospace',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              {value || 'Mon - Sun, 9:00 AM - 10:00 PM IST'}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <InputField
+            label="Support Operating Hours (Custom Text)"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            helperText="Custom schedule string shown to café owners."
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
 const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState('general')
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     platformName: 'QRMenu SaaS',
     contactEmail: 'support@qrmenu.com',
+    supportPhone: '+91 98765 43210',
+    supportWhatsapp: '919876543210',
+    supportHours: 'Mon - Sun, 9:00 AM - 10:00 PM IST',
     trialDays: '14',
     maintenanceMode: false,
     requireEmailVerification: true,
@@ -89,6 +380,9 @@ const AdminSettings = () => {
         setForm({
           platformName: s.platform_name || 'QRMenu SaaS',
           contactEmail: s.contact_email || 'support@qrmenu.com',
+          supportPhone: s.support_phone || '+91 98765 43210',
+          supportWhatsapp: s.support_whatsapp || '919876543210',
+          supportHours: s.support_hours || 'Mon - Sun, 9:00 AM - 10:00 PM IST',
           trialDays: String(s.trial_days ?? 14),
           maintenanceMode: s.maintenance_mode || false,
           requireEmailVerification: true,
@@ -109,6 +403,9 @@ const AdminSettings = () => {
       await adminAPI.updateSettings({
         platform_name: form.platformName,
         contact_email: form.contactEmail,
+        support_phone: form.supportPhone,
+        support_whatsapp: form.supportWhatsapp,
+        support_hours: form.supportHours,
         trial_days: Number(form.trialDays),
         payment_live_mode: form.stripeLiveMode,
         currency: form.currency,
@@ -184,8 +481,20 @@ const AdminSettings = () => {
               <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>General Settings</h2>
               
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
-                <InputField label="Platform Name" value={form.platformName} onChange={e => set(e.target.value)} helperText="Appears in emails and dashboard headers." />
-                <InputField label="Support Email" type="email" value={form.contactEmail} onChange={e => set(e.target.value)} helperText="Contact address for café owners." />
+                <InputField label="Platform Name" value={form.platformName} onChange={e => set('platformName', e.target.value)} helperText="Appears in emails and dashboard headers." />
+                <InputField label="Support Email" type="email" value={form.contactEmail} onChange={e => set('contactEmail', e.target.value)} helperText="Primary email for receiving ticket alerts." />
+              </div>
+
+              <div style={{ marginTop: 20 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: '#9ca3af', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>🎧 Owner Support Channels</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
+                  <InputField label="Support WhatsApp Number" value={form.supportWhatsapp} onChange={e => set('supportWhatsapp', e.target.value)} helperText="Digits with country code (e.g. 919876543210 for wa.me)." />
+                  <InputField label="Support Phone / Helpline" value={form.supportPhone} onChange={e => set('supportPhone', e.target.value)} helperText="Shown on the Help & Support page." />
+                </div>
+                <ScheduleHoursPicker
+                  value={form.supportHours}
+                  onChange={val => set('supportHours', val)}
+                />
               </div>
 
               <div style={{ marginTop: 20 }}>

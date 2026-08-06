@@ -309,6 +309,21 @@ const register = async (req, res, next) => {
 
     await Subscription.create(subscriptionData);
 
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        io.to('admin-room').emit('new-cafe-registered', {
+          id: cafe._id,
+          name: cafe.name,
+          email: cafe.email,
+          plan: plan_name || 'free',
+          created_at: cafe.createdAt
+        });
+      }
+    } catch (sockErr) {
+      console.warn('Socket notification error on register:', sockErr.message);
+    }
+
     const token = generateToken(cafe._id, 'owner');
 
     res.status(201).json({

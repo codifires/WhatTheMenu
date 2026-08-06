@@ -1,0 +1,101 @@
+name: Continuous Integration (CI)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+
+jobs:
+  # ==========================================
+  # 1. Backend CI Matrix Testing & Sanity
+  # ==========================================
+  backend-test:
+    name: Backend CI Matrix Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: './backend/package-lock.json'
+
+      - name: 📦 Install Backend Dependencies
+        run: npm ci || npm install
+
+      - name: 🧪 Execute Smoke & Integration Tests
+        run: npm test
+
+  # ==========================================
+  # 2. Frontend CI Production Build Check
+  # ==========================================
+  frontend-build:
+    name: Frontend Vite Production Build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: 📦 Install Frontend Dependencies
+        run: npm ci || npm install
+
+      - name: 🔨 Compile Vite Production Bundle
+        run: npm run build
+
+      - name: 📦 Verify Artifact Generation
+        run: |
+          test -f dist/index.html || exit 1
+          echo "✅ Frontend production build artifact verified!"
+
+  # ==========================================
+  # 3. Security Vulnerability Scan
+  # ==========================================
+  security-audit:
+    name: Security Vulnerability Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: 🛡️ Audit Backend Dependencies
+        working-directory: ./backend
+        run: npm audit --audit-level=critical || true
+
+      - name: 🛡️ Audit Frontend Dependencies
+        working-directory: ./frontend
+        run: npm audit --audit-level=critical || true

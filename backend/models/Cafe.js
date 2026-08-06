@@ -19,12 +19,12 @@ const cafeSchema = new mongoose.Schema({
   },
   address: {
     type: String,
-    required: [true, 'Address is required'],
+    default: '',
     trim: true
   },
   phone: {
     type: String,
-    required: [true, 'Phone number is required'],
+    default: '',
     trim: true
   },
   email: {

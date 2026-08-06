@@ -858,7 +858,7 @@ const handleSubscriptionWebhook = async (req, res, next) => {
         });
       }
 
-      await cafe.save();
+      await cafe.save({ validateBeforeSave: false });
 
       // Real-time notifications
       if (io) {

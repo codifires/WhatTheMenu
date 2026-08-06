@@ -45,6 +45,18 @@ const settingsSchema = new mongoose.Schema({
     type: String,
     default: 'support@qrmenu.com'
   },
+  support_phone: {
+    type: String,
+    default: '+91 98765 43210'
+  },
+  support_whatsapp: {
+    type: String,
+    default: '919876543210'
+  },
+  support_hours: {
+    type: String,
+    default: 'Mon - Sun, 9:00 AM - 10:00 PM IST'
+  },
   maintenance_mode: {
     type: Boolean,
     default: false

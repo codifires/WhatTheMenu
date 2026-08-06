@@ -9,6 +9,7 @@ const QRCode = require('../models/QRCode');
 const SubscriptionRequest = require('../models/SubscriptionRequest');
 const Settings = require('../models/Settings');
 const GlobalMedia = require('../models/GlobalMedia');
+const SupportTicket = require('../models/SupportTicket');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
 const { welcomeTemplate, emailChangeOldTemplate, emailChangeNewTemplate } = require('../utils/emailTemplates');
@@ -104,6 +105,12 @@ const getDashboard = async (req, res, next) => {
       .select('name email subscription_status created_at');
 
     const pendingRequests = await SubscriptionRequest.countDocuments({ status: 'pending' });
+    const openTickets = await SupportTicket.countDocuments({ status: 'open' });
+    const urgentTickets = await SupportTicket.countDocuments({ priority: 'urgent', status: { $in: ['open', 'in_progress'] } });
+    const recentTickets = await SupportTicket.find()
+      .sort({ created_at: -1 })
+      .limit(5)
+      .populate('cafe_id', 'name email subscription_status subscription');
 
     res.json({
       success: true,
@@ -117,7 +124,10 @@ const getDashboard = async (req, res, next) => {
         revenueHistory,
         dailyRevenueHistory,
         recentCafes,
-        pendingRequests
+        pendingRequests,
+        openTickets,
+        urgentTickets,
+        recentTickets
       }
     });
   } catch (error) {
@@ -538,7 +548,7 @@ const approveSubscriptionRequest = async (req, res, next) => {
         plan_name: request.plan_name,
         duration_days: 30
       };
-      await cafe.save();
+      await cafe.save({ validateBeforeSave: false });
     } else {
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + 30); // 30 day subscription
@@ -552,7 +562,7 @@ const approveSubscriptionRequest = async (req, res, next) => {
         status: 'active'
       };
       cafe.upcoming_subscription = undefined;
-      await cafe.save();
+      await cafe.save({ validateBeforeSave: false });
 
       // Update or create active subscription
       await Subscription.findOneAndUpdate(
@@ -617,7 +627,7 @@ const getSettings = async (req, res, next) => {
 // @route   PUT /api/admin/settings
 const updateSettings = async (req, res, next) => {
   try {
-    const { trial_days, currency, tax_rate, payment_live_mode, platform_name, contact_email, admin_upi_id, starter_price, pro_price, maintenance_mode, starter_features, pro_features } = req.body;
+    const { trial_days, currency, tax_rate, payment_live_mode, platform_name, contact_email, support_phone, support_whatsapp, support_hours, admin_upi_id, starter_price, pro_price, maintenance_mode, starter_features, pro_features } = req.body;
     const settings = await Settings.getSettings();
 
     if (trial_days !== undefined) settings.trial_days = Number(trial_days);
@@ -626,6 +636,9 @@ const updateSettings = async (req, res, next) => {
     if (payment_live_mode !== undefined) settings.payment_live_mode = payment_live_mode;
     if (platform_name) settings.platform_name = platform_name;
     if (contact_email) settings.contact_email = contact_email;
+    if (support_phone) settings.support_phone = support_phone;
+    if (support_whatsapp) settings.support_whatsapp = support_whatsapp;
+    if (support_hours) settings.support_hours = support_hours;
     if (admin_upi_id) settings.admin_upi_id = admin_upi_id;
     if (starter_price !== undefined) settings.starter_price = Number(starter_price);
     if (pro_price !== undefined) settings.pro_price = Number(pro_price);

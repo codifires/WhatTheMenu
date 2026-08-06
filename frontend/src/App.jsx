@@ -26,6 +26,7 @@ const RevenueManagement = lazy(() => import('./pages/admin/RevenueManagement'))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'))
 const AdminMediaLibrary = lazy(() => import('./pages/admin/AdminMediaLibrary'))
 const PlanServicesManagement = lazy(() => import('./pages/admin/PlanServicesManagement'))
+const SupportTicketManagement = lazy(() => import('./pages/admin/SupportTicketManagement'))
 
 // Lazy loaded Owner Pages
 const OwnerDashboard = lazy(() => import('./pages/owner/OwnerDashboard'))
@@ -39,6 +40,7 @@ const QRCodePage = lazy(() => import('./pages/owner/QRCodePage'))
 const FeedbackPage = lazy(() => import('./pages/owner/FeedbackPage'))
 const OwnerSettings = lazy(() => import('./pages/owner/OwnerSettings'))
 const OwnerSubscription = lazy(() => import('./pages/owner/OwnerSubscription'))
+const OwnerSupport = lazy(() => import('./pages/owner/OwnerSupport'))
 
 // Lazy loaded Customer Pages (CRITICAL for fast QR loads)
 const CustomerMenu = lazy(() => import('./pages/customer/CustomerMenu'))
@@ -154,6 +156,11 @@ function App() {
             <AdminLayout><AdminMediaLibrary /></AdminLayout>
           </ProtectedRoute>
         } />
+        <Route path="/admin/support" element={
+          <ProtectedRoute role="superadmin">
+            <AdminLayout><SupportTicketManagement /></AdminLayout>
+          </ProtectedRoute>
+        } />
 
         {/* Café Owner Routes */}
         <Route path="/owner" element={
@@ -209,6 +216,11 @@ function App() {
         <Route path="/owner/subscription" element={
           <ProtectedRoute role="owner">
             <OwnerLayout><OwnerSubscription /></OwnerLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/owner/support" element={
+          <ProtectedRoute role="owner">
+            <OwnerLayout><OwnerSupport /></OwnerLayout>
           </ProtectedRoute>
         } />
 

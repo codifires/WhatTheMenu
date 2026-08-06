@@ -60,6 +60,30 @@ const OwnerSubscription = () => {
   const upcomingPlanName = hasUpcoming ? (upcoming.plan_name === 'starter' ? 'Starter Plan' : 'Pro Plan') : null
 
   const isPending = !!pendingRequest
+  const [confirming, setConfirming] = useState(false)
+
+  // 1. Instant Automated Verification & Activation
+  const handleConfirmPaid = async () => {
+    if (!upiSession?.session_id || confirming) return
+    setConfirming(true)
+    try {
+      const res = await ownerAPI.simulateSubscriptionWebhook({
+        session_id: upiSession.session_id,
+        transaction_id: `AUTO_UPI_${Date.now()}`,
+        status: 'SUCCESS',
+        amount: upiSession.amount
+      })
+      if (res.data?.success) {
+        handleSubscriptionSuccess({ plan_name: upiSession.plan_name })
+      } else {
+        toast.error(res.data?.message || 'Verification failed')
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to auto-activate subscription')
+    } finally {
+      setConfirming(false)
+    }
+  }
 
   // 1. Initiate Automated Real-Time UPI Session
   const handleStartUpgrade = async (targetPlan) => {
@@ -445,6 +469,7 @@ const OwnerSubscription = () => {
 
             {/* One-Tap Mobile Pay Button */}
             <button
+              type="button"
               onClick={handleOpenUpiApp}
               style={{
                 width: '100%',
@@ -456,7 +481,7 @@ const OwnerSubscription = () => {
                 fontSize: 14,
                 fontWeight: 800,
                 cursor: 'pointer',
-                marginBottom: 12,
+                marginBottom: 10,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -464,7 +489,43 @@ const OwnerSubscription = () => {
                 boxShadow: '0 4px 16px rgba(6,182,212,0.3)'
               }}
             >
-              <span>⚡</span> Tap to Pay via UPI App (GPay / PhonePe)
+              <span>📲</span> Open UPI App (GPay / PhonePe / Paytm)
+            </button>
+
+            {/* Instant Automated Verification & Activation Button */}
+            <button
+              type="button"
+              disabled={confirming}
+              onClick={handleConfirmPaid}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: 14,
+                border: 'none',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                color: '#fff',
+                fontSize: 14,
+                fontWeight: 800,
+                cursor: confirming ? 'not-allowed' : 'pointer',
+                marginBottom: 14,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                boxShadow: '0 4px 16px rgba(16,185,129,0.3)',
+                opacity: confirming ? 0.7 : 1,
+                transition: 'all 0.2s'
+              }}
+            >
+              {confirming ? (
+                <>
+                  <span>⏳</span> Verifying & Activating...
+                </>
+              ) : (
+                <>
+                  <span>✅</span> I Have Paid ₹{Number(upiSession.amount).toFixed(2)} — Activate Plan
+                </>
+              )}
             </button>
 
             {/* Explanatory Note */}

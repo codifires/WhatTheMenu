@@ -59,6 +59,17 @@ const STAT_DEFS = [
     trend: 'Active',
     trendUp: true,
   },
+  {
+    key: 'openTickets',
+    label: 'Open Support Tickets',
+    icon: '🎧',
+    bg: 'rgba(56,189,248,0.06)',
+    border: 'rgba(56,189,248,0.25)',
+    glow: 'rgba(56,189,248,0.1)',
+    accent: '#38bdf8',
+    trend: 'Live Tickets',
+    trendUp: true,
+  },
 ]
 
 function StatCard({ def, value, index }) {
@@ -222,8 +233,8 @@ const AdminDashboard = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               {[
                 { to: '/admin/cafes', icon: '🏪', label: 'Add New Café', color: '#7c3aed', bg: 'rgba(124,58,237,0.1)', border: 'rgba(124,58,237,0.2)' },
+                { to: '/admin/support', icon: '🎧', label: 'Support Queue', color: '#38bdf8', bg: 'rgba(56,189,248,0.08)', border: 'rgba(56,189,248,0.2)' },
                 { to: '/admin/subscriptions', icon: '💳', label: 'Manage Plans', color: '#34d399', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)' },
-                { to: '/admin/cafes', icon: '🔍', label: 'Search Cafés', color: '#818cf8', bg: 'rgba(99,102,241,0.08)', border: 'rgba(99,102,241,0.2)' },
                 { to: '/admin/settings', icon: '⚙️', label: 'Settings', color: '#fbbf24', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)' },
               ].map(a => (
                 <Link key={a.to + a.label} to={a.to} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '16px 8px', borderRadius: 14, background: a.bg, border: `1px solid ${a.border}`, textDecoration: 'none', transition: 'transform 0.2s, opacity 0.2s' }}
@@ -259,6 +270,71 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* ─── Recent Support Tickets (Top Priority Queue) ─── */}
+      {stats?.recentTickets?.length > 0 && (
+        <div style={{ borderRadius: 20, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(56,189,248,0.2)', overflow: 'hidden', marginBottom: 28, boxShadow: '0 4px 24px rgba(56,189,248,0.06)' }}>
+          <div style={{ padding: '18px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(56,189,248,0.03)' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 18 }}>🎧</span>
+                <h2 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: '#fff' }}>Recent Support Inquiries</h2>
+                {stats?.urgentTickets > 0 && (
+                  <span style={{ fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 20, background: 'rgba(239,68,68,0.2)', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
+                    ⚡ {stats.urgentTickets} Urgent
+                  </span>
+                )}
+              </div>
+              <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0' }}>Latest issues reported by café owners requiring review</p>
+            </div>
+            <Link to="/admin/support" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#38bdf8', textDecoration: 'none', padding: '8px 16px', borderRadius: 10, background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.25)' }}>
+              Open Support Queue →
+            </Link>
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  {['Ticket ID', 'Café', 'Subject', 'Priority', 'Status', 'Action'].map(h => (
+                    <th key={h} style={{ padding: '12px 20px', fontSize: 11, fontWeight: 700, color: '#4b5563', textAlign: 'left', letterSpacing: 1, textTransform: 'uppercase' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {stats.recentTickets.map(t => (
+                  <tr key={t._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <td style={{ padding: '12px 20px', fontWeight: 800, fontFamily: 'monospace', color: '#60a5fa', fontSize: 12 }}>
+                      {t.ticket_number}
+                    </td>
+                    <td style={{ padding: '12px 20px', fontSize: 13, fontWeight: 600, color: '#fff' }}>
+                      {t.cafe_id?.name || 'Café'}
+                    </td>
+                    <td style={{ padding: '12px 20px', fontSize: 13, color: '#cbd5e1', maxWidth: 260, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {t.subject}
+                    </td>
+                    <td style={{ padding: '12px 20px' }}>
+                      <span style={{ fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 6, background: t.priority === 'urgent' ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.05)', color: t.priority === 'urgent' ? '#f87171' : '#94a3b8' }}>
+                        {t.priority === 'urgent' ? '⚡ Urgent' : 'Standard'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 20px' }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 12, textTransform: 'capitalize', background: t.status === 'open' ? 'rgba(56,189,248,0.15)' : 'rgba(16,185,129,0.15)', color: t.status === 'open' ? '#38bdf8' : '#34d399' }}>
+                        {t.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 20px' }}>
+                      <Link to="/admin/support" style={{ fontSize: 12, fontWeight: 700, color: '#38bdf8', textDecoration: 'none' }}>
+                        Respond →
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* ─── Recent Table (Full width) ─── */}
       <div style={{ borderRadius: 20, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>

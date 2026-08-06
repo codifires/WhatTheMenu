@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 1. MongoDB Database Container
+  # ==========================================
+  mongo:
+    image: mongo:7.0
+    container_name: qr_menu_db
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: QR_System
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - qr_network
+
+  # ==========================================
+  # 2. Backend API Service
+  # ==========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: qr_menu_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://mongo:27017/QR_System
+      - JWT_SECRET=qr_menu_saas_jwt_secret_key_production_2024
+      - JWT_EXPIRE=7d
+      - NODE_ENV=production
+      - FRONTEND_URL=http://localhost:80
+    depends_on:
+      - mongo
+    networks:
+      - qr_network
+
+  # ==========================================
+  # 3. Frontend Web Client Service
+  # ==========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: qr_menu_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - qr_network
+
+volumes:
+  mongo_data:
+    driver: local
+
+networks:
+  qr_network:
+    driver: bridge
