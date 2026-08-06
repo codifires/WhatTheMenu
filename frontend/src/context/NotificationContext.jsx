@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { io } from 'socket.io-client'
 import toast from 'react-hot-toast'
 import { useAuth } from './AuthContext'
-import { adminAPI, ownerAPI } from '../services/api'
+import { adminAPI, ownerAPI, SOCKET_URL } from '../services/api'
 
 const NotificationContext = createContext(null)
 
@@ -319,7 +319,7 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (!user) return
 
-    const socket = io(window.location.origin, {
+    const socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5
     })

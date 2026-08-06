@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
-import { customerAPI } from '../../services/api'
+import { customerAPI, SOCKET_URL } from '../../services/api'
 import { io } from 'socket.io-client'
 import toast from 'react-hot-toast'
 
@@ -38,7 +38,7 @@ const OrderTracking = () => {
 
   useEffect(() => {
     if (!order) return
-    const socket = io(window.location.origin)
+    const socket = io(SOCKET_URL)
     socket.emit('track-order', order.order_number)
     socket.on('order-status-update', (data) => {
       if (data.order_number === order.order_number) {

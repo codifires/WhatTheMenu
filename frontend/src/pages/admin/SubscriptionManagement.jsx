@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { adminAPI, publicAPI } from '../../services/api'
+import { adminAPI, publicAPI, SOCKET_URL } from '../../services/api'
 import toast from 'react-hot-toast'
 import { io } from 'socket.io-client'
 
@@ -25,7 +25,7 @@ const SubscriptionManagement = () => {
     fetchRequests()
     fetchPrices()
 
-    const socket = io(window.location.origin)
+    const socket = io(SOCKET_URL)
     socket.emit('join-admin')
 
     socket.on('new-subscription-revenue', (data) => {

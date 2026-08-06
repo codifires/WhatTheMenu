@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ownerAPI } from '../../services/api'
+import { ownerAPI, SOCKET_URL } from '../../services/api'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 import { io } from 'socket.io-client'
@@ -24,7 +24,7 @@ const OrderManagement = () => {
   useEffect(() => { fetchOrders() }, [filter])
 
   useEffect(() => {
-    const socket = io(window.location.origin)
+    const socket = io(SOCKET_URL)
     socket.emit('join-cafe', user?.id)
     socket.on('new-order', (order) => {
       if (order.payment_status === 'received' || order.payment_status === 'completed' || order.payment_method === 'cash') {

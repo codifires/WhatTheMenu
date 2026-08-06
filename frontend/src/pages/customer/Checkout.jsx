@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
-import { customerAPI } from '../../services/api'
+import { customerAPI, SOCKET_URL } from '../../services/api'
 import { io } from 'socket.io-client'
 import toast from 'react-hot-toast'
 import QRCode from 'react-qr-code'
@@ -122,7 +122,7 @@ const Checkout = () => {
   useEffect(() => {
     if (!showUpiModal || !upiSession?.session_id) return
 
-    const socket = io(window.location.origin)
+    const socket = io(SOCKET_URL)
     socket.emit('join-payment-session', upiSession.session_id)
 
     // Listen for instant server-detected payment webhook event

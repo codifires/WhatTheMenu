@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { ownerAPI, publicAPI } from '../../services/api'
+import { ownerAPI, publicAPI, SOCKET_URL } from '../../services/api'
 import toast from 'react-hot-toast'
 import QRCode from 'react-qr-code'
 import { io } from 'socket.io-client'
@@ -132,7 +132,7 @@ const OwnerSubscription = () => {
   useEffect(() => {
     if (!showUpgradeModal || !upiSession?.session_id) return
 
-    const socket = io(window.location.origin)
+    const socket = io(SOCKET_URL)
     socket.emit('join-payment-session', upiSession.session_id)
 
     // Real-time server webhook event
