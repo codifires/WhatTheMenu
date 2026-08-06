@@ -767,7 +767,9 @@ const initiateSubscriptionSession = async (req, res, next) => {
     }
 
     const planDisplay = plan_name === 'pro' ? 'Pro Plan' : 'Starter Plan';
-    const upiString = `upi://pay?pa=${encodeURIComponent(adminUpiId.trim())}&pn=${encodeURIComponent(platformName.trim())}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Upgrade ${planDisplay} - ${cafe.name}`)}&tr=${sessionId}`;
+    const cleanPlatform = (platformName || 'QR Menu').replace(/&/g, 'and').replace(/[^a-zA-Z0-9\s-]/g, '').trim().substring(0, 25);
+    const cleanNote = `Upgrade ${planDisplay}`.trim().substring(0, 30);
+    const upiString = `upi://pay?pa=${encodeURIComponent(adminUpiId.trim())}&pn=${encodeURIComponent(cleanPlatform)}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(cleanNote)}&tr=${sessionId}`;
 
     res.status(201).json({
       success: true,

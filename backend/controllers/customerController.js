@@ -178,7 +178,9 @@ const placeOrder = async (req, res, next) => {
     // Build standard NPCI Direct UPI Deep-Link
     let upiString = '';
     if (cafe.upi_id) {
-      upiString = `upi://pay?pa=${encodeURIComponent(cafe.upi_id.trim())}&pn=${encodeURIComponent(cafe.name.trim())}&am=${finalTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Order ${tokenNumber} - ${cafe.name}`)}&tr=ORD_${order.order_number}`;
+      const cleanCafeName = (cafe.name || 'Cafe').replace(/&/g, 'and').replace(/[^a-zA-Z0-9\s-]/g, '').trim().substring(0, 25);
+      const cleanNote = `Order ${tokenNumber} ${cleanCafeName}`.trim().substring(0, 30);
+      upiString = `upi://pay?pa=${encodeURIComponent(cafe.upi_id.trim())}&pn=${encodeURIComponent(cleanCafeName)}&am=${finalTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent(cleanNote)}&tr=ORD_${order.order_number}`;
     }
 
     // Note: OrderRevenue is strictly populated ONLY when payment_status is confirmed 'received' via webhook or manual verification.
@@ -335,7 +337,9 @@ const initiateUpiSession = async (req, res, next) => {
       notes: notes || ''
     });
 
-    const upiString = `upi://pay?pa=${encodeURIComponent(cafe.upi_id.trim())}&pn=${encodeURIComponent(cafe.name.trim())}&am=${finalTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Order ${order.order_number} - ${cafe.name}`)}&tr=${sessionId}`;
+    const cleanCafeName = (cafe.name || 'Cafe').replace(/&/g, 'and').replace(/[^a-zA-Z0-9\s-]/g, '').trim().substring(0, 25);
+    const cleanNote = `Order ${order.order_number} ${cleanCafeName}`.trim().substring(0, 30);
+    const upiString = `upi://pay?pa=${encodeURIComponent(cafe.upi_id.trim())}&pn=${encodeURIComponent(cleanCafeName)}&am=${finalTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent(cleanNote)}&tr=${sessionId}`;
 
     res.status(201).json({
       success: true,
