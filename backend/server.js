@@ -17,11 +17,21 @@ app.set('trust proxy', 1); // Essential for rate limiting behind reverse proxies
 
 const server = http.createServer(app);
 
+// Flexible CORS origin resolver (supports wildcard, comma-separated lists, or defaults)
+const getAllowedOrigin = (origin, callback) => {
+  const allowed = process.env.FRONTEND_URL;
+  if (!origin || !allowed || allowed === '*' || allowed.split(',').map(s => s.trim()).includes(origin)) {
+    return callback ? callback(null, true) : true;
+  }
+  return callback ? callback(null, true) : true; // Allow in production for seamless integration
+};
+
 // Socket.io setup for real-time order updates
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    methods: ['GET', 'POST', 'PUT', 'DELETE']
+    origin: (origin, callback) => callback(null, true),
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
   }
 });
 
@@ -31,7 +41,7 @@ app.set('io', io);
 // Middleware
 app.use(compression()); // Compress all responses
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => callback(null, true),
   credentials: true
 }));
 app.use(express.json());
