@@ -540,6 +540,35 @@ const Checkout = () => {
               </div>
             </div>
 
+            {/* ── Real Customer: I Have Paid Confirmation Button ── */}
+            <div style={{ marginBottom: 10 }}>
+              <button
+                type="button"
+                disabled={simulating}
+                onClick={handleSimulatePayment}
+                style={{
+                  width: '100%',
+                  padding: '13px 16px',
+                  borderRadius: 14,
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: '#fff',
+                  fontSize: 14,
+                  fontWeight: 800,
+                  cursor: simulating ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  boxShadow: '0 4px 16px rgba(16,185,129,0.3)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <CheckCircle2 size={18} />
+                <span>{simulating ? 'Confirming Payment...' : '✅ I Have Paid (Confirm Order)'}</span>
+              </button>
+            </div>
+
             {/* ── TEST / DEMO PAYMENT BUTTON ── */}
             <button
               type="button"
@@ -547,12 +576,12 @@ const Checkout = () => {
               onClick={handleSimulatePayment}
               style={{
                 width: '100%',
-                padding: '11px 14px',
-                borderRadius: 12,
+                padding: '9px 12px',
+                borderRadius: 10,
                 border: '1px dashed rgba(245,158,11,0.4)',
-                background: 'rgba(245,158,11,0.08)',
+                background: 'rgba(245,158,11,0.06)',
                 color: '#fbbf24',
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 700,
                 cursor: simulating ? 'not-allowed' : 'pointer',
                 display: 'flex',
@@ -561,11 +590,11 @@ const Checkout = () => {
                 gap: 6,
                 transition: 'all 0.2s'
               }}
-              onMouseEnter={e => { if(!simulating) e.currentTarget.style.background='rgba(245,158,11,0.14)' }}
-              onMouseLeave={e => { e.currentTarget.style.background='rgba(245,158,11,0.08)' }}
+              onMouseEnter={e => { if(!simulating) e.currentTarget.style.background='rgba(245,158,11,0.12)' }}
+              onMouseLeave={e => { e.currentTarget.style.background='rgba(245,158,11,0.06)' }}
             >
-              <Sparkles size={14} />
-              <span>{simulating ? 'Processing Test...' : '⚡ Test Mode: Instant Complete Payment (Demo)'}</span>
+              <Sparkles size={13} />
+              <span>⚡ Test Mode: Instant Demo Confirmation</span>
             </button>
 
           </div>
