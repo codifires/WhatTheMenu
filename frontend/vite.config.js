@@ -10,25 +10,12 @@ export default defineConfig({
   build: {
     target: 'esnext',
     cssCodeSplit: true,
-    minify: 'esbuild',
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
-              return 'vendor-react';
-            }
-            if (id.includes('recharts') || id.includes('d3')) {
-              return 'vendor-charts';
-            }
-            if (id.includes('lucide-react') || id.includes('framer-motion')) {
-              return 'vendor-ui';
-            }
-            if (id.includes('axios') || id.includes('socket.io-client')) {
-              return 'vendor-network';
-            }
-            return 'vendor-misc';
-          }
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-icons': ['lucide-react', 'react-icons'],
+          'vendor-network': ['axios', 'socket.io-client']
         }
       }
     }

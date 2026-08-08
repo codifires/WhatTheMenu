@@ -45,7 +45,7 @@ jobs:
 
       - name: 📦 Install Frontend Dependencies
         working-directory: ./frontend
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: 🔨 Compile Vite Production Bundle
         working-directory: ./frontend
