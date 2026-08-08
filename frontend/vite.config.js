@@ -8,16 +8,26 @@ export default defineConfig({
     tailwindcss(),
   ],
   build: {
+    target: 'esnext',
+    cssCodeSplit: true,
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
-              return 'vendor';
+              return 'vendor-react';
+            }
+            if (id.includes('recharts') || id.includes('d3')) {
+              return 'vendor-charts';
             }
             if (id.includes('lucide-react') || id.includes('framer-motion')) {
-              return 'ui';
+              return 'vendor-ui';
             }
+            if (id.includes('axios') || id.includes('socket.io-client')) {
+              return 'vendor-network';
+            }
+            return 'vendor-misc';
           }
         }
       }

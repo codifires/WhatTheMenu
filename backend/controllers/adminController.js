@@ -18,99 +18,62 @@ const { welcomeTemplate, emailChangeOldTemplate, emailChangeNewTemplate } = requ
 // @route   GET /api/admin/dashboard
 const getDashboard = async (req, res, next) => {
   try {
-    const totalCafes = await Cafe.countDocuments();
-    const activePlans = await Subscription.countDocuments({ status: 'active' });
-    const expiredPlans = await Subscription.countDocuments({ status: 'expired' });
-    const suspendedCafes = await Cafe.countDocuments({ subscription_status: 'suspended' });
-
-    // Monthly revenue from subscriptions
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthlyRevenue = await Subscription.aggregate([
-      {
-        $match: {
-          status: 'active'
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$price' }
-        }
-      }
-    ]);
-
-    const monthlyCashCollected = await SubscriptionHistory.aggregate([
-      {
-        $match: {
-          created_at: { $gte: startOfMonth }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$price' }
-        }
-      }
-    ]);
 
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     sixMonthsAgo.setDate(1);
     sixMonthsAgo.setHours(0, 0, 0, 0);
 
-    const revenueHistory = await SubscriptionHistory.aggregate([
-      {
-        $match: {
-          created_at: { $gte: sixMonthsAgo }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: "$created_at" },
-            month: { $month: "$created_at" }
-          },
-          total: { $sum: "$price" }
-        }
-      },
-      {
-        $sort: { "_id.year": -1, "_id.month": -1 }
-      }
-    ]);
-
-    // Daily revenue from subscriptions (last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     thirtyDaysAgo.setHours(0, 0, 0, 0);
 
-    const dailyRevenueHistory = await SubscriptionHistory.aggregate([
-      { $match: { created_at: { $gte: thirtyDaysAgo } } },
-      {
-        $group: {
-          _id: {
-            year: { $year: "$created_at" },
-            month: { $month: "$created_at" },
-            day: { $dayOfMonth: "$created_at" }
-          },
-          total: { $sum: "$price" }
-        }
-      },
-      { $sort: { "_id.year": -1, "_id.month": -1, "_id.day": -1 } }
+    // Parallel fetch all admin metrics in 1 shot
+    const [
+      totalCafes,
+      activePlans,
+      expiredPlans,
+      suspendedCafes,
+      monthlyRevenue,
+      monthlyCashCollected,
+      revenueHistory,
+      dailyRevenueHistory,
+      recentCafes,
+      pendingRequests,
+      openTickets,
+      urgentTickets,
+      recentTickets
+    ] = await Promise.all([
+      Cafe.countDocuments(),
+      Subscription.countDocuments({ status: 'active' }),
+      Subscription.countDocuments({ status: 'expired' }),
+      Cafe.countDocuments({ subscription_status: 'suspended' }),
+      Subscription.aggregate([
+        { $match: { status: 'active' } },
+        { $group: { _id: null, total: { $sum: '$price' } } }
+      ]),
+      SubscriptionHistory.aggregate([
+        { $match: { created_at: { $gte: startOfMonth } } },
+        { $group: { _id: null, total: { $sum: '$price' } } }
+      ]),
+      SubscriptionHistory.aggregate([
+        { $match: { created_at: { $gte: sixMonthsAgo } } },
+        { $group: { _id: { year: { $year: "$created_at" }, month: { $month: "$created_at" } }, total: { $sum: "$price" } } },
+        { $sort: { "_id.year": -1, "_id.month": -1 } }
+      ]),
+      SubscriptionHistory.aggregate([
+        { $match: { created_at: { $gte: thirtyDaysAgo } } },
+        { $group: { _id: { year: { $year: "$created_at" }, month: { $month: "$created_at" }, day: { $dayOfMonth: "$created_at" } }, total: { $sum: "$price" } } },
+        { $sort: { "_id.year": -1, "_id.month": -1, "_id.day": -1 } }
+      ]),
+      Cafe.find().sort({ created_at: -1 }).limit(5).select('name email subscription_status created_at').lean(),
+      SubscriptionRequest.countDocuments({ status: 'pending' }),
+      SupportTicket.countDocuments({ status: 'open' }),
+      SupportTicket.countDocuments({ priority: 'urgent', status: { $in: ['open', 'in_progress'] } }),
+      SupportTicket.find().populate('cafe_id', 'name email').sort({ created_at: -1 }).limit(5).lean()
     ]);
-
-    const recentCafes = await Cafe.find()
-      .sort({ created_at: -1 })
-      .limit(5)
-      .select('name email subscription_status created_at');
-
-    const pendingRequests = await SubscriptionRequest.countDocuments({ status: 'pending' });
-    const openTickets = await SupportTicket.countDocuments({ status: 'open' });
-    const urgentTickets = await SupportTicket.countDocuments({ priority: 'urgent', status: { $in: ['open', 'in_progress'] } });
-    const recentTickets = await SupportTicket.find()
-      .sort({ created_at: -1 })
-      .limit(5)
-      .populate('cafe_id', 'name email subscription_status subscription');
 
     res.json({
       success: true,

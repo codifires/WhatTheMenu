@@ -5,12 +5,13 @@ const Order = require('../models/Order');
 const OrderRevenue = require('../models/OrderRevenue');
 const Feedback = require('../models/Feedback');
 
-
-// @desc    Get café info and full menu
+// @desc    Get café info and full menu (Optimized with parallel queries + lean)
 // @route   GET /api/menu/:cafeId
 const getCafeMenu = async (req, res, next) => {
   try {
-    const cafe = await Cafe.findById(req.params.cafeId).select('-password -email');
+    const cafe = await Cafe.findById(req.params.cafeId)
+      .select('name logo address phone upi_id upi_qr tax_percentage subscription_status')
+      .lean();
 
     if (!cafe) {
       return res.status(404).json({ success: false, message: 'Café not found' });
@@ -23,22 +24,23 @@ const getCafeMenu = async (req, res, next) => {
       });
     }
 
-    const categories = await Category.find({
-      cafe_id: cafe._id,
-      is_active: true
-    }).sort({ sort_order: 1 });
+    // Parallel fetch categories and menu items
+    const [categories, menuItems] = await Promise.all([
+      Category.find({ cafe_id: cafe._id, is_active: true })
+        .sort({ sort_order: 1 })
+        .select('name sort_order')
+        .lean(),
+      MenuItem.find({ cafe_id: cafe._id, availability: true })
+        .populate('category_id', 'name')
+        .lean()
+    ]);
 
-    const menuItems = await MenuItem.find({
-      cafe_id: cafe._id,
-      availability: true
-    }).populate('category_id', 'name');
-
-    // Group items by category
+    // Group items by category in memory
     const menuByCategory = categories.map(cat => ({
       _id: cat._id,
       name: cat.name,
       items: menuItems.filter(
-        item => item.category_id._id.toString() === cat._id.toString()
+        item => item.category_id && (item.category_id._id || item.category_id).toString() === cat._id.toString()
       )
     }));
 
@@ -64,7 +66,7 @@ const getCafeMenu = async (req, res, next) => {
   }
 };
 
-// @desc    Search menu items
+// @desc    Search menu items (Optimized with lean)
 // @route   GET /api/menu/:cafeId/search
 const searchMenu = async (req, res, next) => {
   try {
@@ -80,7 +82,7 @@ const searchMenu = async (req, res, next) => {
         { name: { $regex: q, $options: 'i' } },
         { description: { $regex: q, $options: 'i' } }
       ]
-    }).populate('category_id', 'name');
+    }).populate('category_id', 'name').lean();
 
     res.json({ success: true, data: items });
   } catch (error) {
@@ -88,7 +90,7 @@ const searchMenu = async (req, res, next) => {
   }
 };
 
-// @desc    Place a new order
+// @desc    Place a new order (Optimized batch item lookup)
 // @route   POST /api/orders
 const placeOrder = async (req, res, next) => {
   try {
@@ -104,7 +106,7 @@ const placeOrder = async (req, res, next) => {
     } = req.body;
 
     // Validate café
-    const cafe = await Cafe.findById(cafe_id);
+    const cafe = await Cafe.findById(cafe_id).select('subscription_status tax_percentage upi_id name').lean();
     if (!cafe || cafe.subscription_status !== 'active') {
       return res.status(400).json({
         success: false,
@@ -112,12 +114,16 @@ const placeOrder = async (req, res, next) => {
       });
     }
 
-    // Calculate total
+    // Batch fetch menu items in 1 query
+    const itemIds = items.map(i => i.menu_item_id);
+    const dbMenuItems = await MenuItem.find({ _id: { $in: itemIds } }).lean();
+    const itemMap = new Map(dbMenuItems.map(m => [m._id.toString(), m]));
+
     let total = 0;
     const orderItems = [];
 
     for (const item of items) {
-      const menuItem = await MenuItem.findById(item.menu_item_id);
+      const menuItem = itemMap.get(item.menu_item_id.toString());
       if (!menuItem || !menuItem.availability) {
         return res.status(400).json({
           success: false,
@@ -145,7 +151,7 @@ const placeOrder = async (req, res, next) => {
       cafe_id, 
       created_at: { $gte: startOfDay },
       token_number: { $ne: '' } 
-    }).select('token_number');
+    }).select('token_number').lean();
 
     let maxToken = 0;
     todaysOrders.forEach(o => {
@@ -158,9 +164,6 @@ const placeOrder = async (req, res, next) => {
     });
     tokenNumber = `#${maxToken + 1}`;
 
-    const isUPI = payment_method === 'upi' || payment_method === 'online';
-    const finalPaymentMethod = isUPI ? 'upi' : 'cash';
-
     const order = await Order.create({
       cafe_id,
       customer_name: customer_name || 'Guest',
@@ -169,7 +172,7 @@ const placeOrder = async (req, res, next) => {
       items: orderItems,
       total_amount: finalTotal,
       token_number: tokenNumber,
-      payment_method: finalPaymentMethod,
+      payment_method: 'upi',
       payment_transaction_id: payment_transaction_id || '',
       payment_status: 'pending',
       notes: notes || ''
@@ -183,31 +186,46 @@ const placeOrder = async (req, res, next) => {
       upiString = `upi://pay?pa=${encodeURIComponent(cafe.upi_id.trim())}&pn=${encodeURIComponent(cleanCafeName)}&am=${finalTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent(cleanNote)}&tr=ORD_${order.order_number}`;
     }
 
-    // Note: OrderRevenue is strictly populated ONLY when payment_status is confirmed 'received' via webhook or manual verification.
-
     // Emit real-time notification to café owner
     const io = req.app.get('io');
     if (io) {
-      io.to(`cafe-${cafe_id}`).emit('new-order', order);
+      io.to(`cafe-${cafe_id}`).emit('new-order', {
+        order: {
+          _id: order._id,
+          order_number: order.order_number,
+          customer_name: order.customer_name,
+          table_number: order.table_number,
+          total_amount: order.total_amount,
+          items: order.items,
+          order_status: order.order_status,
+          payment_status: order.payment_status,
+          token_number: order.token_number,
+          created_at: order.created_at
+        },
+        message: `New Order ${order.token_number || order.order_number}`
+      });
     }
 
     res.status(201).json({
       success: true,
-      data: order,
-      upi_url: upiString
+      data: {
+        ...order.toObject(),
+        upi_string: upiString,
+        cafe_upi_id: cafe.upi_id || ''
+      }
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Track order status
+// @desc    Track order status (Optimized with lean)
 // @route   GET /api/orders/:orderNumber/track
 const trackOrder = async (req, res, next) => {
   try {
     const order = await Order.findOne({
       order_number: req.params.orderNumber
-    });
+    }).lean();
 
     if (!order) {
       return res.status(404).json({
@@ -240,13 +258,12 @@ const submitFeedback = async (req, res, next) => {
   try {
     const { order_number, rating, review } = req.body;
 
-    const order = await Order.findOne({ order_number });
+    const order = await Order.findOne({ order_number }).lean();
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    // Check if feedback already exists
-    const existingFeedback = await Feedback.findOne({ order_id: order._id });
+    const existingFeedback = await Feedback.findOne({ order_id: order._id }).lean();
     if (existingFeedback) {
       return res.status(400).json({
         success: false,
@@ -268,7 +285,7 @@ const submitFeedback = async (req, res, next) => {
   }
 };
 
-// @desc    Initiate an automated UPI Payment Session
+// @desc    Initiate an automated UPI Payment Session (Optimized batch lookup)
 // @route   POST /api/orders/initiate-upi-session
 const initiateUpiSession = async (req, res, next) => {
   try {
@@ -281,7 +298,7 @@ const initiateUpiSession = async (req, res, next) => {
       notes
     } = req.body;
 
-    const cafe = await Cafe.findById(cafe_id);
+    const cafe = await Cafe.findById(cafe_id).select('subscription_status upi_id name tax_percentage').lean();
     if (!cafe || cafe.subscription_status !== 'active') {
       return res.status(400).json({
         success: false,
@@ -296,11 +313,16 @@ const initiateUpiSession = async (req, res, next) => {
       });
     }
 
+    // Batch fetch menu items
+    const itemIds = items.map(i => i.menu_item_id);
+    const dbMenuItems = await MenuItem.find({ _id: { $in: itemIds } }).lean();
+    const itemMap = new Map(dbMenuItems.map(m => [m._id.toString(), m]));
+
     let total = 0;
     const orderItems = [];
 
     for (const item of items) {
-      const menuItem = await MenuItem.findById(item.menu_item_id);
+      const menuItem = itemMap.get(item.menu_item_id.toString());
       if (!menuItem || !menuItem.availability) {
         return res.status(400).json({
           success: false,
@@ -361,11 +383,11 @@ const initiateUpiSession = async (req, res, next) => {
 // @route   POST /api/orders/upi-webhook
 const handleUpiWebhook = async (req, res, next) => {
   try {
-    const { session_id, transaction_id, status = 'SUCCESS', amount } = req.body;
-    const trId = session_id || req.body.sessionId || req.body.tr || req.body.merchantTransactionId || req.body.payment_transaction_id;
+    const { session_id, transaction_ref, status, amount, utr_number } = req.body;
+    const trId = session_id || transaction_ref;
 
     if (!trId) {
-      return res.status(400).json({ success: false, message: 'Session / Transaction ID required' });
+      return res.status(400).json({ success: false, message: 'Transaction reference or session_id is required' });
     }
 
     const order = await Order.findOne({
@@ -375,83 +397,111 @@ const handleUpiWebhook = async (req, res, next) => {
         { order_number: trId }
       ]
     });
+
     if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found for transaction' });
+      return res.status(404).json({ success: false, message: 'Order session not found' });
     }
+
+    if (order.payment_status === 'received' || order.payment_status === 'completed') {
+      return res.status(200).json({
+        success: true,
+        message: 'Order already processed',
+        data: order
+      });
+    }
+
+    const isSuccess = status === 'SUCCESS' || status === 'paid' || status === 'completed' || status === 'captured' || status === 'COMPLETED';
 
     const io = req.app.get('io');
 
-    if (status === 'SUCCESS' || status === 'received' || status === 'COMPLETED') {
-      // Idempotency: If already received, just return success
-      if (order.payment_status === 'received' || order.payment_status === 'completed') {
-        return res.status(200).json({ success: true, message: 'Payment already processed', data: order });
+    if (isSuccess) {
+      let tokenNumber = order.token_number;
+      if (!tokenNumber) {
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const todaysOrders = await Order.find({ 
+          cafe_id: order.cafe_id, 
+          created_at: { $gte: startOfDay },
+          token_number: { $ne: '' } 
+        }).select('token_number').lean();
+
+        let maxToken = 0;
+        todaysOrders.forEach(o => {
+          if (o.token_number) {
+            const num = parseInt(o.token_number.replace('#', ''), 10);
+            if (!isNaN(num) && num > maxToken) {
+              maxToken = num;
+            }
+          }
+        });
+        tokenNumber = `#${maxToken + 1}`;
+        order.token_number = tokenNumber;
       }
 
-      // Generate next sequential token number for today
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-
-      const todaysOrders = await Order.find({ 
-        cafe_id: order.cafe_id, 
-        created_at: { $gte: startOfDay },
-        token_number: { $ne: '' } 
-      }).select('token_number');
-
-      let maxToken = 0;
-      todaysOrders.forEach(o => {
-        if (o.token_number) {
-          const num = parseInt(o.token_number.replace('#', ''), 10);
-          if (!isNaN(num) && num > maxToken) {
-            maxToken = num;
-          }
-        }
-      });
-      const tokenNumber = `#${maxToken + 1}`;
-
       order.payment_status = 'received';
-      order.token_number = tokenNumber;
-      if (transaction_id && transaction_id !== trId) {
-        order.payment_transaction_id = `${trId}#${transaction_id}`;
+      order.order_status = 'new';
+      if (utr_number) {
+        order.payment_transaction_id = `${order.payment_transaction_id} | UTR:${utr_number}`;
       }
       await order.save();
 
-      // Log into permanent revenue ledger
+      // Ensure OrderRevenue audit log entry
       try {
-        await OrderRevenue.findOneAndUpdate(
-          { order_number: order.order_number },
-          {
-            cafe_id: order.cafe_id,
-            order_number: order.order_number,
-            total_amount: order.total_amount,
-            payment_method: 'upi',
-            table_number: order.table_number || '',
-            items_count: order.items?.length || 0,
-            payment_date: new Date()
-          },
-          { upsert: true, new: true }
-        );
-      } catch (revErr) {
-        console.error('OrderRevenue save error:', revErr.message);
-      }
-
-      // 1. Emit live real-time notification to owner's kitchen dashboard
-      if (io) {
-        io.to(`cafe-${order.cafe_id}`).emit('new-order', order);
-        // 2. Emit order-confirmed to customer session room
-        io.to(`session-${trId}`).emit('order-confirmed', {
+        await OrderRevenue.create({
+          order_id: order._id,
+          cafe_id: order.cafe_id,
           order_number: order.order_number,
           token_number: order.token_number,
-          order
+          customer_name: order.customer_name,
+          table_number: order.table_number,
+          items: order.items.map(i => ({
+            name: i.name,
+            quantity: i.quantity,
+            price: i.price
+          })),
+          total_amount: order.total_amount,
+          payment_method: 'upi',
+          payment_transaction_id: order.payment_transaction_id,
+          payment_status: 'received',
+          order_created_at: order.created_at,
+          payment_confirmed_at: new Date()
+        });
+      } catch (revErr) {
+        console.warn('Revenue audit note:', revErr.message);
+      }
+
+      if (io) {
+        io.to(`session-${trId}`).emit('payment-success', {
+          order_number: order.order_number,
+          token_number: order.token_number,
+          payment_status: 'received',
+          order: order
+        });
+
+        io.to(`cafe-${order.cafe_id}`).emit('new-order', {
+          order: {
+            _id: order._id,
+            order_number: order.order_number,
+            customer_name: order.customer_name,
+            table_number: order.table_number,
+            total_amount: order.total_amount,
+            items: order.items,
+            order_status: order.order_status,
+            payment_status: order.payment_status,
+            token_number: order.token_number,
+            created_at: order.created_at
+          },
+          message: `⚡ Paid Order: Token ${order.token_number || order.order_number} Received!`
         });
       }
 
       return res.status(200).json({
         success: true,
-        message: 'Payment detected & order confirmed',
+        message: 'Payment confirmed and order placed successfully',
         data: order
       });
     } else {
-      // Payment aborted or failed
       order.payment_status = 'failed';
       await order.save();
 
@@ -472,7 +522,7 @@ const handleUpiWebhook = async (req, res, next) => {
   }
 };
 
-// @desc    Check status of UPI payment session (Polling fallback)
+// @desc    Check status of UPI payment session (Polling fallback with lean)
 // @route   GET /api/orders/check-upi-status/:sessionId
 const checkUpiStatus = async (req, res, next) => {
   try {
@@ -483,7 +533,7 @@ const checkUpiStatus = async (req, res, next) => {
         { payment_transaction_id: { $regex: new RegExp(`^${sessionId}`) } },
         { order_number: sessionId }
       ]
-    });
+    }).lean();
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Session not found' });
@@ -540,4 +590,3 @@ module.exports = {
   checkUpiStatus,
   cancelUpiSession
 };
-

@@ -24,104 +24,55 @@ const getDashboard = async (req, res, next) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const todayOrders = await Order.countDocuments({
-      cafe_id: cafeId,
-      created_at: { $gte: today }
-    });
-
-    const pendingOrders = await Order.countDocuments({
-      cafe_id: cafeId,
-      order_status: { $in: ['new', 'accepted', 'preparing'] }
-    });
-
-    const completedToday = await Order.countDocuments({
-      cafe_id: cafeId,
-      order_status: 'completed',
-      created_at: { $gte: today }
-    });
-
-    const revenueResult = await Order.aggregate([
-      {
-        $match: {
-          cafe_id: cafeId,
-          created_at: { $gte: today },
-          payment_status: { $in: ['received', 'completed'] }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: '$total_amount' }
-        }
-      }
-    ]);
-
-    const totalMenuItems = await MenuItem.countDocuments({ cafe_id: cafeId });
-    const totalCategories = await Category.countDocuments({ cafe_id: cafeId });
-
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     sixMonthsAgo.setDate(1);
     sixMonthsAgo.setHours(0, 0, 0, 0);
 
-    const monthlyRevenueHistory = await Order.aggregate([
-      {
-        $match: {
-          cafe_id: cafeId,
-          created_at: { $gte: sixMonthsAgo },
-          payment_status: { $in: ['received', 'completed'] }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: "$created_at" },
-            month: { $month: "$created_at" }
-          },
-          total: { $sum: "$total_amount" }
-        }
-      },
-      { $sort: { "_id.year": -1, "_id.month": -1 } }
-    ]);
-
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     thirtyDaysAgo.setHours(0, 0, 0, 0);
 
-    const dailyRevenueHistory = await Order.aggregate([
-      {
-        $match: {
-          cafe_id: cafeId,
-          created_at: { $gte: thirtyDaysAgo },
-          payment_status: { $in: ['received', 'completed'] }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: "$created_at" },
-            month: { $month: "$created_at" },
-            day: { $dayOfMonth: "$created_at" }
-          },
-          total: { $sum: "$total_amount" }
-        }
-      },
-      { $sort: { "_id.year": -1, "_id.month": -1, "_id.day": -1 } }
+    // Parallel fetch all dashboard metrics in 1 shot
+    const [
+      todayOrders,
+      pendingOrders,
+      completedToday,
+      revenueResult,
+      totalMenuItems,
+      totalCategories,
+      monthlyRevenueHistory,
+      dailyRevenueHistory,
+      recentOrders,
+      ratingResult,
+      activeSub
+    ] = await Promise.all([
+      Order.countDocuments({ cafe_id: cafeId, created_at: { $gte: today } }),
+      Order.countDocuments({ cafe_id: cafeId, order_status: { $in: ['new', 'accepted', 'preparing'] } }),
+      Order.countDocuments({ cafe_id: cafeId, order_status: 'completed', created_at: { $gte: today } }),
+      Order.aggregate([
+        { $match: { cafe_id: cafeId, created_at: { $gte: today }, payment_status: { $in: ['received', 'completed'] } } },
+        { $group: { _id: null, total: { $sum: '$total_amount' } } }
+      ]),
+      MenuItem.countDocuments({ cafe_id: cafeId }),
+      Category.countDocuments({ cafe_id: cafeId }),
+      Order.aggregate([
+        { $match: { cafe_id: cafeId, created_at: { $gte: sixMonthsAgo }, payment_status: { $in: ['received', 'completed'] } } },
+        { $group: { _id: { year: { $year: "$created_at" }, month: { $month: "$created_at" } }, total: { $sum: "$total_amount" } } },
+        { $sort: { "_id.year": -1, "_id.month": -1 } }
+      ]),
+      Order.aggregate([
+        { $match: { cafe_id: cafeId, created_at: { $gte: thirtyDaysAgo }, payment_status: { $in: ['received', 'completed'] } } },
+        { $group: { _id: { year: { $year: "$created_at" }, month: { $month: "$created_at" }, day: { $dayOfMonth: "$created_at" } }, total: { $sum: "$total_amount" } } },
+        { $sort: { "_id.year": -1, "_id.month": -1, "_id.day": -1 } }
+      ]),
+      Order.find({ cafe_id: cafeId }).sort({ created_at: -1 }).limit(5).lean(),
+      Feedback.aggregate([
+        { $match: { cafe_id: cafeId } },
+        { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } }
+      ]),
+      Subscription.findOne({ cafe_id: cafeId, status: 'active' }).lean()
     ]);
-
-    // Recent orders
-    const recentOrders = await Order.find({ cafe_id: cafeId })
-      .sort({ created_at: -1 })
-      .limit(5);
-
-    // Average rating
-    const ratingResult = await Feedback.aggregate([
-      { $match: { cafe_id: cafeId } },
-      { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } }
-    ]);
-
-    // Active subscription
-    const activeSub = await Subscription.findOne({ cafe_id: cafeId, status: 'active' });
     let subscriptionData = null;
     if (activeSub) {
       const now = new Date();

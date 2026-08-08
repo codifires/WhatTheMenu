@@ -67,49 +67,10 @@ const Checkout = () => {
 
   const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
 
-  // Primary action button: Initiates real-time payment session or places Cash Order
+  // Primary action button: Initiates real-time payment session
   const handleProceed = async () => {
-    // 1. If Cash order is selected
-    if (paymentMethod === 'cash') {
-      setLoading(true)
-      try {
-        const payload = {
-          cafe_id: cafeId,
-          customer_name: 'Guest',
-          customer_phone: '',
-          table_number: form.table_number || '',
-          notes: form.notes || '',
-          payment_method: 'cash',
-          items: items.map(item => ({
-            menu_item_id: item._id,
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price
-          }))
-        }
-
-        const res = await customerAPI.placeOrder(payload)
-        const order = res.data.data
-        
-        // Save order tracking info locally
-        const savedOrders = JSON.parse(localStorage.getItem('myOrders') || '[]')
-        savedOrders.unshift({ orderNumber: order.order_number, cafeId, createdAt: new Date().toISOString() })
-        localStorage.setItem('myOrders', JSON.stringify(savedOrders.slice(0, 20)))
-
-        toast.success(`🎉 Order placed! Token: ${order.token_number || order.order_number}`, { duration: 4000 })
-        clearCart()
-        navigate(`/menu/${cafeId}/orders?track=${order.order_number}`)
-      } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to place cash order')
-      } finally {
-        setLoading(false)
-      }
-      return
-    }
-
-    // 2. If UPI order is selected
     if (!cafe?.upi_id) {
-      toast.error('This café has not set up a UPI ID yet. You can use Cash at Counter to place your order!')
+      toast.error('This café has not configured their UPI ID yet. Please contact café staff.')
       return
     }
 
@@ -306,75 +267,39 @@ const Checkout = () => {
           <InputField label="Special Instructions" as="textarea" placeholder="e.g. Less spicy, extra napkins, warm water..." value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} />
         </div>
 
-        {/* ── Payment Method Selector ── */}
+        {/* ── Payment Method ── */}
         <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <span style={{ fontSize: 18 }}>💳</span>
-            <h3 style={{ fontSize: 13, fontWeight: 800, color: '#e5e7eb', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>Select Payment Method</h3>
+            <h3 style={{ fontSize: 13, fontWeight: 800, color: '#e5e7eb', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>Payment Method</h3>
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            
-            {/* Option 1: Direct UPI */}
-            <div
-              onClick={() => setPaymentMethod('upi')}
-              style={{
-                padding: '16px', borderRadius: 18, cursor: 'pointer',
-                border: paymentMethod === 'upi' ? '2px solid #f59e0b' : '1px solid rgba(255,255,255,0.08)',
-                background: paymentMethod === 'upi' ? 'linear-gradient(180deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.03) 100%)' : 'rgba(255,255,255,0.02)',
-                boxShadow: paymentMethod === 'upi' ? '0 0 20px rgba(245,158,11,0.18)' : 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 12, background: paymentMethod === 'upi' ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-                  ⚡
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <p style={{ fontSize: 15, fontWeight: 800, color: paymentMethod === 'upi' ? '#fbbf24' : '#fff', margin: 0 }}>Direct UPI</p>
-                    <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(16,185,129,0.2)', color: '#34d399', padding: '2px 6px', borderRadius: 4 }}>Fastest</span>
-                  </div>
-                  <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>GPay, PhonePe, Paytm, QR Scan</p>
-                </div>
+          {/* Direct UPI Single Option */}
+          <div
+            style={{
+              padding: '16px', borderRadius: 18,
+              border: '2px solid #f59e0b',
+              background: 'linear-gradient(180deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.03) 100%)',
+              boxShadow: '0 0 20px rgba(245,158,11,0.18)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                ⚡
               </div>
-
-              <div style={{ width: 22, height: 22, borderRadius: 50, border: paymentMethod === 'upi' ? 'none' : '2px solid #6b7280', background: paymentMethod === 'upi' ? '#f59e0b' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontSize: 12, fontWeight: 900 }}>
-                {paymentMethod === 'upi' && '✓'}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: '#fbbf24', margin: 0 }}>Direct UPI Payment</p>
+                  <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(16,185,129,0.2)', color: '#34d399', padding: '2px 6px', borderRadius: 4 }}>0% Extra Fee</span>
+                </div>
+                <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>GPay, PhonePe, Paytm & any UPI App</p>
               </div>
             </div>
 
-            {/* Option 2: Cash at Counter */}
-            <div
-              onClick={() => setPaymentMethod('cash')}
-              style={{
-                padding: '16px', borderRadius: 18, cursor: 'pointer',
-                border: paymentMethod === 'cash' ? '2px solid #10b981' : '1px solid rgba(255,255,255,0.08)',
-                background: paymentMethod === 'cash' ? 'linear-gradient(180deg, rgba(16,185,129,0.12) 0%, rgba(16,185,129,0.03) 100%)' : 'rgba(255,255,255,0.02)',
-                boxShadow: paymentMethod === 'cash' ? '0 0 20px rgba(16,185,129,0.18)' : 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 12, background: paymentMethod === 'cash' ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-                  💵
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <p style={{ fontSize: 15, fontWeight: 800, color: paymentMethod === 'cash' ? '#34d399' : '#fff', margin: 0 }}>Pay at Counter (Cash)</p>
-                    <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(59,130,246,0.2)', color: '#60a5fa', padding: '2px 6px', borderRadius: 4 }}>No Online Pay</span>
-                  </div>
-                  <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>Pay directly at the counter or after dining</p>
-                </div>
-              </div>
-
-              <div style={{ width: 22, height: 22, borderRadius: 50, border: paymentMethod === 'cash' ? 'none' : '2px solid #6b7280', background: paymentMethod === 'cash' ? '#10b981' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontSize: 12, fontWeight: 900 }}>
-                {paymentMethod === 'cash' && '✓'}
-              </div>
+            <div style={{ width: 22, height: 22, borderRadius: 50, background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontSize: 12, fontWeight: 900 }}>
+              ✓
             </div>
-
           </div>
         </div>
 
@@ -399,7 +324,7 @@ const Checkout = () => {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Total Payable</span>
-            <span style={{ fontSize: 24, fontWeight: 900, color: paymentMethod === 'cash' ? '#34d399' : '#f59e0b', fontFamily: "'Outfit',sans-serif" }}>₹{grandTotal.toFixed(2)}</span>
+            <span style={{ fontSize: 24, fontWeight: 900, color: '#f59e0b', fontFamily: "'Outfit',sans-serif" }}>₹{grandTotal.toFixed(2)}</span>
           </div>
         </div>
 
@@ -429,10 +354,10 @@ const Checkout = () => {
             disabled={loading}
             style={{
               flex: 1, height: 52, borderRadius: 16, border: 'none',
-              background: paymentMethod === 'cash' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #f59e0b, #ea580c)',
+              background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
               color: '#fff', fontSize: 15, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              boxShadow: paymentMethod === 'cash' ? '0 6px 20px rgba(16,185,129,0.4)' : '0 6px 20px rgba(245,158,11,0.45)',
+              boxShadow: '0 6px 20px rgba(245,158,11,0.45)',
               transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', opacity: loading ? 0.7 : 1
             }}
             onMouseEnter={e => { if(!loading) e.currentTarget.style.transform='translateY(-1px)' }}
@@ -442,12 +367,6 @@ const Checkout = () => {
               <>
                 <svg style={{ animation: 'spin 1s linear infinite' }} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
                 <span>Processing Order...</span>
-              </>
-            ) : paymentMethod === 'cash' ? (
-              <>
-                <span>💵</span>
-                <span>Place Cash Order</span>
-                <ArrowRight size={18} />
               </>
             ) : (
               <>

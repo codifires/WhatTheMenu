@@ -137,21 +137,8 @@ const AdminLogin = () => {
               </button>
             </form>
 
-            {/* Demo fill */}
-            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.06)', textAlign: 'center' }}>
-              <p style={{ fontSize: 12, color: '#4b5563', marginBottom: 10 }}>Quick fill demo credentials</p>
-              <button onClick={() => { setEmail('admin@qrmenu.com'); setPassword('admin123') }}
-                style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.08)', color: '#a78bfa', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                Use Demo Admin →
-              </button>
-            </div>
+            {/* End of Form Card */}
           </div>
-
-          {/* Switch to owner */}
-          <p style={{ textAlign: 'center', marginTop: 24, fontSize: 13, color: '#4b5563' }}>
-            Are you a café owner?{' '}
-            <Link to="/owner/login" style={{ color: '#a78bfa', textDecoration: 'none', fontWeight: 600 }}>Sign in here →</Link>
-          </p>
         </div>
       </div>
 
