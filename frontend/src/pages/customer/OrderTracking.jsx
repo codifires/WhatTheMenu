@@ -44,13 +44,13 @@ const OrderTracking = () => {
       if (data.order_number === order.order_number) {
         setOrder(prev => ({ ...prev, order_status: data.status }))
         toast.success(`Order update: ${data.status.toUpperCase()}`, { icon: '🔔' })
-        
+
         if (data.status === 'completed') {
           // Mark in localStorage so it doesn't show in tracking anymore
           const saved = JSON.parse(localStorage.getItem('myOrders') || '[]')
           const updated = saved.map(o => o.orderNumber === data.order_number ? { ...o, status: 'completed' } : o)
           localStorage.setItem('myOrders', JSON.stringify(updated))
-          
+
           toast.success('Your order is complete! Please leave a review.')
           setTimeout(() => navigate(`/menu/${cafeId}/feedback`), 2000)
         }
@@ -64,12 +64,12 @@ const OrderTracking = () => {
     try {
       const res = await customerAPI.trackOrder(num)
       setOrder(res.data.data)
-      
+
       if (res.data.data.order_status === 'completed') {
         const saved = JSON.parse(localStorage.getItem('myOrders') || '[]')
         const updated = saved.map(o => o.orderNumber === res.data.data.order_number ? { ...o, status: 'completed' } : o)
         localStorage.setItem('myOrders', JSON.stringify(updated))
-        
+
         toast.success('Your order is complete! Please leave a review.')
         setTimeout(() => navigate(`/menu/${cafeId}/feedback`), 2000)
       }
@@ -127,8 +127,8 @@ const OrderTracking = () => {
 
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 }}>
             <div>
-              <p style={{ fontSize: 24, fontWeight: 900, color: '#f59e0b', margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>Token: {order.token_number || 'N/A'}</p>
-              <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 2px' }}>Order: {order.order_number}</p>
+              <p style={{ fontSize: 32, fontWeight: 900, color: '#f59e0b', margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>Order #{order.token_number || order.order_number.slice(-4)}</p>
+              <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 2px', opacity: 0.5 }}>Transaction: {order.order_number}</p>
               <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>{new Date(order.created_at).toLocaleString()}</p>
             </div>
             <div style={{ textAlign: 'right' }}>

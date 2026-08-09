@@ -154,7 +154,10 @@ export const NotificationProvider = ({ children }) => {
   // Clear all
   const clearAll = useCallback(() => {
     setNotifications([])
-  }, [])
+    if (user?.id || user?._id) {
+      localStorage.setItem(`qrmenu_cleared_at_${user.id || user._id}`, Date.now().toString())
+    }
+  }, [user])
 
   // Toggle sound
   const toggleSound = useCallback(() => {
@@ -166,6 +169,9 @@ export const NotificationProvider = ({ children }) => {
   // ==========================================
   const syncDatabaseState = useCallback(async () => {
     if (!user) return
+    const userId = user?.id || user?._id
+    const clearedAtStr = localStorage.getItem(`qrmenu_cleared_at_${userId}`)
+    const clearedAt = clearedAtStr ? parseInt(clearedAtStr, 10) : 0
 
     // 1. ADMIN INITIAL DB SYNC
     if (user.role === 'superadmin') {
@@ -250,19 +256,20 @@ export const NotificationProvider = ({ children }) => {
         const myTickets = ticketsRes.data?.data || []
 
         myTickets.forEach(t => {
-          if (t.admin_reply || t.status === 'in_progress' || t.status === 'resolved') {
+          const ticketUpdatedAt = new Date(t.updated_at || t.updatedAt || t.created_at || t.createdAt).getTime()
+          if (ticketUpdatedAt > clearedAt && (t.admin_reply || t.status === 'in_progress' || t.status === 'resolved')) {
             const hasReply = !!t.admin_reply
             const replySnippet = hasReply 
               ? (t.admin_reply.length > 55 ? t.admin_reply.slice(0, 55) + '...' : t.admin_reply)
               : `Status: ${t.status === 'in_progress' ? 'In Progress' : t.status}`
 
             addNotification({
-              id: `ticket_${t._id}`,
+              id: `ticket_${t._id}_${ticketUpdatedAt}`,
               title: `🎧 Support: #${t.ticket_number || ''}`,
               message: hasReply ? `Team Reply: "${replySnippet}"` : `Update: "${t.subject}" (${t.status})`,
               type: 'support',
               link: '/owner/support',
-              createdAt: t.updated_at || t.updatedAt || t.created_at || t.createdAt,
+              createdAt: new Date(ticketUpdatedAt).toISOString(),
               silent: true,
               meta: { ticketId: t._id, status: t.status }
             })

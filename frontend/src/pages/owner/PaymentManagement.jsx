@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { ownerAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 
-const FILTERS = ['all', 'pending', 'received', 'online', 'upi', 'cash']
+const FILTERS = ['all', 'pending', 'received', 'online', 'upi']
 
 const STATUS_COLORS = {
   pending: { bg: 'rgba(245,158,11,0.1)', color: '#fbbf24', border: 'rgba(245,158,11,0.2)' },
@@ -74,7 +74,7 @@ const PaymentManagement = () => {
 
   return (
     <div style={{ fontFamily: "'Inter',sans-serif", color: '#fff', maxWidth: 1400, margin: '0 auto' }}>
-      
+
       {/* ── Header ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 28, animation: 'fadeIn 0.4s ease' }}>
         <div>
@@ -86,7 +86,7 @@ const PaymentManagement = () => {
         <button onClick={() => { setLoading(true); fetchOrders() }}
           style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid rgba(6,182,212,0.2)', background: 'rgba(6,182,212,0.1)', color: '#06b6d4', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s' }}
           onMouseEnter={e => e.currentTarget.style.background = 'rgba(6,182,212,0.15)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(6,182,212,0.1)'}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.92-10.27l5.35 5.35"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.92-10.27l5.35 5.35" /></svg>
           Refresh
         </button>
       </div>
@@ -100,7 +100,7 @@ const PaymentManagement = () => {
           { label: 'Online Revenue', value: stats.onlineRevenue, icon: '💳', color: '#8b5cf6' },
         ].map((stat, i) => (
           <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 20, padding: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: `rgba(${parseInt(stat.color.slice(1,3),16)},${parseInt(stat.color.slice(3,5),16)},${parseInt(stat.color.slice(5,7),16)},0.1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: `rgba(${parseInt(stat.color.slice(1, 3), 16)},${parseInt(stat.color.slice(3, 5), 16)},${parseInt(stat.color.slice(5, 7), 16)},0.1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
               {stat.icon}
             </div>
             <div>
@@ -160,7 +160,7 @@ const PaymentManagement = () => {
                 filteredOrders.map(order => {
                   const sc = STATUS_COLORS[order.payment_status] || STATUS_COLORS.pending
                   const isPaid = order.payment_status === 'received'
-                  
+
                   return (
                     <tr key={order._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <td style={{ padding: '16px 24px', fontSize: 14, fontWeight: 700, color: '#fff' }}>{order.order_number}</td>

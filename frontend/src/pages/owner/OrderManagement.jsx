@@ -6,12 +6,12 @@ import { io } from 'socket.io-client'
 
 const STATUS_FLOW = ['new', 'accepted', 'preparing', 'ready', 'completed']
 const STATUS_COLORS = {
-  new:       { bg: 'rgba(59,130,246,0.12)', color: '#60a5fa', border: 'rgba(59,130,246,0.25)' },
-  accepted:  { bg: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: 'rgba(139,92,246,0.25)' },
+  new: { bg: 'rgba(59,130,246,0.12)', color: '#60a5fa', border: 'rgba(59,130,246,0.25)' },
+  accepted: { bg: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: 'rgba(139,92,246,0.25)' },
   preparing: { bg: 'rgba(245,158,11,0.12)', color: '#fbbf24', border: 'rgba(245,158,11,0.25)' },
-  ready:     { bg: 'rgba(6,182,212,0.12)',  color: '#22d3ee', border: 'rgba(6,182,212,0.25)' },
+  ready: { bg: 'rgba(6,182,212,0.12)', color: '#22d3ee', border: 'rgba(6,182,212,0.25)' },
   completed: { bg: 'rgba(16,185,129,0.12)', color: '#34d399', border: 'rgba(16,185,129,0.25)' },
-  cancelled: { bg: 'rgba(239,68,68,0.12)',  color: '#f87171', border: 'rgba(239,68,68,0.25)' },
+  cancelled: { bg: 'rgba(239,68,68,0.12)', color: '#f87171', border: 'rgba(239,68,68,0.25)' },
 }
 
 const OrderManagement = () => {
@@ -41,10 +41,10 @@ const OrderManagement = () => {
       if (filter) params.status = filter
       const res = await ownerAPI.getOrders(params)
       // Filter out 'completed' and 'cancelled' orders from Live Kitchen
-      const validOrders = res.data.data.filter(order => 
-        (order.payment_status === 'received' || 
-         order.payment_status === 'completed' || 
-         order.payment_method === 'cash') &&
+      const validOrders = res.data.data.filter(order =>
+        (order.payment_status === 'received' ||
+          order.payment_status === 'completed' ||
+          order.payment_method === 'cash') &&
         order.order_status !== 'completed' &&
         order.order_status !== 'cancelled'
       )
@@ -76,7 +76,7 @@ const OrderManagement = () => {
 
   return (
     <div style={{ fontFamily: "'Inter',sans-serif", color: '#fff' }}>
-      
+
       {/* ── Header ── */}
       <div style={{ marginBottom: 28, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
         <div>
@@ -126,15 +126,15 @@ const OrderManagement = () => {
             const sc = STATUS_COLORS[order.order_status] || STATUS_COLORS.new
             const isPaid = order.payment_status === 'received'
             const nextStatus = getNextStatus(order.order_status)
-            
+
             return (
               <div key={order._id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 20, padding: 20, display: 'flex', flexDirection: 'column', gap: 16, transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer', animation: `slideUp 0.3s ease ${i * 0.05}s both` }} onClick={() => setSelectedOrder(order)} onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)' }} onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
-                
+
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <span style={{ fontSize: 24, fontWeight: 900, color: '#f59e0b', fontFamily: "'Outfit',sans-serif", display: 'block' }}>{order.token_number || order.order_number.slice(-4)}</span>
-                    <span style={{ fontSize: 11, color: '#6b7280', fontFamily: 'monospace' }}>{order.order_number}</span>
+                    <span style={{ fontSize: 24, fontWeight: 900, color: '#f59e0b', fontFamily: "'Outfit',sans-serif", display: 'block' }}>Order #{order.token_number || order.order_number.slice(-4)}</span>
+                    <span style={{ fontSize: 11, color: '#6b7280', fontFamily: 'monospace', opacity: 0.5 }}>{order.order_number}</span>
                   </div>
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: sc.bg, color: sc.color, textTransform: 'uppercase', border: `1px solid ${sc.border}` }}>
                     {order.order_status}
@@ -156,7 +156,7 @@ const OrderManagement = () => {
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: (isPaid || order.payment_status === 'completed') ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: (isPaid || order.payment_status === 'completed') ? '#34d399' : '#fbbf24', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                     {(isPaid || order.payment_status === 'completed') ? '✓' : '⌛'} {order.payment_method} - {order.payment_status}
                   </span>
-                  
+
                   <div style={{ display: 'flex', gap: 8 }} onClick={e => e.stopPropagation()}>
                     {nextStatus && (
                       <button onClick={() => handleStatusChange(order._id, nextStatus)}
@@ -186,7 +186,7 @@ const OrderManagement = () => {
         return (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setSelectedOrder(null)}>
             <div style={{ width: '100%', maxWidth: 500, background: '#0a0d18', border: '1px solid rgba(6,182,212,0.2)', borderRadius: 24, padding: 32, boxShadow: '0 40px 100px rgba(0,0,0,0.7)', maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-              
+
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                 <div>
                   <h2 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif", color: '#f59e0b' }}>Token: {selectedOrder.token_number || selectedOrder.order_number.slice(-4)}</h2>
@@ -223,14 +223,14 @@ const OrderManagement = () => {
                     <p style={{ fontSize: 11, fontWeight: 600, color: '#06b6d4', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 4px' }}>UPI Transaction ID (UTR)</p>
                     <p style={{ fontSize: 16, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: 1 }}>{selectedOrder.payment_transaction_id}</p>
                   </div>
-                  <button 
+                  <button
                     onClick={(e) => {
                       navigator.clipboard.writeText(selectedOrder.payment_transaction_id);
                       e.currentTarget.innerText = 'Copied!';
                       setTimeout(() => { if (e.target) e.target.innerText = 'Copy' }, 2000);
                     }}
                     style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.3)', color: '#06b6d4', fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(6,182,212,0.2)'} 
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(6,182,212,0.2)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'rgba(6,182,212,0.1)'}
                   >
                     Copy

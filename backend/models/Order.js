@@ -84,7 +84,7 @@ const orderSchema = new mongoose.Schema({
 });
 
 // Generate unique order number
-orderSchema.pre('validate', async function(next) {
+orderSchema.pre('validate', async function (next) {
   if (this.isNew) {
     const count = await mongoose.model('Order').countDocuments({ cafe_id: this.cafe_id });
     const prefix = 'ORD';
