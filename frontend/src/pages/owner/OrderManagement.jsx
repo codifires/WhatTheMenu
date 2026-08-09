@@ -57,6 +57,11 @@ const OrderManagement = () => {
   }
 
   const handleStatusChange = async (orderId, newStatus) => {
+    if (user?.email === 'cafe@demo.com') {
+      toast.error('⚠️ Demo Template: Order modifications are disabled.', { style: { background: '#fff', color: '#000', fontWeight: 'bold' } })
+      return
+    }
+    
     try {
       await ownerAPI.updateOrderStatus(orderId, { order_status: newStatus })
       toast.success(`Order moved to: ${newStatus}`)

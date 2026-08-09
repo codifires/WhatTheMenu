@@ -87,6 +87,11 @@ const OwnerSubscription = () => {
 
   // 1. Initiate Automated Real-Time UPI Session
   const handleStartUpgrade = async (targetPlan) => {
+    if (user?.email === 'cafe@demo.com') {
+      toast.error('⚠️ Demo Template: Subscription upgrades are disabled.', { style: { background: '#fff', color: '#000', fontWeight: 'bold' } })
+      return
+    }
+
     setLoading(true)
     setSelectedPlan(targetPlan)
     setLastAttemptedPlan(targetPlan)

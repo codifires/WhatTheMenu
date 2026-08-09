@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ownerAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { useAuth } from '../../context/AuthContext'
 
 import InputField from '../../components/ui/InputField'
 import MenuHeader from './components/MenuHeader'
@@ -16,6 +17,7 @@ const MenuManagement = () => {
   const [showModal, setShowModal] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
   const [activeCategory, setActiveCategory] = useState('')
+  const { user } = useAuth()
   const [form, setForm] = useState({ name: '', description: '', price: '', category_id: '', is_veg: true, image_url: '' })
   const [imageFile, setImageFile] = useState(null)
   const [showMediaModal, setShowMediaModal] = useState(false)
@@ -56,6 +58,10 @@ const MenuManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (user?.email === 'cafe@demo.com') {
+      toast.error('⚠️ Demo Template: Menu modifications are disabled.', { style: { background: '#fff', color: '#000', fontWeight: 'bold' } })
+      return
+    }
     try {
       const formData = new FormData()
       formData.append('name', form.name)
@@ -82,13 +88,18 @@ const MenuManagement = () => {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this menu item?')) return
-    try {
-      await ownerAPI.deleteMenuItem(id)
-      toast.success('Item deleted')
-      fetchItems()
-    } catch (error) {
-      toast.error('Failed to delete')
+    if (user?.email === 'cafe@demo.com') {
+      toast.error('⚠️ Demo Template: Menu modifications are disabled.', { style: { background: '#fff', color: '#000', fontWeight: 'bold' } })
+      return
+    }
+    if (window.confirm('Are you sure you want to delete this item?')) {
+      try {
+        await ownerAPI.deleteMenuItem(id)
+        toast.success('Item deleted')
+        fetchItems()
+      } catch (error) {
+        toast.error('Failed to delete')
+      }
     }
   }
 

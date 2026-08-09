@@ -69,6 +69,11 @@ const Checkout = () => {
 
   // Primary action button: Initiates real-time payment session
   const handleProceed = async () => {
+    if (cafe?.email === 'cafe@demo.com') {
+      toast.error('⚠️ Demo Template: Real orders and payments are disabled.', { style: { background: '#fff', color: '#000', fontWeight: 'bold' } })
+      return
+    }
+
     if (!cafe?.upi_id) {
       toast.error('This café has not configured their UPI ID yet. Please contact café staff.')
       return

@@ -75,7 +75,8 @@ const cafeSchema = new mongoose.Schema({
   resetPasswordToken: String,
   resetPasswordExpire: Date
 }, {
-  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
+  collection: 'cafes'
 });
 
 // Generate slug from name

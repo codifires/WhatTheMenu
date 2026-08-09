@@ -39,6 +39,12 @@ const OwnerSettings = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (user?.email === 'cafe@demo.com') {
+      toast.error('⚠️ Demo Template: Modifying settings is disabled.', { style: { background: '#fff', color: '#000', fontWeight: 'bold' } })
+      return
+    }
+
     setSaving(true)
     try {
       const formData = new FormData()
