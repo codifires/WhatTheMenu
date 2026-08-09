@@ -139,6 +139,7 @@ const PaymentManagement = () => {
                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1 }}>Amount</th>
                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1 }}>Method</th>
                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1 }}>Transaction ID (UTR)</th>
+                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1 }}>Date & Time</th>
                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1 }}>Status</th>
                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, textAlign: 'right' }}>Action</th>
               </tr>
@@ -184,6 +185,12 @@ const PaymentManagement = () => {
                         ) : (
                           <span style={{ color: '#6b7280', fontSize: 13 }}>N/A</span>
                         )}
+                      </td>
+                      <td style={{ padding: '16px 24px', fontSize: 13, color: '#e5e7eb', whiteSpace: 'nowrap' }}>
+                        {new Date(order.created_at).toLocaleString('en-IN', {
+                          day: '2-digit', month: 'short', year: 'numeric',
+                          hour: '2-digit', minute: '2-digit', hour12: true
+                        })}
                       </td>
                       <td style={{ padding: '16px 24px' }}>
                         <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, textTransform: 'uppercase', letterSpacing: 0.5 }}>
