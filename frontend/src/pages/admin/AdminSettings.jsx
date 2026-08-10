@@ -365,7 +365,6 @@ const AdminSettings = () => {
     stripeLiveMode: false,
     currency: 'INR',
     taxRate: '18',
-    adminUpiId: 'yourname@upi',
     starterPrice: '299',
     proPrice: '499',
   })
@@ -389,7 +388,6 @@ const AdminSettings = () => {
           stripeLiveMode: s.payment_live_mode || false,
           currency: s.currency || 'INR',
           taxRate: String(s.tax_rate ?? 18),
-          adminUpiId: s.admin_upi_id || 'yourname@upi',
           starterPrice: String(s.starter_price ?? 299),
           proPrice: String(s.pro_price ?? 499),
         })
@@ -410,7 +408,6 @@ const AdminSettings = () => {
         payment_live_mode: form.stripeLiveMode,
         currency: form.currency,
         tax_rate: Number(form.taxRate),
-        admin_upi_id: form.adminUpiId,
         starter_price: Number(form.starterPrice),
         pro_price: Number(form.proPrice),
         maintenance_mode: form.maintenanceMode,
@@ -528,10 +525,6 @@ const AdminSettings = () => {
                   </select>
                 </div>
                 <InputField label="Tax Rate (GST)" type="number" value={form.taxRate} onChange={e => set('taxRate', e.target.value)} suffix="%" helperText="Default tax rate applied to subscription invoices." />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginTop: 20 }}>
-                 <InputField label="Admin UPI ID" type="text" value={form.adminUpiId} onChange={e => set('adminUpiId', e.target.value)} helperText="The UPI ID where café owners will send subscription payments." />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginTop: 20 }}>

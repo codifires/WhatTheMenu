@@ -31,8 +31,10 @@ const OwnerSettings = () => {
     name: user?.name || '',
     phone: user?.phone || '',
     address: user?.address || '',
-    upi_id: user?.upi_id || '',
-    tax_percentage: user?.tax_percentage || 0
+    tax_percentage: user?.tax_percentage || 0,
+    razorpay_key_id: user?.razorpay_key_id || '',
+    razorpay_key_secret: '',
+    razorpay_webhook_secret: ''
   })
   const [logoFile, setLogoFile] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -51,8 +53,10 @@ const OwnerSettings = () => {
       formData.append('name', form.name)
       formData.append('phone', form.phone)
       formData.append('address', form.address)
-      formData.append('upi_id', form.upi_id)
       formData.append('tax_percentage', form.tax_percentage)
+      formData.append('razorpay_key_id', form.razorpay_key_id)
+      if (form.razorpay_key_secret) formData.append('razorpay_key_secret', form.razorpay_key_secret)
+      if (form.razorpay_webhook_secret) formData.append('razorpay_webhook_secret', form.razorpay_webhook_secret)
       if (logoFile) formData.append('logo', logoFile)
 
       const res = await ownerAPI.updateSettings(formData)
@@ -166,37 +170,62 @@ const OwnerSettings = () => {
                 <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>Payment & Billing Methods</h2>
                 <div style={{ padding: '24px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
                   
+
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                    <span style={{ fontSize: 28 }}>⚡</span>
+                    <span style={{ fontSize: 28 }}>💳</span>
                     <div>
-                      <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 2px', color: '#fff' }}>Direct NPCI UPI Payments</h3>
-                      <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Customer order payments transfer 100% directly to your bank account with 0% gateway commission.</p>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 2px', color: '#fff' }}>Razorpay Payment Gateway</h3>
+                      <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Enable seamless online payments (Credit Card, Netbanking, UPI, Wallets) via Razorpay checkout.</p>
                     </div>
                   </div>
                   
-                  <div style={{ padding: '20px', borderRadius: 14, border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.04)', marginBottom: 24 }}>
+                  <div style={{ padding: '20px', borderRadius: 14, border: '1px solid rgba(6,182,212,0.3)', background: 'rgba(6,182,212,0.04)', marginBottom: 24 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: '#fbbf24', margin: 0 }}>Your Business / Personal UPI ID (VPA)</p>
-                      {form.upi_id ? (
+                      <p style={{ fontSize: 14, fontWeight: 700, color: '#67e8f9', margin: 0 }}>Razorpay API Keys</p>
+                      {form.razorpay_key_id ? (
                         <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(16,185,129,0.2)', color: '#34d399', padding: '3px 8px', borderRadius: 50 }}>
-                          ✓ Active for Direct Orders
+                          ✓ Configured
                         </span>
                       ) : (
                         <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(239,68,68,0.2)', color: '#f87171', padding: '3px 8px', borderRadius: 50 }}>
-                          ⚠️ Add UPI ID to enable QR
+                          ⚠️ Not Configured
                         </span>
                       )}
                     </div>
                     <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 14px' }}>
-                      Supports PhonePe, Google Pay, Paytm, BHIM, or your bank's UPI handle (e.g. <code>cafe@okhdfcbank</code>, <code>9876543210@ybl</code>).
+                      Get these from your Razorpay Dashboard ➔ Settings ➔ API Keys.
                     </p>
-                    <InputField placeholder="e.g. yourcafe@okaxis or 9876543210@ybl" value={form.upi_id} onChange={e => setForm({...form, upi_id: e.target.value})} />
-                    
-                    {form.upi_id && (
-                      <p style={{ fontSize: 11, color: '#6b7280', margin: '6px 0 0' }}>
-                        🔗 Customer Mobile link: <code>upi://pay?pa={form.upi_id}&pn={encodeURIComponent(form.name || 'Cafe')}</code>
-                      </p>
-                    )}
+                    <InputField label="Key ID" placeholder="rzp_live_..." value={form.razorpay_key_id} onChange={e => setForm({...form, razorpay_key_id: e.target.value})} />
+                    <InputField label="Key Secret" type="password" placeholder={form.razorpay_key_id ? "•••••••••••••••• (Leave blank to keep existing)" : "Enter key secret..."} value={form.razorpay_key_secret} onChange={e => setForm({...form, razorpay_key_secret: e.target.value})} />
+                  </div>
+
+                  <div style={{ padding: '20px', borderRadius: 14, border: '1px solid rgba(6,182,212,0.3)', background: 'rgba(6,182,212,0.04)', marginBottom: 24 }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: '#67e8f9', margin: '0 0 6px' }}>Order Webhooks</p>
+                    <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 14px' }}>
+                      Set up webhooks in Razorpay to ensure real-time order confirmation.
+                    </p>
+                    <div style={{ marginBottom: 16 }}>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#e5e7eb', display: 'block', marginBottom: 6 }}>Webhook URL (Add this to Razorpay)</label>
+                      <div style={{ 
+                        padding: '12px 14px', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.2)', 
+                        background: 'rgba(0,0,0,0.2)', color: '#fff', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: 'monospace', wordBreak: 'break-all'
+                      }}>
+                        <span>{import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') : window.location.origin}/api/webhooks/razorpay/order</span>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const url = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '') : window.location.origin;
+                            navigator.clipboard.writeText(`${url}/api/webhooks/razorpay/order`);
+                            toast.success('Copied URL');
+                          }}
+                          style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: '#06b6d4', color: '#fff', fontSize: 11, fontWeight: 'bold', cursor: 'pointer' }}
+                        >
+                          Copy
+                        </button>
+                      </div>
+                      <p style={{ fontSize: 11, color: '#9ca3af', margin: '6px 0 0' }}>Select events: <strong>payment.captured</strong> and <strong>payment.failed</strong></p>
+                    </div>
+                    <InputField label="Webhook Secret" type="password" placeholder="Enter webhook secret..." value={form.razorpay_webhook_secret} onChange={e => setForm({...form, razorpay_webhook_secret: e.target.value})} helperText="Set a secret phrase here and enter the same secret in Razorpay to secure your webhooks." />
                   </div>
 
                   <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>

@@ -28,6 +28,18 @@ const subscriptionHistorySchema = new mongoose.Schema({
     enum: ['active', 'expired', 'cancelled'],
     default: 'active'
   },
+  razorpay_payment_id: {
+    type: String,
+    default: ''
+  },
+  razorpay_invoice_id: {
+    type: String,
+    default: ''
+  },
+  payment_method: {
+    type: String,
+    default: 'razorpay'
+  },
   created_at: {
     type: Date,
     default: Date.now

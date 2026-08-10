@@ -7,10 +7,7 @@ import { io } from 'socket.io-client'
 
 const OwnerSubscription = () => {
   const { user, refreshUser } = useAuth()
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState('pro') // 'starter' | 'pro'
   const [loading, setLoading] = useState(false)
-  const [upiSession, setUpiSession] = useState(null)
   const [paymentIncomplete, setPaymentIncomplete] = useState(false)
   const [lastAttemptedPlan, setLastAttemptedPlan] = useState('pro')
   
@@ -60,71 +57,16 @@ const OwnerSubscription = () => {
   const upcomingPlanName = hasUpcoming ? (upcoming.plan_name === 'starter' ? 'Starter Plan' : 'Pro Plan') : null
 
   const isPending = !!pendingRequest
-  const [confirming, setConfirming] = useState(false)
-
-  // 1. Instant Automated Verification & Activation
-  const handleConfirmPaid = async () => {
-    if (!upiSession?.session_id || confirming) return
-    setConfirming(true)
-    try {
-      const res = await ownerAPI.simulateSubscriptionWebhook({
-        session_id: upiSession.session_id,
-        transaction_id: `AUTO_UPI_${Date.now()}`,
-        status: 'SUCCESS',
-        amount: upiSession.amount
-      })
-      if (res.data?.success) {
-        handleSubscriptionSuccess({ plan_name: upiSession.plan_name })
-      } else {
-        toast.error(res.data?.message || 'Verification failed')
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to auto-activate subscription')
-    } finally {
-      setConfirming(false)
-    }
-  }
-
-  // 1. Initiate Automated Real-Time UPI Session
-  const handleStartUpgrade = async (targetPlan) => {
-    if (user?.email === 'cafe@demo.com') {
-      toast.error('⚠️ Demo Template: Subscription upgrades are disabled.', { style: { background: '#fff', color: '#000', fontWeight: 'bold' } })
-      return
-    }
-
-    setLoading(true)
-    setSelectedPlan(targetPlan)
-    setLastAttemptedPlan(targetPlan)
-    isConfirmedRef.current = false
-
-    try {
-      const res = await ownerAPI.initiateSubscriptionSession({ plan_name: targetPlan })
-      if (res.data?.success) {
-        setUpiSession(res.data.data)
-        setShowUpgradeModal(true)
-        setPaymentIncomplete(false)
-      } else {
-        toast.error(res.data?.message || 'Failed to initiate payment session')
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to initiate UPI upgrade')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // 2. Handle Confirmed Subscription Payment (Auto Real-Time Detection)
+  // 1. Handle Confirmed Subscription Payment
   const handleSubscriptionSuccess = async (data) => {
     if (isConfirmedRef.current) return
     isConfirmedRef.current = true
 
-    toast.success(`🎉 Payment Detected! Your ${data?.plan_name === 'pro' ? 'Pro Plan' : 'Starter Plan'} is now ACTIVE!`, {
+    toast.success(`🎉 Payment Successful! Your ${data?.plan_name === 'pro' ? 'Pro Plan' : 'Starter Plan'} is now ACTIVE!`, {
       duration: 5000,
       icon: '⚡'
     })
 
-    setShowUpgradeModal(false)
-    setUpiSession(null)
     setPaymentIncomplete(false)
 
     // Refresh context and reload data seamlessly
@@ -133,69 +75,101 @@ const OwnerSubscription = () => {
     }
   }
 
-  // 3. Socket & Resilient Polling Listener inside active UPI Modal
+  // 2. Initiate Razorpay Checkout for Subscription
+  const handleStartUpgrade = async (targetPlan) => {
+    if (user?.email === 'cafe@demo.com') {
+      toast.error('⚠️ Demo Template: Subscription upgrades are disabled.', { style: { background: '#fff', color: '#000', fontWeight: 'bold' } })
+      return
+    }
+
+    setLoading(true)
+    setLastAttemptedPlan(targetPlan)
+    isConfirmedRef.current = false
+
+    try {
+      const res = await ownerAPI.createRazorpaySubscription({ plan_name: targetPlan })
+      
+      if (res.data?.success) {
+        const { subscription_id, razorpay_key_id, plan_name } = res.data.data
+        
+        const options = {
+          key: razorpay_key_id,
+          subscription_id: subscription_id,
+          name: platformName,
+          description: `Upgrade to ${plan_name === 'pro' ? 'Pro' : 'Starter'} Plan`,
+          image: '/logo.png', // Or platform logo
+          handler: async function (response) {
+            try {
+              const verifyRes = await ownerAPI.verifyRazorpaySubscription({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_subscription_id: response.razorpay_subscription_id,
+                razorpay_signature: response.razorpay_signature
+              })
+              
+              if (verifyRes.data?.success) {
+                handleSubscriptionSuccess({ plan_name })
+              } else {
+                toast.error('Payment verification failed.')
+              }
+            } catch (err) {
+              toast.error(err.response?.data?.message || 'Payment verification failed.')
+            }
+          },
+          prefill: {
+            name: user?.name,
+            email: user?.email,
+            contact: user?.phone
+          },
+          theme: {
+            color: '#06b6d4'
+          },
+          modal: {
+            ondismiss: function() {
+              setPaymentIncomplete(true)
+              toast('Upgrade payment pending. You can retry anytime!', { icon: 'ℹ️' })
+            }
+          }
+        };
+        
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+          toast.error(response.error.description || 'Payment failed.')
+        });
+        rzp.open();
+        
+      } else {
+        toast.error(res.data?.message || 'Failed to initiate payment session')
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to initiate Razorpay upgrade')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 3. Socket Listener for Background Webhook Success (e.g., if user closes tab too early)
   useEffect(() => {
-    if (!showUpgradeModal || !upiSession?.session_id) return
+    if (!user?._id) return
 
     const socket = io(SOCKET_URL)
-    socket.emit('join-payment-session', upiSession.session_id)
+    // We can join a cafe-specific room since we are the owner
+    socket.emit('join-payment-session', `cafe-${user._id}`) 
 
-    // Real-time server webhook event
+    // Real-time server webhook event from Razorpay webhook
     socket.on('subscription-activated', (data) => {
       handleSubscriptionSuccess(data)
     })
 
-    socket.on('subscription-failed', (data) => {
-      toast.error(data?.message || 'Subscription payment was not completed')
-      handleCloseModal(true)
+    socket.on('subscription-status-changed', (data) => {
+       if (data.status === 'suspended') {
+         toast.error('Subscription suspended due to payment failure.')
+       }
     })
-
-    // Resilient Polling Fallback (every 2.5 seconds)
-    const pollInterval = setInterval(async () => {
-      if (isConfirmedRef.current) return
-      try {
-        const res = await ownerAPI.checkSubscriptionStatus(upiSession.session_id)
-        const status = res.data?.data?.status
-        if (status === 'approved') {
-          handleSubscriptionSuccess(res.data.data)
-        }
-      } catch (err) {
-        // Silently retry next tick
-      }
-    }, 2500)
 
     return () => {
       socket.disconnect()
-      clearInterval(pollInterval)
     }
-  }, [showUpgradeModal, upiSession])
-
-  // 4. Open native UPI App on Mobile
-  const handleOpenUpiApp = () => {
-    if (!upiSession?.upi_url) return
-
-    if (!isMobile) {
-      toast('💡 UPI apps are on mobile phones. Please scan the dynamic QR code with your phone camera or payment app!', {
-        icon: '📲',
-        duration: 4500
-      })
-      return
-    }
-
-    window.location.href = upiSession.upi_url
-  }
-
-  // 5. Handle Modal Dismissal / Abort
-  const handleCloseModal = async (wasFailed = false) => {
-    if (upiSession?.session_id && !isConfirmedRef.current) {
-      ownerAPI.cancelSubscriptionSession(upiSession.session_id).catch(() => {})
-    }
-    setShowUpgradeModal(false)
-    setPaymentIncomplete(true)
-    if (!wasFailed) {
-      toast('Upgrade payment pending. You can retry or complete it anytime!', { icon: 'ℹ️' })
-    }
-  }
+  }, [user?._id])
 
   return (
     <div style={{ fontFamily: "'Inter',sans-serif", color: '#fff', maxWidth: 1000, margin: '0 auto', paddingBottom: 60 }}>
@@ -417,149 +391,6 @@ const OwnerSubscription = () => {
 
       </div>
 
-      {/* ── Automated Real-Time Direct NPCI UPI Upgrade Modal ── */}
-      {showUpgradeModal && upiSession && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#111827', width: '100%', maxWidth: 440, borderRadius: 24, padding: 28, border: '1px solid rgba(6,182,212,0.4)', boxShadow: '0 25px 60px rgba(0,0,0,0.8)', position: 'relative', textAlign: 'center' }}>
-            <button
-              onClick={() => handleCloseModal(false)}
-              style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.05)', border: 'none', color: '#9ca3af', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 14 }}
-            >
-              ✕
-            </button>
-            
-            <h2 style={{ fontSize: 22, fontWeight: 900, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>
-              Upgrade to {upiSession.plan_display}
-            </h2>
-            <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 16px' }}>
-              Direct UPI transfer to Superadmin (0% platform fees)
-            </p>
-
-            {/* Dynamic Real-Time UPI QR Code */}
-            <div style={{ background: '#fff', padding: 14, borderRadius: 16, display: 'inline-block', marginBottom: 14, boxShadow: '0 8px 30px rgba(0,0,0,0.4)' }}>
-              <QRCode value={upiSession.upi_url} size={165} />
-            </div>
-
-            <p style={{ fontSize: 28, fontWeight: 900, color: '#06b6d4', margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>
-              ₹{Number(upiSession.amount).toFixed(2)}
-            </p>
-            <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 16px' }}>
-              Admin UPI: <strong>{upiSession.admin_upi_id}</strong>
-            </p>
-
-            {/* Live Pulsing Real-Time Radar Status Indicator */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 10,
-              padding: '10px 16px',
-              background: 'rgba(16,185,129,0.1)',
-              border: '1px solid rgba(16,185,129,0.3)',
-              borderRadius: 20,
-              marginBottom: 16
-            }}>
-              <span style={{
-                width: 10,
-                height: 10,
-                borderRadius: '50%',
-                background: '#10b981',
-                animation: 'pulse-radar 1.5s infinite',
-                display: 'inline-block'
-              }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#34d399' }}>
-                ⚡ Awaiting UPI Payment Confirmation...
-              </span>
-            </div>
-
-            {/* One-Tap Mobile Pay Button */}
-            <button
-              type="button"
-              onClick={handleOpenUpiApp}
-              style={{
-                width: '100%',
-                padding: '14px',
-                borderRadius: 14,
-                border: 'none',
-                background: 'linear-gradient(135deg, #06b6d4, #4f46e5)',
-                color: '#fff',
-                fontSize: 14,
-                fontWeight: 800,
-                cursor: 'pointer',
-                marginBottom: 10,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                boxShadow: '0 4px 16px rgba(6,182,212,0.3)'
-              }}
-            >
-              <span>📲</span> Open UPI App (GPay / PhonePe / Paytm)
-            </button>
-
-            {/* Instant Automated Verification & Activation Button */}
-            <button
-              type="button"
-              disabled={confirming}
-              onClick={handleConfirmPaid}
-              style={{
-                width: '100%',
-                padding: '14px',
-                borderRadius: 14,
-                border: 'none',
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                color: '#fff',
-                fontSize: 14,
-                fontWeight: 800,
-                cursor: confirming ? 'not-allowed' : 'pointer',
-                marginBottom: 14,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                boxShadow: '0 4px 16px rgba(16,185,129,0.3)',
-                opacity: confirming ? 0.7 : 1,
-                transition: 'all 0.2s'
-              }}
-            >
-              {confirming ? (
-                <>
-                  <span>⏳</span> Verifying & Activating...
-                </>
-              ) : (
-                <>
-                  <span>✅</span> I Have Paid ₹{Number(upiSession.amount).toFixed(2)} — Activate Plan
-                </>
-              )}
-            </button>
-
-            {/* Explanatory Note */}
-            <div style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.07)',
-              borderRadius: 12,
-              padding: '10px 14px',
-              fontSize: 12,
-              color: '#9ca3af',
-              lineHeight: 1.5,
-              marginBottom: 10
-            }}>
-              ✨ <strong>100% Automated Detection</strong>: Scan QR or tap above to pay. Your plan will activate instantly without manual UTR submission!
-            </div>
-
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(upiSession.admin_upi_id)
-                toast.success('Admin UPI ID copied!')
-              }}
-              style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: 11, cursor: 'pointer' }}
-            >
-              Copy UPI ID to clipboard
-            </button>
-
-          </div>
-        </div>
-      )}
     </div>
   )
 }

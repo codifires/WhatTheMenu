@@ -121,14 +121,16 @@ export const ownerAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   // Subscription
-  initiateSubscriptionSession: (data) => api.post('/owner/subscription/initiate-session', data),
-  checkSubscriptionStatus: (sessionId) => api.get(`/owner/subscription/check-status/${sessionId}`),
-  cancelSubscriptionSession: (sessionId) => api.post(`/owner/subscription/cancel-session/${sessionId}`),
-  simulateSubscriptionWebhook: (data) => api.post('/owner/subscription/webhook', data),
   submitSubscriptionRequest: (data) => api.post('/owner/subscription/request', data),
   getGlobalMedia: () => api.get('/owner/media/global'),
   // Revenue History (permanent ledger)
   getRevenue: (params) => api.get('/owner/revenue', { params }),
+  // Razorpay Subscription
+  createRazorpaySubscription: (data) => api.post('/owner/razorpay/create-subscription', data),
+  verifyRazorpaySubscription: (data) => api.post('/owner/razorpay/verify-subscription', data),
+  cancelRazorpaySubscription: () => api.post('/owner/razorpay/cancel-subscription'),
+  getRazorpayInvoices: () => api.get('/owner/razorpay/invoices'),
+  initiateRazorpayRefund: (orderId, data) => api.post(`/owner/razorpay/refund/${orderId}`, data),
 }
 
 // ============ CUSTOMER (PUBLIC) ============
@@ -136,12 +138,11 @@ export const customerAPI = {
   getCafeMenu: (cafeId) => api.get(`/menu/${cafeId}`),
   searchMenu: (cafeId, q) => api.get(`/menu/${cafeId}/search`, { params: { q } }),
   placeOrder: (data) => api.post('/orders', data),
-  initiateUpiSession: (data) => api.post('/orders/initiate-upi-session', data),
-  checkUpiStatus: (sessionId) => api.get(`/orders/check-upi-status/${sessionId}`),
-  cancelUpiSession: (sessionId) => api.post(`/orders/cancel-upi-session/${sessionId}`),
-  simulateUpiWebhook: (data) => api.post('/orders/upi-webhook', data),
   trackOrder: (orderNumber) => api.get(`/orders/${orderNumber}/track`),
   submitFeedback: (data) => api.post('/feedback', data),
+  // Razorpay Order Payment
+  createRazorpayOrder: (data) => api.post('/orders/create-razorpay-order', data),
+  verifyRazorpayPayment: (data) => api.post('/orders/verify-razorpay-payment', data),
 }
 
 export default api

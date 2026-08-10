@@ -90,8 +90,10 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [plans, setPlans] = useState(DEFAULT_PLANS)
-  const cafes  = useCountUp(500)
-  const orders = useCountUp(10000)
+  const [realCafeCount, setRealCafeCount] = useState(0)
+  
+  const cafes  = useCountUp(realCafeCount)
+  const orders = useCountUp(realCafeCount * 145)
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 30)
@@ -101,6 +103,7 @@ export default function LandingPage() {
     publicAPI.getSettings().then(res => {
       const d = res.data?.data;
       if (d) {
+        setRealCafeCount(d.cafe_count || 0)
         setPlans([
           {
             ...DEFAULT_PLANS[0],
@@ -132,14 +135,12 @@ export default function LandingPage() {
       }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM17 17h4M17 21v-4M21 14h-4v4"/></svg>
-            </div>
-            <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.5px', fontFamily: "'Outfit',sans-serif" }}>
-              QRMenu<span style={{ color: '#a78bfa' }}>.</span>
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
+            <img src="/logo.png" alt="WTM Logo" style={{ height: 70, width: 70, objectFit: 'cover', borderRadius: '50%' }} />
+            <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.5px', fontFamily: "'Outfit',sans-serif", color: '#fff' }}>
+              WTM
             </span>
-          </div>
+          </Link>
 
           {/* Desktop links */}
           <nav style={{ display: 'flex', gap: 32, alignItems: 'center' }} className="hidden-mobile">
@@ -279,20 +280,22 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ STATS ═══════════════ */}
-      <section style={{ padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, textAlign: 'center' }}>
-          {[
-            { val: `${cafes}+`, label: 'Cafés Onboarded' },
-            { val: `${orders.toLocaleString()}+`, label: 'Orders Processed' },
-            { val: '4.9/5', label: 'Average Rating' },
-          ].map((s, i) => (
-            <div key={s.label} style={{ padding: '20px 32px', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
-              <p style={{ fontSize: 'clamp(32px,5vw,48px)', fontWeight: 900, margin: '0 0 6px', fontFamily: "'Outfit',sans-serif", background: 'linear-gradient(135deg,#a78bfa,#818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.val}</p>
-              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {realCafeCount >= 20 && (
+        <section style={{ padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, textAlign: 'center' }}>
+            {[
+              { val: `${cafes}+`, label: 'Cafés Onboarded' },
+              { val: `${orders.toLocaleString()}+`, label: 'Orders Processed' },
+              { val: '4.9/5', label: 'Average Rating' },
+            ].map((s, i) => (
+              <div key={s.label} style={{ padding: '20px 32px', borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+                <p style={{ fontSize: 'clamp(32px,5vw,48px)', fontWeight: 900, margin: '0 0 6px', fontFamily: "'Outfit',sans-serif", background: 'linear-gradient(135deg,#a78bfa,#818cf8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.val}</p>
+                <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ═══════════════ HOW IT WORKS ═══════════════ */}
       <section id="how-it-works" style={{ padding: '100px 24px' }}>
@@ -434,19 +437,39 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ FOOTER ═══════════════ */}
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '32px 24px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '64px 24px 32px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 48 }}>
+          
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 32 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 300 }}>
+              <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', marginBottom: 8 }}>
+                <img src="/logo.png" alt="WTM Logo" style={{ height: 120, width: 120, objectFit: 'cover', borderRadius: '50%' }} />
+                {/* <span style={{ fontWeight: 900, fontSize: 32, fontFamily: "'Outfit',sans-serif", color: '#fff' }}>WTM</span> */}
+              </Link>
+              <p style={{ fontSize: 14, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
+                Empowering cafés and restaurants with next-generation digital menus and seamless ordering.
+              </p>
             </div>
-            <span style={{ fontWeight: 800, fontFamily: "'Outfit',sans-serif" }}>QRMenu.</span>
+
+            <div style={{ display: 'flex', gap: 64, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#e5e7eb', textTransform: 'uppercase', letterSpacing: 1 }}>Product</span>
+                <Link to="/owner/login" style={{ fontSize: 14, color: '#9ca3af', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e=>e.target.style.color='#fff'} onMouseOut={e=>e.target.style.color='#9ca3af'}>Owner Login</Link>
+                <Link to="/owner/register" style={{ fontSize: 14, color: '#9ca3af', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e=>e.target.style.color='#fff'} onMouseOut={e=>e.target.style.color='#9ca3af'}>Register Café</Link>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#e5e7eb', textTransform: 'uppercase', letterSpacing: 1 }}>Legal</span>
+                <Link to="/terms" style={{ fontSize: 14, color: '#9ca3af', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e=>e.target.style.color='#fff'} onMouseOut={e=>e.target.style.color='#9ca3af'}>Terms & Conditions</Link>
+                <Link to="/privacy-policy" style={{ fontSize: 14, color: '#9ca3af', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e=>e.target.style.color='#fff'} onMouseOut={e=>e.target.style.color='#9ca3af'}>Privacy Policy</Link>
+                <Link to="/refund-policy" style={{ fontSize: 14, color: '#9ca3af', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={e=>e.target.style.color='#fff'} onMouseOut={e=>e.target.style.color='#9ca3af'}>Refund Policy</Link>
+              </div>
+            </div>
           </div>
-          <p style={{ fontSize: 13, color: '#4b5563', margin: 0 }}>© {new Date().getFullYear()} QRMenu SaaS. All rights reserved.</p>
-          <div style={{ display: 'flex', gap: 24 }}>
-            <Link to="/owner/login" style={{ fontSize: 13, color: '#4b5563', textDecoration: 'none' }}>Owner Login</Link>
-            <Link to="/owner/register" style={{ fontSize: 13, color: '#4b5563', textDecoration: 'none' }}>Register Café</Link>
+
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 32, display: 'flex', justifyContent: 'center' }}>
+            <p style={{ fontSize: 14, color: '#4b5563', margin: 0 }}>© {new Date().getFullYear()} What on the Menu. All rights reserved.</p>
           </div>
+
         </div>
       </footer>
 

@@ -590,7 +590,7 @@ const getSettings = async (req, res, next) => {
 // @route   PUT /api/admin/settings
 const updateSettings = async (req, res, next) => {
   try {
-    const { trial_days, currency, tax_rate, payment_live_mode, platform_name, contact_email, support_phone, support_whatsapp, support_hours, admin_upi_id, starter_price, pro_price, maintenance_mode, starter_features, pro_features } = req.body;
+    const { trial_days, currency, tax_rate, payment_live_mode, platform_name, contact_email, support_phone, support_whatsapp, support_hours, starter_price, pro_price, maintenance_mode, starter_features, pro_features } = req.body;
     const settings = await Settings.getSettings();
 
     if (trial_days !== undefined) settings.trial_days = Number(trial_days);
@@ -602,7 +602,6 @@ const updateSettings = async (req, res, next) => {
     if (support_phone) settings.support_phone = support_phone;
     if (support_whatsapp) settings.support_whatsapp = support_whatsapp;
     if (support_hours) settings.support_hours = support_hours;
-    if (admin_upi_id) settings.admin_upi_id = admin_upi_id;
     if (starter_price !== undefined) settings.starter_price = Number(starter_price);
     if (pro_price !== undefined) settings.pro_price = Number(pro_price);
     if (maintenance_mode !== undefined) settings.maintenance_mode = maintenance_mode;

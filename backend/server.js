@@ -44,6 +44,23 @@ app.use(cors({
   origin: (origin, callback) => callback(null, true),
   credentials: true
 }));
+
+// Razorpay Webhook routes — must come BEFORE express.json() to preserve raw body
+const { handleSubscriptionWebhook, handleOrderWebhook } = require('./controllers/razorpayController');
+app.post('/api/webhooks/razorpay/subscription',
+  express.json({
+    verify: (req, res, buf) => { req.rawBody = buf.toString(); }
+  }),
+  handleSubscriptionWebhook
+);
+app.post('/api/webhooks/razorpay/order',
+  express.json({
+    verify: (req, res, buf) => { req.rawBody = buf.toString(); }
+  }),
+  handleOrderWebhook
+);
+
+// Standard JSON parsing for all other routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -57,6 +74,9 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/owner', require('./routes/ownerRoutes'));
 app.use('/api/support', require('./routes/supportRoutes'));
 
+// Razorpay API routes (subscription + order payments)
+app.use('/api', require('./routes/razorpayRoutes'));
+
 // Public routes with rate limiting
 app.use('/api/menu', publicLimiter, require('./routes/menuRoutes'));
 app.use('/api/orders', publicLimiter, require('./routes/orderRoutes'));
@@ -66,9 +86,11 @@ const { errorHandler } = require('./middleware/errorHandler');
 
 // Public settings endpoint — no auth required (for registration page)
 const Settings = require('./models/Settings');
+const Cafe = require('./models/Cafe');
 app.get('/api/settings/public', async (req, res) => {
   try {
     const settings = await Settings.getSettings();
+    const cafeCount = await Cafe.countDocuments({ status: 'active' });
     res.json({
       success: true,
       data: {
@@ -77,11 +99,12 @@ app.get('/api/settings/public', async (req, res) => {
         admin_upi_id: settings.admin_upi_id,
         starter_price: settings.starter_price,
         pro_price: settings.pro_price,
-        maintenance_mode: settings.maintenance_mode
+        maintenance_mode: settings.maintenance_mode,
+        cafe_count: cafeCount
       }
     });
   } catch (err) {
-    res.json({ success: true, data: { trial_days: 14, currency: 'INR' } });
+    res.json({ success: true, data: { trial_days: 14, currency: 'INR', cafe_count: 0 } });
   }
 });
 

@@ -60,7 +60,12 @@ const startSubscriptionCron = () => {
       
       const expiredCafes = await Cafe.find({
         'subscription.status': 'active',
-        'subscription.end_date': { $lte: now }
+        'subscription.end_date': { $lte: now },
+        // Skip cafés with active Razorpay subscriptions — Razorpay handles billing via webhooks
+        $or: [
+          { razorpay_subscription_id: { $exists: false } },
+          { razorpay_subscription_id: '' }
+        ]
       });
 
       let settings = null;

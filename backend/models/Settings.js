@@ -17,10 +17,7 @@ const settingsSchema = new mongoose.Schema({
     type: String,
     default: 'INR'
   },
-  admin_upi_id: {
-    type: String,
-    default: 'yourname@upi'
-  },
+
   starter_price: {
     type: Number,
     default: 299

@@ -40,7 +40,26 @@ const cafeSchema = new mongoose.Schema({
     minlength: 6,
     select: false
   },
-  upi_id: {
+
+  razorpay_key_id: {
+    type: String,
+    default: ''
+  },
+  razorpay_key_secret: {
+    type: String,
+    default: '',
+    select: false
+  },
+  razorpay_webhook_secret: {
+    type: String,
+    default: '',
+    select: false
+  },
+  razorpay_customer_id: {
+    type: String,
+    default: ''
+  },
+  razorpay_subscription_id: {
     type: String,
     default: ''
   },

@@ -17,6 +17,10 @@ import OwnerRegister from './pages/auth/OwnerRegister'
 import SetPassword from './pages/auth/SetPassword'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import LandingPage from './pages/LandingPage'
+import TermsAndConditions from './pages/TermsAndConditions'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import RefundPolicy from './pages/RefundPolicy'
+
 
 // Lazy loaded Admin Pages
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
@@ -246,6 +250,9 @@ function App() {
 
         {/* Default route */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/terms" element={<TermsAndConditions />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/refund-policy" element={<RefundPolicy />} />
         <Route path="*" element={
           <div className="min-h-screen bg-dark-950 flex items-center justify-center">
             <div className="text-center">

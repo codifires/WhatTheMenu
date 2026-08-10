@@ -38,10 +38,7 @@ const {
   initiateSubscriptionSessionValidator
 } = require('../validators/ownerValidators');
 
-// Public webhook & status routes (No auth required for payment webhooks/polling)
-router.post('/subscription/webhook', handleSubscriptionWebhook);
-router.get('/subscription/check-status/:sessionId', checkSubscriptionStatus);
-router.post('/subscription/cancel-session/:sessionId', cancelSubscriptionSession);
+
 
 // All routes below require owner auth
 router.use(protect, authorize('owner'), apiLimiter);
@@ -87,9 +84,7 @@ router.get('/feedback', getFeedback);
 // Settings
 router.put('/settings', upload.single('logo'), settingsValidator, updateSettings);
 
-// Subscription Requests & Automated UPI Sessions
-router.post('/subscription/initiate-session', initiateSubscriptionSessionValidator, initiateSubscriptionSession);
-router.post('/subscription/request', subscriptionRequestValidator, submitSubscriptionRequest);
+
 
 // Global Media
 router.get('/media/global', getGlobalMedia);

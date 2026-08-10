@@ -31,6 +31,30 @@ const subscriptionSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'expired', 'suspended'],
     default: 'active'
+  },
+  razorpay_subscription_id: {
+    type: String,
+    default: ''
+  },
+  razorpay_plan_id: {
+    type: String,
+    default: ''
+  },
+  razorpay_payment_id: {
+    type: String,
+    default: ''
+  },
+  billing_cycle: {
+    type: String,
+    enum: ['monthly', 'yearly'],
+    default: 'monthly'
+  },
+  next_billing_date: {
+    type: Date
+  },
+  invoice_id: {
+    type: String,
+    default: ''
   }
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
