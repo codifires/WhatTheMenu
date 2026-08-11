@@ -188,7 +188,7 @@ const OwnerSubscription = () => {
           Subscription & Billing
         </h1>
         <p style={{ fontSize: 15, color: '#9ca3af', margin: 0 }}>
-          Automated real-time zero-fee UPI upgrades for instant activation.
+          Manage your subscription and billing details seamlessly with Razorpay.
         </p>
       </div>
 

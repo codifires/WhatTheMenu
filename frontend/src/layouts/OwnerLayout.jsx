@@ -183,6 +183,13 @@ const OwnerLayout = ({ children }) => {
   const navigate = useNavigate()
   const location = useLocation()
 
+  const daysRemaining = (() => {
+    if (!user?.subscription?.end_date) return null;
+    const endDate = new Date(user.subscription.end_date);
+    const diffTime = endDate.getTime() - new Date().getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  })();
+
   const handleLogout = () => {
     logout()
     navigate('/owner/login')
@@ -217,7 +224,15 @@ const OwnerLayout = ({ children }) => {
             <span style={{ fontSize: 14, fontWeight: 600, color: '#e5e7eb' }}>{pageTitle}</span>
           </div>
 
-          <div id="topbar-alert-portal" style={{ flex: 1, margin: '0 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}></div>
+          <div id="topbar-alert-portal" style={{ flex: 1, margin: '0 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+            {daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 3 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', padding: '6px 12px', borderRadius: 8, color: '#fbbf24', fontSize: 13, fontWeight: 600 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                {daysRemaining === 0 ? 'Your plan expires today!' : `Your plan expires in ${daysRemaining} day${daysRemaining > 1 ? 's' : ''}!`}
+                <Link to="/owner/subscription" style={{ color: '#fff', marginLeft: 8, textDecoration: 'underline' }}>Upgrade</Link>
+              </div>
+            )}
+          </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Link to={`/menu/${user?.id}`} target="_blank" title="Preview Store"

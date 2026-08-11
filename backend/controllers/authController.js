@@ -185,8 +185,27 @@ const getMe = async (req, res, next) => {
     const user = req.user;
     let pendingRequest = null;
     
+    let subscription = user.subscription;
+    
     if (user.role === 'owner') {
       pendingRequest = await SubscriptionRequest.findOne({ cafe_id: user._id, status: 'pending' }).sort({ created_at: -1 });
+      
+      // Patch for existing users missing the embedded subscription or missing end_date
+      if (!subscription || !subscription.end_date) {
+        const activeSub = await Subscription.findOne({ cafe_id: user._id, status: 'active' }).sort({ created_at: -1 }).lean();
+        if (activeSub) {
+          subscription = {
+            plan_name: activeSub.plan_name,
+            start_date: activeSub.start_date,
+            end_date: activeSub.end_date,
+            status: activeSub.status
+          };
+          // Also save it to the DB so it's permanently fixed
+          try {
+             await Cafe.findByIdAndUpdate(user._id, { subscription });
+          } catch(e) {}
+        }
+      }
     }
 
     res.json({
@@ -203,7 +222,7 @@ const getMe = async (req, res, next) => {
           upi_id: user.upi_id,
           tax_percentage: user.tax_percentage,
           subscription_status: user.subscription_status,
-          subscription: user.subscription, // Use embedded subscription
+          subscription: subscription, // Use embedded subscription (patched if missing)
           upcoming_subscription: user.upcoming_subscription, // Add upcoming subscription
           pending_request: pendingRequest
         })
@@ -308,6 +327,16 @@ const register = async (req, res, next) => {
     }
 
     await Subscription.create(subscriptionData);
+    
+    // Set embedded subscription in Cafe
+    cafe.subscription_status = 'active';
+    cafe.subscription = {
+      plan_name: subscriptionData.plan_name,
+      start_date: subscriptionData.start_date,
+      end_date: subscriptionData.end_date,
+      status: 'active'
+    };
+    await cafe.save({ validateBeforeSave: false });
 
     try {
       const io = req.app.get('io');
