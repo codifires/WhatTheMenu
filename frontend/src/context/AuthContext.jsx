@@ -35,11 +35,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const res = await authAPI.login({ email, password })
-    const { token, user: userData } = res.data.data
+    const { token } = res.data.data
     localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(userData))
-    setUser(userData)
-    return userData
+    
+    // Immediately fetch the fully hydrated user object from /api/auth/me
+    const fullUser = await refreshUser()
+    return fullUser
   }
 
   const refreshUser = async () => {
