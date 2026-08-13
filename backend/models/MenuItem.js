@@ -37,6 +37,10 @@ const menuItemSchema = new mongoose.Schema({
   is_veg: {
     type: Boolean,
     default: true
+  },
+  sort_order: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }

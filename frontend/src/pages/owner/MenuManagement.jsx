@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { ownerAPI } from '../../services/api'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable'
 
 import InputField from '../../components/ui/InputField'
 import MenuHeader from './components/MenuHeader'
@@ -23,6 +25,11 @@ const MenuManagement = () => {
   const [showMediaModal, setShowMediaModal] = useState(false)
   const [globalMedia, setGlobalMedia] = useState([])
   const [mediaTab, setMediaTab] = useState('platform')
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
 
   useEffect(() => {
     fetchCategories()
@@ -165,6 +172,28 @@ const MenuManagement = () => {
     setShowMediaModal(false)
   }
 
+  const handleDragEnd = async (event) => {
+    if (user?.email === 'cafe@demo.com') {
+      toast.error('⚠️ Demo Template: Menu modifications are disabled.')
+      return
+    }
+    const { active, over } = event
+    if (active.id !== over?.id) {
+      const oldIndex = items.findIndex(item => item._id === active.id)
+      const newIndex = items.findIndex(item => item._id === over.id)
+      
+      const newItems = arrayMove(items, oldIndex, newIndex)
+      setItems(newItems)
+
+      try {
+        await ownerAPI.reorderMenuItems({ itemIds: newItems.map(item => item._id) })
+      } catch (error) {
+        toast.error('Failed to save new order')
+        fetchItems() // revert on fail
+      }
+    }
+  }
+
   return (
     <div style={{ fontFamily: "'Inter',sans-serif", color: '#fff' }}>
 
@@ -185,18 +214,22 @@ const MenuManagement = () => {
           ))}
         </div>
       ) : items.length > 0 ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
-          {items.map((item, i) => (
-            <MenuItemCard 
-              key={item._id} 
-              item={item} 
-              index={i} 
-              onEdit={openEdit} 
-              onDelete={handleDelete} 
-              onToggle={handleToggleAvailability} 
-            />
-          ))}
-        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={items.map(i => i._id)} strategy={rectSortingStrategy}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
+              {items.map((item, i) => (
+                <MenuItemCard 
+                  key={item._id} 
+                  item={item} 
+                  index={i} 
+                  onEdit={openEdit} 
+                  onDelete={handleDelete} 
+                  onToggle={handleToggleAvailability} 
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       ) : (
         <div style={{ padding: '60px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: 20, border: '1px dashed rgba(255,255,255,0.1)' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🍽️</div>

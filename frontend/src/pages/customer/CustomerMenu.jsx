@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { customerAPI } from '../../services/api'
+import { customerAPI, SOCKET_URL } from '../../services/api'
 import { useCart } from '../../context/CartContext'
 import toast from 'react-hot-toast'
+import { io } from 'socket.io-client'
 
 const CustomerMenu = () => {
   const { cafeId } = useParams()
@@ -15,6 +16,18 @@ const CustomerMenu = () => {
 
   useEffect(() => {
     fetchMenu()
+    
+    // Live Availability Updates
+    const socket = io(SOCKET_URL)
+    socket.emit('join-cafe', cafeId)
+    
+    socket.on('menu_item_updated', (updatedItem) => {
+      setAllItems(prevItems => 
+        prevItems.map(item => item._id === updatedItem._id ? { ...item, availability: updatedItem.availability } : item)
+      )
+    })
+
+    return () => socket.disconnect()
   }, [cafeId])
 
   const fetchMenu = async () => {
@@ -134,7 +147,7 @@ const CustomerMenu = () => {
                 {/* Image */}
                 <div style={{ height: 120, background: 'rgba(255,255,255,0.02)', position: 'relative' }}>
                   {item.image ? (
-                    <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: item.availability === false ? 'grayscale(100%) opacity(0.6)' : 'none' }} />
                   ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, opacity: 0.2 }}>🍽️</div>
                   )}
@@ -150,9 +163,13 @@ const CustomerMenu = () => {
                   <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 12px', flex: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.description}</p>
                   
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-                    <span style={{ fontSize: 16, fontWeight: 800, color: '#f59e0b' }}>₹{item.price}</span>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: item.availability === false ? '#6b7280' : '#f59e0b' }}>₹{item.price}</span>
                     
-                    {qty > 0 ? (
+                    {item.availability === false ? (
+                      <span style={{ padding: '6px 12px', borderRadius: 12, background: 'rgba(255,255,255,0.05)', color: '#9ca3af', fontSize: 11, fontWeight: 700 }}>
+                        Out of Stock
+                      </span>
+                    ) : qty > 0 ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 4 }}>
                         <button onClick={() => qty === 1 ? removeItem(item._id) : updateQuantity(item._id, qty - 1)} style={{ width: 24, height: 24, borderRadius: 8, border: 'none', background: 'transparent', color: '#9ca3af', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
                         <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', width: 12, textAlign: 'center' }}>{qty}</span>

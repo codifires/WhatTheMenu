@@ -102,6 +102,7 @@ export const ownerAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   deleteMenuItem: (id) => api.delete(`/owner/menu-items/${id}`),
+  reorderMenuItems: (data) => api.put('/owner/menu-items/reorder', data),
   toggleAvailability: (id) => api.put(`/owner/menu-items/${id}/availability`),
   // Orders
   getOrders: (params) => api.get('/owner/orders', { params }),

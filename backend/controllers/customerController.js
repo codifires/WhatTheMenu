@@ -30,8 +30,9 @@ const getCafeMenu = async (req, res, next) => {
         .sort({ sort_order: 1 })
         .select('name sort_order')
         .lean(),
-      MenuItem.find({ cafe_id: cafe._id, availability: true })
+      MenuItem.find({ cafe_id: cafe._id })
         .populate('category_id', 'name')
+        .sort({ sort_order: 1 })
         .lean()
     ]);
 
@@ -76,7 +77,6 @@ const searchMenu = async (req, res, next) => {
 
     const items = await MenuItem.find({
       cafe_id: req.params.cafeId,
-      availability: true,
       $or: [
         { name: { $regex: q, $options: 'i' } },
         { description: { $regex: q, $options: 'i' } }

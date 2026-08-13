@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { customerAPI } from '../../services/api'
+import { customerAPI, SOCKET_URL } from '../../services/api'
 import { useCart } from '../../context/CartContext'
+import { io } from 'socket.io-client'
 
 const CustomerSearch = () => {
   const { cafeId } = useParams()
@@ -9,6 +10,19 @@ const CustomerSearch = () => {
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
   const { addItem, items: cartItems, updateQuantity, removeItem } = useCart()
+
+  useEffect(() => {
+    const socket = io(SOCKET_URL)
+    socket.emit('join-cafe', cafeId)
+    
+    socket.on('menu_item_updated', (updatedItem) => {
+      setResults(prevResults => 
+        prevResults.map(item => item._id === updatedItem._id ? { ...item, availability: updatedItem.availability } : item)
+      )
+    })
+
+    return () => socket.disconnect()
+  }, [cafeId])
 
   const handleSearch = async (q) => {
     setQuery(q)
@@ -73,7 +87,7 @@ const CustomerSearch = () => {
               {/* Image Box */}
               <div style={{ width: 70, height: 70, borderRadius: 12, background: 'rgba(255,255,255,0.02)', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
                 {item.image ? (
-                  <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: item.availability === false ? 'grayscale(100%) opacity(0.6)' : 'none' }} />
                 ) : (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, opacity: 0.2 }}>🍽️</div>
                 )}
@@ -86,12 +100,16 @@ const CustomerSearch = () => {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: '0 0 2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</h3>
                 <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.category_id?.name || 'Item'}</p>
-                <p style={{ fontSize: 14, fontWeight: 800, color: '#f59e0b', margin: 0 }}>₹{item.price}</p>
+                <p style={{ fontSize: 14, fontWeight: 800, color: item.availability === false ? '#6b7280' : '#f59e0b', margin: 0 }}>₹{item.price}</p>
               </div>
 
               {/* Actions */}
               <div style={{ flexShrink: 0 }}>
-                {qty > 0 ? (
+                {item.availability === false ? (
+                  <span style={{ padding: '4px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', color: '#9ca3af', fontSize: 10, fontWeight: 700 }}>
+                    Out of Stock
+                  </span>
+                ) : qty > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 4 }}>
                     <button onClick={() => updateQuantity(item._id, qty + 1)} style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #f59e0b, #ea580c)', color: '#fff', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
                     <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', textAlign: 'center' }}>{qty}</span>

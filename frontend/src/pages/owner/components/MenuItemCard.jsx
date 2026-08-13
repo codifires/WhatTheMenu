@@ -1,10 +1,30 @@
 import React from 'react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const MenuItemCard = ({ item, index, onEdit, onDelete, onToggle }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item._id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 1,
+    position: 'relative'
+  };
+
   return (
-    <div className="menu-card" style={{ borderRadius: 20, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden', display: 'flex', flexDirection: 'column', animation: `fadeIn 0.3s ease ${index * 0.05}s both` }}>
-      {/* Image Box */}
+    <div 
+      ref={setNodeRef} 
+      style={{ ...style, borderRadius: 20, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden', display: 'flex', flexDirection: 'column', animation: isDragging ? 'none' : `fadeIn 0.3s ease ${index * 0.05}s both` }}
+    >
+      {/* Drag Handle & Image Box */}
       <div style={{ height: 160, background: 'rgba(255,255,255,0.02)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        
+        {/* 6-dot Drag Handle */}
+        <div {...attributes} {...listeners} style={{ position: 'absolute', top: 12, left: 12, zIndex: 2, cursor: 'grab', background: 'rgba(0,0,0,0.5)', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>
+        </div>
         {item.image ? (
           <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} className="menu-img" />
         ) : (

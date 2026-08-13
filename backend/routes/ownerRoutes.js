@@ -10,6 +10,7 @@ const {
   createMenuItem,
   updateMenuItem,
   deleteMenuItem,
+  reorderMenuItems,
   toggleAvailability,
   getOrders,
   updateOrderStatus,
@@ -59,6 +60,8 @@ router.route('/categories/:id')
   .delete(deleteCategory);
 
 // Menu Items
+router.put('/menu-items/reorder', reorderMenuItems);
+
 router.route('/menu-items')
   .get(getMenuItems)
   .post(upload.single('image'), menuItemValidator, createMenuItem);

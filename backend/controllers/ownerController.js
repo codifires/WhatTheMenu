@@ -229,9 +229,37 @@ const getMenuItems = async (req, res, next) => {
 
     const items = await MenuItem.find(query)
       .populate('category_id', 'name')
-      .sort({ created_at: -1 });
+      .sort({ sort_order: 1, created_at: -1 });
 
     res.json({ success: true, data: items });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Reorder menu items
+// @route   PUT /api/owner/menu-items/reorder
+const reorderMenuItems = async (req, res, next) => {
+  try {
+    const { itemIds } = req.body; // Array of MenuItem IDs in the new order
+
+    if (!itemIds || !Array.isArray(itemIds)) {
+      return res.status(400).json({ success: false, message: 'Invalid item IDs array' });
+    }
+
+    // Use bulkWrite to update all items' sort_order in a single database operation
+    const bulkOps = itemIds.map((id, index) => ({
+      updateOne: {
+        filter: { _id: id, cafe_id: req.user._id },
+        update: { $set: { sort_order: index } }
+      }
+    }));
+
+    if (bulkOps.length > 0) {
+      await MenuItem.bulkWrite(bulkOps);
+    }
+
+    res.json({ success: true, message: 'Menu items reordered successfully' });
   } catch (error) {
     next(error);
   }
@@ -346,6 +374,11 @@ const toggleAvailability = async (req, res, next) => {
 
     item.availability = !item.availability;
     await item.save();
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`cafe-${req.user._id}`).emit('menu_item_updated', item);
+    }
 
     res.json({ success: true, data: item });
   } catch (error) {
@@ -699,6 +732,7 @@ module.exports = {
   createMenuItem,
   updateMenuItem,
   deleteMenuItem,
+  reorderMenuItems,
   toggleAvailability,
   getOrders,
   updateOrderStatus,
