@@ -26,6 +26,12 @@ const FEATURES = [
     color: '#7c3aed',
   },
   {
+    icon: '✨',
+    title: 'Live Demo Café',
+    desc: 'Try our fully populated demo café before you even sign up. See exactly what your customers will experience!',
+    color: '#10b981',
+  },
+  {
     icon: '📱',
     title: 'Scan & Browse — No App',
     desc: 'Customers scan your QR code and browse your full menu in their phone browser. Nothing to install.',
@@ -447,7 +453,7 @@ export default function LandingPage() {
                 {/* <span style={{ fontWeight: 900, fontSize: 32, fontFamily: "'Outfit',sans-serif", color: '#fff' }}>WTM</span> */}
               </Link>
               <p style={{ fontSize: 14, color: '#6b7280', margin: 0, lineHeight: 1.6 }}>
-                Empowering cafés and restaurants with next-generation digital menus and seamless ordering.
+                Empowering cafés with next-generation digital menus and seamless ordering.
               </p>
             </div>
 

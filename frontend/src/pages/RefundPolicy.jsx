@@ -51,7 +51,7 @@ const RefundPolicy = () => {
             
             <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: '16px 0 8px' }}>3.1 Order Cancellations</h3>
             <ul style={{ paddingLeft: 20 }}>
-              <li>Order cancellations are at the sole discretion of the specific Café/Restaurant where the order was placed.</li>
+              <li>Order cancellations are at the sole discretion of the specific Café where the order was placed.</li>
               <li>Once an order is marked as "Preparing" by the café, it typically cannot be cancelled.</li>
             </ul>
 

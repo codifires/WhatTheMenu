@@ -27,13 +27,13 @@ const TermsAndConditions = () => {
 
           <Section title="1. Acceptance of Terms">
             <p>By accessing or using the WTM platform ("Service"), you agree to be bound by these Terms and Conditions ("Terms"). If you do not agree to these Terms, please do not use the Service.</p>
-            <p>WTM is a SaaS (Software as a Service) platform that enables café and restaurant owners to create digital QR menus, receive customer orders, and manage their business operations online.</p>
+            <p>WTM is a SaaS (Software as a Service) platform that enables café owners to create digital QR menus, receive customer orders, and manage their business operations online.</p>
           </Section>
 
           <Section title="2. Definitions">
             <ul style={{ paddingLeft: 20 }}>
               <li><strong>"Platform"</strong> refers to the WTM web application and all associated services.</li>
-              <li><strong>"Owner"</strong> or <strong>"Café Owner"</strong> refers to a business that registers on the Platform to manage their café or restaurant.</li>
+              <li><strong>"Owner"</strong> or <strong>"Café Owner"</strong> refers to a business that registers on the Platform to manage their café.</li>
               <li><strong>"Customer"</strong> refers to an end-user who scans a QR code to browse a café's menu and place orders.</li>
               <li><strong>"Admin"</strong> refers to the WTM platform administrators.</li>
               <li><strong>"Subscription"</strong> refers to the paid plan that grants Owners access to Platform features.</li>
@@ -53,6 +53,7 @@ const TermsAndConditions = () => {
               <li>Payment is processed via secure third-party payment gateways (e.g., Razorpay, PhonePe).</li>
               <li>All prices are in Indian Rupees (INR) and inclusive of applicable taxes unless stated otherwise.</li>
               <li>Free trial periods, if offered, are subject to separate terms and may be limited.</li>
+              <li><strong>Service Suspension:</strong> Failure to pay the subscription fee will result in the immediate suspension of your café's digital menu and ordering system until payment is made.</li>
             </ul>
           </Section>
 

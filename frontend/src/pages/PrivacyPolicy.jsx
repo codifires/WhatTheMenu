@@ -35,7 +35,7 @@ const PrivacyPolicy = () => {
             <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: '16px 0 8px' }}>2.1 Café Owner Information</h3>
             <ul style={{ paddingLeft: 20 }}>
               <li>Full name and contact details (email, phone number)</li>
-              <li>Café/restaurant name, address, and logo</li>
+              <li>Café name, address, and logo</li>
               <li>UPI ID or payment details for receiving customer payments</li>
               <li>Menu content (item names, descriptions, prices, images)</li>
               <li>Subscription and billing information</li>
