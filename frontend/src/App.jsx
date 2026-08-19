@@ -27,6 +27,8 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const CafeManagement = lazy(() => import('./pages/admin/CafeManagement'))
 const SubscriptionManagement = lazy(() => import('./pages/admin/SubscriptionManagement'))
 const RevenueManagement = lazy(() => import('./pages/admin/RevenueManagement'))
+const AdminPayments = lazy(() => import('./pages/admin/AdminPayments'))
+const AdminLogs = lazy(() => import('./pages/admin/AdminLogs'))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'))
 const AdminMediaLibrary = lazy(() => import('./pages/admin/AdminMediaLibrary'))
 const PlanServicesManagement = lazy(() => import('./pages/admin/PlanServicesManagement'))
@@ -143,6 +145,16 @@ function App() {
         <Route path="/admin/revenue" element={
           <ProtectedRoute role="superadmin">
             <AdminLayout><RevenueManagement /></AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/payments" element={
+          <ProtectedRoute role="superadmin">
+            <AdminLayout><AdminPayments /></AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin/logs" element={
+          <ProtectedRoute role="superadmin">
+            <AdminLayout><AdminLogs /></AdminLayout>
           </ProtectedRoute>
         } />
         <Route path="/admin/settings" element={

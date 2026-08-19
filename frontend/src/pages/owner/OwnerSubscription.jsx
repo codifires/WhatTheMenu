@@ -13,6 +13,8 @@ const OwnerSubscription = () => {
   
   const [starterPrice, setStarterPrice] = useState(299)
   const [proPrice, setProPrice] = useState(499)
+  const [yearlyDiscountPercentage, setYearlyDiscountPercentage] = useState(20)
+  const [billingCycle, setBillingCycle] = useState('monthly')
   const [adminUpiId, setAdminUpiId] = useState('superadmin@okaxis')
   const [platformName, setPlatformName] = useState('QRMenu SaaS')
   const [starterFeatures, setStarterFeatures] = useState([
@@ -30,16 +32,21 @@ const OwnerSubscription = () => {
   const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent)
   const isConfirmedRef = useRef(false)
 
-  useEffect(() => {
+  const fetchSettings = () => {
     publicAPI.getSettings().then(res => {
       const d = res.data?.data
       if (d?.starter_price) setStarterPrice(d.starter_price)
       if (d?.pro_price) setProPrice(d.pro_price)
+      if (d?.yearly_discount_percentage) setYearlyDiscountPercentage(d.yearly_discount_percentage)
       if (d?.admin_upi_id) setAdminUpiId(d.admin_upi_id)
       if (d?.platform_name) setPlatformName(d.platform_name)
       if (d?.starter_features?.length > 0) setStarterFeatures(d.starter_features)
       if (d?.pro_features?.length > 0) setProFeatures(d.pro_features)
     }).catch(() => {})
+  }
+
+  useEffect(() => {
+    fetchSettings()
   }, [])
 
   const isActive = user?.subscription_status === 'active'
@@ -50,7 +57,11 @@ const OwnerSubscription = () => {
   const endDate = subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'
   
   const displayPlanName = planName === 'free' ? 'Free Trial' : planName === 'starter' ? 'Starter Plan' : 'Pro Plan'
-  const displayPrice = planName === 'free' ? '₹0/month' : planName === 'starter' ? `₹${starterPrice}/month` : `₹${proPrice}/month`
+  const isCurrentPlanYearly = subscription?.billing_cycle === 'yearly'
+  const starterPriceYearly = Math.round(starterPrice * 12 * (1 - yearlyDiscountPercentage / 100))
+  const proPriceYearly = Math.round(proPrice * 12 * (1 - yearlyDiscountPercentage / 100))
+  const currentPrice = planName === 'free' ? 0 : planName === 'starter' ? (isCurrentPlanYearly ? starterPriceYearly : starterPrice) : (isCurrentPlanYearly ? proPriceYearly : proPrice)
+  const displayPrice = planName === 'free' ? '₹0/month' : `₹${currentPrice}/${isCurrentPlanYearly ? 'year' : 'month'}`
 
   const upcoming = user?.upcoming_subscription
   const hasUpcoming = upcoming && upcoming.plan_name
@@ -87,7 +98,7 @@ const OwnerSubscription = () => {
     isConfirmedRef.current = false
 
     try {
-      const res = await ownerAPI.createRazorpaySubscription({ plan_name: targetPlan })
+      const res = await ownerAPI.createRazorpaySubscription({ plan_name: targetPlan, billing_cycle: billingCycle })
       
       if (res.data?.success) {
         const { subscription_id, razorpay_key_id, plan_name } = res.data.data
@@ -164,6 +175,10 @@ const OwnerSubscription = () => {
        if (data.status === 'suspended') {
          toast.error('Subscription suspended due to payment failure.')
        }
+    })
+
+    socket.on('settings-updated', () => {
+       fetchSettings()
     })
 
     return () => {
@@ -331,14 +346,35 @@ const OwnerSubscription = () => {
       </div>
 
       {/* ── Pricing Table ── */}
-      <h3 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>Available SaaS Plans</h3>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <h3 style={{ fontSize: 20, fontWeight: 700, margin: 0, fontFamily: "'Outfit',sans-serif" }}>Available SaaS Plans</h3>
+        
+        {/* Toggle */}
+        <div style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: 100, padding: 4 }}>
+          <button
+            onClick={() => setBillingCycle('monthly')}
+            style={{ padding: '6px 16px', borderRadius: 100, border: 'none', background: billingCycle === 'monthly' ? '#7c3aed' : 'transparent', color: billingCycle === 'monthly' ? '#fff' : '#9ca3af', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingCycle('yearly')}
+            style={{ padding: '6px 16px', borderRadius: 100, border: 'none', background: billingCycle === 'yearly' ? '#7c3aed' : 'transparent', color: billingCycle === 'yearly' ? '#fff' : '#9ca3af', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            Yearly <span style={{ fontSize: 10, background: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: 50, fontWeight: 800 }}>-{yearlyDiscountPercentage}%</span>
+          </button>
+        </div>
+      </div>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
         
         {/* Starter Plan */}
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column' }}>
           <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#9ca3af' }}>Starter</h4>
-          <div style={{ fontSize: 36, fontWeight: 800, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>₹{starterPrice}<span style={{ fontSize: 16, color: '#6b7280', fontWeight: 500 }}>/mo</span></div>
+          <div style={{ fontSize: 36, fontWeight: 800, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>
+            ₹{billingCycle === 'yearly' ? starterPriceYearly : starterPrice}
+            <span style={{ fontSize: 16, color: '#6b7280', fontWeight: 500 }}>/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
+          </div>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
             {starterFeatures.map((feature, idx) => (
               <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#d1d5db' }}>
@@ -362,11 +398,13 @@ const OwnerSubscription = () => {
         </div>
 
         {/* Pro Plan */}
-        <div style={{ background: 'linear-gradient(180deg, rgba(6,182,212,0.1) 0%, rgba(255,255,255,0.02) 100%)', border: '1px solid rgba(6,182,212,0.3)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(90deg, #06b6d4, #4f46e5)', padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>Most Popular</div>
-          <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#06b6d4' }}>Pro</h4>
-          <div style={{ fontSize: 36, fontWeight: 800, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>₹{proPrice}<span style={{ fontSize: 16, color: '#6b7280', fontWeight: 500 }}>/mo</span></div>
-          <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 24px' }}>All features included.</p>
+        <div style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(79,70,229,0.05))', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: -1, right: 24, transform: 'translateY(-50%)', padding: '4px 12px', borderRadius: 50, fontSize: 11, fontWeight: 800, color: '#fff', background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>Most Popular</div>
+          <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#c4b5fd' }}>Pro</h4>
+          <div style={{ fontSize: 36, fontWeight: 800, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>
+            ₹{billingCycle === 'yearly' ? proPriceYearly : proPrice}
+            <span style={{ fontSize: 16, color: '#6b7280', fontWeight: 500 }}>/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
+          </div>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
             {proFeatures.map((feature, idx) => (
               <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#fff' }}>

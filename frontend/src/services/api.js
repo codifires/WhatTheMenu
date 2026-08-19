@@ -78,6 +78,9 @@ export const adminAPI = {
   getRevenue: (params) => api.get('/admin/revenue', { params }),
   getSupportTickets: (params) => api.get('/support/admin/tickets', { params }),
   replySupportTicket: (id, data) => api.put(`/support/admin/tickets/${id}`, data),
+  getAllPayments: (params) => api.get('/admin/payments', { params }),
+  getSystemLogs: (params) => api.get('/admin/logs', { params }),
+  clearSystemLogs: () => api.delete('/admin/logs/clear'),
 }
 
 // ============ PUBLIC SETTINGS ============

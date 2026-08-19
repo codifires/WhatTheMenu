@@ -99,7 +99,10 @@ app.get('/api/settings/public', async (req, res) => {
         admin_upi_id: settings.admin_upi_id,
         starter_price: settings.starter_price,
         pro_price: settings.pro_price,
+        yearly_discount_percentage: settings.yearly_discount_percentage,
         maintenance_mode: settings.maintenance_mode,
+        starter_features: settings.starter_features,
+        pro_features: settings.pro_features,
         cafe_count: cafeCount
       }
     });

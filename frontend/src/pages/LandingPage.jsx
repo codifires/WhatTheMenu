@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
-import { publicAPI } from '../services/api'
+import { publicAPI, SOCKET_URL } from '../services/api'
+import { io } from 'socket.io-client'
 
 /* ─── tiny hook: count-up on mount ─── */
 function useCountUp(target, duration = 1800) {
@@ -96,37 +97,83 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [plans, setPlans] = useState(DEFAULT_PLANS)
+  const [billingCycle, setBillingCycle] = useState('monthly')
+  const [rawPrices, setRawPrices] = useState({
+    starter_price: 299, pro_price: 499,
+    yearly_discount_percentage: 20
+  })
   const [realCafeCount, setRealCafeCount] = useState(0)
   
   const cafes  = useCountUp(realCafeCount)
   const orders = useCountUp(realCafeCount * 145)
 
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 30)
-    window.addEventListener('scroll', fn)
-    
-    // Fetch dynamic plans and pricing
+  const fetchSettings = () => {
     publicAPI.getSettings().then(res => {
       const d = res.data?.data;
       if (d) {
         setRealCafeCount(d.cafe_count || 0)
+        setRawPrices({
+          starter_price: d.starter_price || 299,
+          pro_price: d.pro_price || 499,
+          yearly_discount_percentage: d.yearly_discount_percentage || 20
+        })
+        
+        const isYearly = billingCycle === 'yearly';
+        const discount = d.yearly_discount_percentage || 20;
+        const starterYearly = Math.round((d.starter_price || 299) * 12 * (1 - discount / 100));
+        const proYearly = Math.round((d.pro_price || 499) * 12 * (1 - discount / 100));
+
         setPlans([
           {
             ...DEFAULT_PLANS[0],
-            price: `₹${d.starter_price || 299}`,
+            price: `₹${isYearly ? starterYearly : (d.starter_price || 299)}`,
+            period: isYearly ? '/year' : '/month',
             features: d.starter_features?.length > 0 ? d.starter_features : DEFAULT_PLANS[0].features
           },
           {
             ...DEFAULT_PLANS[1],
-            price: `₹${d.pro_price || 499}`,
+            price: `₹${isYearly ? proYearly : (d.pro_price || 499)}`,
+            period: isYearly ? '/year' : '/month',
             features: d.pro_features?.length > 0 ? d.pro_features : DEFAULT_PLANS[1].features
           }
         ])
       }
     }).catch(() => {})
+  }
+
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 30)
+    window.addEventListener('scroll', fn)
     
-    return () => window.removeEventListener('scroll', fn)
-  }, [])
+    fetchSettings()
+
+    const socket = io(SOCKET_URL)
+    socket.on('settings-updated', () => {
+      fetchSettings()
+    })
+    
+    return () => {
+      window.removeEventListener('scroll', fn)
+      socket.disconnect()
+    }
+  }, [billingCycle])
+
+  useEffect(() => {
+    const isYearly = billingCycle === 'yearly';
+    const discount = rawPrices.yearly_discount_percentage;
+    const starterYearly = Math.round(rawPrices.starter_price * 12 * (1 - discount / 100));
+    const proYearly = Math.round(rawPrices.pro_price * 12 * (1 - discount / 100));
+
+    setPlans(prevPlans => prevPlans.map(p => {
+      if (p.id === 'starter') {
+        return { ...p, price: `₹${isYearly ? starterYearly : rawPrices.starter_price}`, period: isYearly ? '/year' : '/month' }
+      }
+      if (p.id === 'pro') {
+        return { ...p, price: `₹${isYearly ? proYearly : rawPrices.pro_price}`, period: isYearly ? '/year' : '/month' }
+      }
+      return p;
+    }))
+  }, [billingCycle, rawPrices])
 
   return (
     <div style={{ background: '#080c14', color: '#fff', fontFamily: "'Inter', system-ui, sans-serif", overflowX: 'hidden' }}>
@@ -366,9 +413,25 @@ export default function LandingPage() {
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
             <p style={{ color: '#7c3aed', fontSize: 13, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 12 }}>Pricing</p>
             <h2 style={{ fontSize: 'clamp(28px,4vw,44px)', fontWeight: 800, margin: '0 0 16px', fontFamily: "'Outfit',sans-serif" }}>Simple, honest pricing</h2>
-            <p style={{ fontSize: 16, color: '#6b7280' }}>No hidden fees. Cancel anytime.</p>
+            <p style={{ fontSize: 16, color: '#6b7280', marginBottom: 32 }}>No hidden fees. Cancel anytime.</p>
+            
+            {/* Toggle */}
+            <div style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: 100, padding: 6, margin: '0 auto' }}>
+              <button
+                onClick={() => setBillingCycle('monthly')}
+                style={{ padding: '10px 24px', borderRadius: 100, border: 'none', background: billingCycle === 'monthly' ? '#7c3aed' : 'transparent', color: billingCycle === 'monthly' ? '#fff' : '#9ca3af', fontSize: 15, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle('yearly')}
+                style={{ padding: '10px 24px', borderRadius: 100, border: 'none', background: billingCycle === 'yearly' ? '#7c3aed' : 'transparent', color: billingCycle === 'yearly' ? '#fff' : '#9ca3af', fontSize: 15, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 8 }}
+              >
+                Yearly <span style={{ fontSize: 11, background: '#10b981', color: '#fff', padding: '2px 8px', borderRadius: 50, fontWeight: 800 }}>SAVE {rawPrices.yearly_discount_percentage || 20}%</span>
+              </button>
+            </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginTop: 32 }}>
             {plans.map(p => (
               <div key={p.name} style={{
                 padding: '36px 32px', borderRadius: 22, position: 'relative',

@@ -25,22 +25,33 @@ const {
  */
 const createSubscription = async (req, res, next) => {
   try {
-    const { plan_name } = req.body;
+    const { plan_name, billing_cycle = 'monthly' } = req.body;
     const cafeId = req.user._id;
 
     if (!['starter', 'pro'].includes(plan_name)) {
       return res.status(400).json({ success: false, message: 'Invalid plan name. Choose starter or pro.' });
     }
+    
+    if (!['monthly', 'yearly'].includes(billing_cycle)) {
+      return res.status(400).json({ success: false, message: 'Invalid billing cycle. Choose monthly or yearly.' });
+    }
 
     const razorpay = getPlatformRazorpay();
 
     // Determine plan ID from env
-    const planId = plan_name === 'pro'
-      ? process.env.RAZORPAY_PLAN_ID_PRO_MONTHLY
-      : process.env.RAZORPAY_PLAN_ID_STARTER_MONTHLY;
+    let planId;
+    if (billing_cycle === 'yearly') {
+      planId = plan_name === 'pro'
+        ? process.env.RAZORPAY_PLAN_ID_PRO_YEARLY
+        : process.env.RAZORPAY_PLAN_ID_STARTER_YEARLY;
+    } else {
+      planId = plan_name === 'pro'
+        ? process.env.RAZORPAY_PLAN_ID_PRO_MONTHLY
+        : process.env.RAZORPAY_PLAN_ID_STARTER_MONTHLY;
+    }
 
     if (!planId) {
-      return res.status(500).json({ success: false, message: `Razorpay plan ID for ${plan_name} is not configured.` });
+      return res.status(500).json({ success: false, message: `Razorpay plan ID for ${plan_name} (${billing_cycle}) is not configured.` });
     }
 
     const cafe = await Cafe.findById(cafeId);
@@ -71,11 +82,12 @@ const createSubscription = async (req, res, next) => {
     const subscription = await razorpay.subscriptions.create({
       plan_id: planId,
       customer_id: customerId,
-      total_count: 120, // Max billing cycles (10 years monthly)
+      total_count: billing_cycle === 'yearly' ? 10 : 120, // Max billing cycles (10 years)
       customer_notify: 1,
       notes: {
         cafe_id: cafeId.toString(),
         plan_name,
+        billing_cycle,
         cafe_name: cafe.name
       }
     });
@@ -135,13 +147,26 @@ const verifySubscriptionPayment = async (req, res, next) => {
     }
 
     const planName = rzpSub.notes?.plan_name || 'pro';
+    const billingCycle = rzpSub.notes?.billing_cycle || 'monthly';
     const settings = await Settings.getSettings();
-    const price = planName === 'pro' ? (settings.pro_price || 499) : (settings.starter_price || 299);
+    
+    let price;
+    if (billingCycle === 'yearly') {
+      const monthlyPrice = planName === 'pro' ? (settings.pro_price || 499) : (settings.starter_price || 299);
+      const discount = settings.yearly_discount_percentage || 20;
+      price = Math.round(monthlyPrice * 12 * (1 - discount / 100));
+    } else {
+      price = planName === 'pro' ? (settings.pro_price || 499) : (settings.starter_price || 299);
+    }
 
-    // Calculate end date (30 days from now for monthly)
+    // Calculate end date
     const now = new Date();
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + 30);
+    if (billingCycle === 'yearly') {
+      endDate.setDate(endDate.getDate() + 365);
+    } else {
+      endDate.setDate(endDate.getDate() + 30);
+    }
 
     // Activate café subscription
     cafe.subscription_status = 'active';
@@ -168,7 +193,7 @@ const verifySubscriptionPayment = async (req, res, next) => {
         razorpay_subscription_id,
         razorpay_payment_id,
         razorpay_plan_id: rzpSub.plan_id || '',
-        billing_cycle: 'monthly',
+        billing_cycle: billingCycle,
         next_billing_date: endDate
       },
       { upsert: true, new: true }

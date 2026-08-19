@@ -3,6 +3,7 @@ import { io } from 'socket.io-client'
 import toast from 'react-hot-toast'
 import { useAuth } from './AuthContext'
 import { adminAPI, ownerAPI, SOCKET_URL } from '../services/api'
+import { playHardwareAlert } from '../utils/hardwareAlerts'
 
 const NotificationContext = createContext(null)
 
@@ -70,7 +71,7 @@ const playChime = (type = 'order') => {
 }
 
 export const NotificationProvider = ({ children }) => {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const storageKey = user?.id ? `qrmenu_notifications_${user.id}` : (user?.role === 'superadmin' ? 'qrmenu_notifications_admin' : 'qrmenu_notifications_guest')
 
   const [notifications, setNotifications] = useState(() => {
@@ -350,8 +351,11 @@ export const NotificationProvider = ({ children }) => {
           message: `${table} • ${itemsCount} ${itemsCount === 1 ? 'item' : 'items'} • ${total}`,
           type: 'order',
           link: '/owner/orders',
-          meta: { orderId: order._id, orderNumber: orderNum, table: order.table_number }
+          meta: { orderId: order._id, orderNumber: orderNum, table: order.table_number },
+          silent: true // prevent duplicate chime
         })
+        
+        playHardwareAlert('new-order')
 
         toast.success(`🔔 New Order ${orderNum} received from ${table}!`, {
           duration: 4500,
@@ -360,6 +364,30 @@ export const NotificationProvider = ({ children }) => {
             border: '1px solid rgba(34, 197, 94, 0.4)',
             color: '#fff',
             fontWeight: 600
+          }
+        })
+      })
+
+      // 1.5 Real-time Staff Alert (Waiter/Bill)
+      socket.on('staff-alert', (data) => {
+        addNotification({
+          id: `staff_alert_${Date.now()}`,
+          title: `🛎️ Staff Alert: ${data.table_number || 'Takeaway'}`,
+          message: `${data.customer_name || 'Customer'} requested ${data.type === 'waiter' ? 'a waiter' : 'the bill'}.`,
+          type: 'system',
+          meta: { type: data.type, table: data.table_number },
+          silent: true
+        })
+
+        playHardwareAlert(data.type)
+
+        toast.error(`🛎️ ${data.customer_name || 'Customer'} at ${data.table_number || 'Takeaway'} requested ${data.type === 'waiter' ? 'a waiter' : 'the bill'}!`, {
+          duration: 6000,
+          style: {
+            background: '#0f172a',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            color: '#fff',
+            fontWeight: 700
           }
         })
       })
@@ -412,6 +440,13 @@ export const NotificationProvider = ({ children }) => {
             fontWeight: 600
           }
         })
+      })
+
+      // 4. Account Suspended Event
+      socket.on('account-suspended', (data) => {
+        alert(`🚨 ACCOUNT SUSPENDED 🚨\n\n${data.message}`);
+        logout();
+        window.location.href = '/owner/login';
       })
     }
 

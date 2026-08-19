@@ -85,6 +85,10 @@ const SubscriptionManagement = () => {
   }
 
   const fetchHistory = async (cafeId, cafeName) => {
+    if (!cafeId) {
+      toast.error('Cannot fetch history: Café details missing or deleted')
+      return
+    }
     try {
       const res = await adminAPI.getSubscriptionHistory(cafeId)
       setHistoryData(res.data.data)
@@ -230,8 +234,8 @@ const SubscriptionManagement = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                {['Café Details', 'Plan Type', 'Amount', 'Duration', 'Status', 'Actions'].map((h, i) => (
-                  <th key={h} style={{ padding: '14px 20px', fontSize: 11, fontWeight: 700, color: '#4b5563', textAlign: i === 5 ? 'right' : 'left', letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap', background: 'rgba(255,255,255,0.01)' }}>
+                {['Café Details', 'Plan Type', 'Amount', 'Duration', 'Dates', 'Status', 'Actions'].map((h, i) => (
+                  <th key={h} style={{ padding: '14px 20px', fontSize: 11, fontWeight: 700, color: '#4b5563', textAlign: i === 6 ? 'right' : 'left', letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap', background: 'rgba(255,255,255,0.01)' }}>
                     {h}
                   </th>
                 ))}
@@ -241,7 +245,7 @@ const SubscriptionManagement = () => {
               {loading ? (
                 [...Array(4)].map((_, i) => (
                   <tr key={i}>
-                    {[...Array(6)].map((_, j) => (
+                    {[...Array(7)].map((_, j) => (
                       <td key={j} style={{ padding: '18px 20px' }}>
                         <div style={{ height: 13, borderRadius: 4, background: 'rgba(255,255,255,0.04)', animation: 'pulse 1.5s ease infinite' }} />
                       </td>
@@ -296,6 +300,14 @@ const SubscriptionManagement = () => {
                         </span>
                       </td>
 
+                      {/* Dates */}
+                      <td style={{ padding: '16px 20px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <span style={{ fontSize: 12, color: '#9ca3af' }}><span style={{ color: '#6b7280' }}>Start:</span> {new Date(sub.start_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                          <span style={{ fontSize: 12, color: '#e5e7eb' }}><span style={{ color: '#6b7280' }}>End:</span> {new Date(sub.end_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                        </div>
+                      </td>
+
                       {/* Status */}
                       <td style={{ padding: '16px 20px' }}>
                         <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 50, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, textTransform: 'capitalize' }}>
@@ -332,7 +344,7 @@ const SubscriptionManagement = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={6} style={{ padding: '60px 20px', textAlign: 'center' }}>
+                  <td colSpan={7} style={{ padding: '60px 20px', textAlign: 'center' }}>
                     <div style={{ fontSize: 40, marginBottom: 12 }}>💳</div>
                     <p style={{ fontSize: 15, fontWeight: 600, color: '#6b7280', margin: '0 0 6px' }}>No subscriptions found</p>
                     <p style={{ fontSize: 13, color: '#374151', margin: 0 }}>When cafés register, their subscriptions will appear here.</p>

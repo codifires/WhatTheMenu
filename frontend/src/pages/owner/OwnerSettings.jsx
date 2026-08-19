@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { ownerAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { loadAlertSettings, saveAlertSettings, playHardwareAlert } from '../../utils/hardwareAlerts'
 
 const INPUT = {
   width: '100%', padding: '12px 14px', borderRadius: 12,
@@ -38,6 +39,16 @@ const OwnerSettings = () => {
   })
   const [logoFile, setLogoFile] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [hardwareAlerts, setHardwareAlerts] = useState(loadAlertSettings())
+
+  const handleHardwareChange = (field, value) => {
+    const newSettings = { ...hardwareAlerts, [field]: value }
+    setHardwareAlerts(newSettings)
+    saveAlertSettings(newSettings)
+    if (field === 'volume' && !newSettings.mute) {
+      playHardwareAlert('new-order')
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -75,6 +86,7 @@ const OwnerSettings = () => {
     { id: 'branding', label: 'Branding', icon: '✨' },
     { id: 'payments', label: 'Payment & Billing', icon: '💳' },
     { id: 'hours', label: 'Business Hours', icon: '🕒' },
+    { id: 'alerts', label: 'Hardware Alerts', icon: '🔔' },
   ]
 
   return (
@@ -162,6 +174,67 @@ const OwnerSettings = () => {
                 <div style={{ padding: 20, borderRadius: 12, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <p style={{ fontSize: 14, color: '#9ca3af', fontStyle: 'italic', margin: 0 }}>Business hours configuration coming soon in v2.0</p>
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'alerts' && (
+              <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>Hardware Alerts (This Device)</h2>
+                <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 20 }}>These settings control audio and vibration alerts for this specific device. They do not affect other devices.</p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Mute Audio */}
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderRadius: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}>
+                    <div>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>🔕 Mute Audio Alerts</span>
+                      <p style={{ fontSize: 13, color: '#9ca3af', margin: '4px 0 0' }}>Silence all incoming order and staff request sounds.</p>
+                    </div>
+                    <input type="checkbox" checked={hardwareAlerts.mute} onChange={(e) => handleHardwareChange('mute', e.target.checked)} style={{ width: 20, height: 20, accentColor: '#06b6d4', cursor: 'pointer' }} />
+                  </label>
+
+                  {/* Disable Vibration */}
+                  <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderRadius: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}>
+                    <div>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>📳 Disable Vibration</span>
+                      <p style={{ fontSize: 13, color: '#9ca3af', margin: '4px 0 0' }}>Stop this device from vibrating on new alerts.</p>
+                    </div>
+                    <input type="checkbox" checked={hardwareAlerts.disableVibration} onChange={(e) => handleHardwareChange('disableVibration', e.target.checked)} style={{ width: 20, height: 20, accentColor: '#06b6d4', cursor: 'pointer' }} />
+                  </label>
+
+                  {/* Volume Slider */}
+                  <div style={{ padding: 20, borderRadius: 16, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}>🔊 Alert Volume</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#06b6d4' }}>{Math.round((hardwareAlerts.volume || 0.8) * 100)}%</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" max="1" step="0.1" 
+                      value={hardwareAlerts.volume || 0.8} 
+                      onChange={(e) => handleHardwareChange('volume', parseFloat(e.target.value))}
+                      style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
+                      disabled={hardwareAlerts.mute}
+                    />
+                    <p style={{ fontSize: 12, color: '#6b7280', margin: '12px 0 0', fontStyle: 'italic' }}>Drag slider to preview alert sound</p>
+                  </div>
+
+                  {/* Test Sounds Demo */}
+                  <div style={{ padding: 20, borderRadius: 16, background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(6,182,212,0.3)' }}>
+                    <h3 style={{ fontSize: 14, fontWeight: 700, margin: '0 0 12px', color: '#67e8f9' }}>Test Alert Sounds</h3>
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                      <button type="button" onClick={() => playHardwareAlert('new-order')} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
+                        🛍️ New Order
+                      </button>
+                      <button type="button" onClick={() => playHardwareAlert('waiter')} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
+                        🛎️ Waiter / Bill
+                      </button>
+                      <button type="button" onClick={() => playHardwareAlert('ready')} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
+                        ✅ Order Ready
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
               </div>
             )}
 

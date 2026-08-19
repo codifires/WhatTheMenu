@@ -367,6 +367,7 @@ const AdminSettings = () => {
     taxRate: '18',
     starterPrice: '299',
     proPrice: '499',
+    yearlyDiscountPercentage: '20',
   })
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
@@ -390,6 +391,7 @@ const AdminSettings = () => {
           taxRate: String(s.tax_rate ?? 18),
           starterPrice: String(s.starter_price ?? 299),
           proPrice: String(s.pro_price ?? 499),
+          yearlyDiscountPercentage: String(s.yearly_discount_percentage ?? 20),
         })
       })
       .catch(() => {}) // silently fail, keep defaults
@@ -410,6 +412,7 @@ const AdminSettings = () => {
         tax_rate: Number(form.taxRate),
         starter_price: Number(form.starterPrice),
         pro_price: Number(form.proPrice),
+        yearly_discount_percentage: Number(form.yearlyDiscountPercentage),
         maintenance_mode: form.maintenanceMode,
       })
       toast.success('Platform settings saved successfully')
@@ -528,8 +531,12 @@ const AdminSettings = () => {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginTop: 20 }}>
-                 <InputField label="Starter Plan Price" type="number" prefix="₹" value={form.starterPrice} onChange={e => set('starterPrice', e.target.value)} helperText="Monthly price for the Starter plan." />
-                 <InputField label="Pro Plan Price" type="number" prefix="₹" value={form.proPrice} onChange={e => set('proPrice', e.target.value)} helperText="Monthly price for the Pro plan." />
+                 <InputField label="Starter Plan Price (Monthly)" type="number" prefix="₹" value={form.starterPrice} onChange={e => set('starterPrice', e.target.value)} helperText="Monthly price for the Starter plan." />
+                 <InputField label="Pro Plan Price (Monthly)" type="number" prefix="₹" value={form.proPrice} onChange={e => set('proPrice', e.target.value)} helperText="Monthly price for the Pro plan." />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginTop: 10 }}>
+                 <InputField label="Yearly Discount Percentage (%)" type="number" suffix="%" value={form.yearlyDiscountPercentage} onChange={e => set('yearlyDiscountPercentage', e.target.value)} helperText="Discount given when purchasing a yearly plan." />
               </div>
 
               <div style={{ marginTop: 20 }}>

@@ -3,6 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { customerAPI, SOCKET_URL } from '../../services/api'
 import { io } from 'socket.io-client'
 import toast from 'react-hot-toast'
+import { playHardwareAlert } from '../../utils/hardwareAlerts'
 
 const STATUS_STEPS = [
   { key: 'new', label: 'Placed', icon: '📝' },
@@ -46,6 +47,9 @@ const OrderTracking = () => {
         toast.success(`Order update: ${data.status.toUpperCase()}`, { icon: '🔔' })
 
         if (data.status === 'completed') {
+          // Play physical alert for customer
+          playHardwareAlert('ready')
+          
           // Mark in localStorage so it doesn't show in tracking anymore
           const saved = JSON.parse(localStorage.getItem('myOrders') || '[]')
           const updated = saved.map(o => o.orderNumber === data.order_number ? { ...o, status: 'completed' } : o)

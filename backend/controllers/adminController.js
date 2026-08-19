@@ -10,6 +10,7 @@ const SubscriptionRequest = require('../models/SubscriptionRequest');
 const Settings = require('../models/Settings');
 const GlobalMedia = require('../models/GlobalMedia');
 const SupportTicket = require('../models/SupportTicket');
+const SystemLog = require('../models/SystemLog');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
 const { welcomeTemplate, emailChangeOldTemplate, emailChangeNewTemplate } = require('../utils/emailTemplates');
@@ -368,6 +369,14 @@ const suspendCafe = async (req, res, next) => {
       { status: 'suspended' }
     );
 
+    // Emit socket event to log out owner
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`cafe-${cafe._id}`).emit('account-suspended', {
+        message: 'Your account was suspended by the admin. Please contact support at support@qrmenu.com or 1-800-QR-MENU.'
+      });
+    }
+
     res.json({ success: true, data: cafe, message: 'Café suspended successfully' });
   } catch (error) {
     next(error);
@@ -461,10 +470,19 @@ const updateSubscription = async (req, res, next) => {
 
     // Update cafe subscription status
     if (status) {
-      await Cafe.findByIdAndUpdate(subscription.cafe_id, {
+      await Cafe.findByIdAndUpdate(subscription.cafe_id._id, {
         subscription_status: status,
         is_active: status === 'active'
       });
+
+      if (status === 'suspended') {
+        const io = req.app.get('io');
+        if (io) {
+          io.to(`cafe-${subscription.cafe_id._id}`).emit('account-suspended', {
+            message: 'Your account was suspended by the admin. Please contact support at support@qrmenu.com or 1-800-QR-MENU.'
+          });
+        }
+      }
     }
 
     res.json({ success: true, data: subscription });
@@ -590,7 +608,7 @@ const getSettings = async (req, res, next) => {
 // @route   PUT /api/admin/settings
 const updateSettings = async (req, res, next) => {
   try {
-    const { trial_days, currency, tax_rate, payment_live_mode, platform_name, contact_email, support_phone, support_whatsapp, support_hours, starter_price, pro_price, maintenance_mode, starter_features, pro_features } = req.body;
+    const { trial_days, currency, tax_rate, payment_live_mode, platform_name, contact_email, support_phone, support_whatsapp, support_hours, starter_price, pro_price, yearly_discount_percentage, maintenance_mode, starter_features, pro_features } = req.body;
     const settings = await Settings.getSettings();
 
     if (trial_days !== undefined) settings.trial_days = Number(trial_days);
@@ -604,11 +622,19 @@ const updateSettings = async (req, res, next) => {
     if (support_hours) settings.support_hours = support_hours;
     if (starter_price !== undefined) settings.starter_price = Number(starter_price);
     if (pro_price !== undefined) settings.pro_price = Number(pro_price);
+    if (yearly_discount_percentage !== undefined) settings.yearly_discount_percentage = Number(yearly_discount_percentage);
     if (maintenance_mode !== undefined) settings.maintenance_mode = maintenance_mode;
     if (starter_features !== undefined) settings.starter_features = starter_features;
     if (pro_features !== undefined) settings.pro_features = pro_features;
 
     await settings.save();
+
+    // Broadcast setting changes to all connected clients
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('settings-updated');
+    }
+
     res.json({ success: true, data: settings, message: 'Settings saved successfully' });
   } catch (error) {
     next(error);
@@ -749,6 +775,75 @@ const getRevenueHistory = async (req, res, next) => {
   }
 };
 
+// @desc    Get all subscription payments across all cafes
+// @route   GET /api/admin/payments
+const getAllPayments = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    
+    const total = await SubscriptionHistory.countDocuments();
+    const payments = await SubscriptionHistory.find()
+      .populate('cafe_id', 'name email phone')
+      .sort({ created_at: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+      
+    res.json({
+      success: true,
+      data: payments,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get system error logs
+// @route   GET /api/admin/logs
+const getSystemLogs = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+
+    const total = await SystemLog.countDocuments();
+    const logs = await SystemLog.find()
+      .populate('user_id', 'name email')
+      .sort({ created_at: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.json({
+      success: true,
+      data: logs,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Clear system error logs
+// @route   DELETE /api/admin/logs/clear
+const clearSystemLogs = async (req, res, next) => {
+  try {
+    await SystemLog.deleteMany({});
+    res.json({ success: true, message: 'All system logs cleared' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getDashboard,
   createCafe,
@@ -769,5 +864,8 @@ module.exports = {
   uploadGlobalMedia,
   deleteGlobalMedia,
   getSubscriptionHistory,
-  getRevenueHistory
+  getRevenueHistory,
+  getAllPayments,
+  getSystemLogs,
+  clearSystemLogs
 };

@@ -284,12 +284,40 @@ const submitFeedback = async (req, res, next) => {
   }
 };
 
+// @desc    Trigger staff alert (Call Waiter / Bill Request)
+// @route   POST /api/orders/:orderNumber/alert
+const triggerStaffAlert = async (req, res, next) => {
+  try {
+    const { orderNumber } = req.params;
+    const { type } = req.body; // 'waiter' or 'bill'
 
+    const order = await Order.findOne({ order_number: orderNumber }).lean();
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`cafe-${order.cafe_id}`).emit('staff-alert', {
+        type,
+        order_number: order.order_number,
+        table_number: order.table_number,
+        customer_name: order.customer_name,
+        timestamp: new Date()
+      });
+    }
+
+    res.json({ success: true, message: `Alert sent successfully` });
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   getCafeMenu,
   searchMenu,
   placeOrder,
   trackOrder,
-  submitFeedback
+  submitFeedback,
+  triggerStaffAlert
 };

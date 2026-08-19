@@ -26,6 +26,10 @@ const settingsSchema = new mongoose.Schema({
     type: Number,
     default: 499
   },
+  yearly_discount_percentage: {
+    type: Number,
+    default: 20
+  },
   tax_rate: {
     type: Number,
     default: 18

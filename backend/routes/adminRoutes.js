@@ -20,7 +20,10 @@ const {
   getGlobalMedia,
   deleteGlobalMedia,
   getSubscriptionHistory,
-  getRevenueHistory
+  getRevenueHistory,
+  getAllPayments,
+  getSystemLogs,
+  clearSystemLogs
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -33,6 +36,7 @@ router.use(protect, authorize('superadmin'), apiLimiter);
 // Dashboard & Revenue History
 router.get('/dashboard', getDashboard);
 router.get('/revenue', getRevenueHistory);
+router.get('/payments', getAllPayments);
 
 // Cafés
 router.route('/cafes')
@@ -59,10 +63,13 @@ router.get('/subscription-requests', getSubscriptionRequests);
 router.put('/subscription-requests/:id/approve', approveSubscriptionRequest);
 router.put('/subscription-requests/:id/reject', rejectSubscriptionRequest);
 
-// Platform Settings
+// Platform Settings & Logs
 router.route('/settings')
   .get(getSettings)
   .put(updateSettings);
+
+router.get('/logs', getSystemLogs);
+router.delete('/logs/clear', clearSystemLogs);
 
 // Global Media
 router.route('/media')

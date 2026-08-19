@@ -44,6 +44,15 @@ const NAV_LINKS = [
     label: 'Subscriptions',
   },
   {
+    to: '/admin/payments',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="5" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+      </svg>
+    ),
+    label: 'Payments',
+  },
+  {
     to: '/admin/settings',
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -78,6 +87,17 @@ const NAV_LINKS = [
       </svg>
     ),
     label: 'Support Tickets',
+  },
+  {
+    to: '/admin/logs',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2l9 4-9 4-9-4 9-4z" />
+        <path d="M21 15l-9 4-9-4" />
+        <path d="M21 10l-9 4-9-4" />
+      </svg>
+    ),
+    label: 'System Logs',
   },
 ]
 
