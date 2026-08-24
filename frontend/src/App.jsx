@@ -61,7 +61,7 @@ const PageLoader = () => (
   <div className="min-h-screen bg-dark-950 flex items-center justify-center">
     <div className="flex flex-col items-center gap-4">
       <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center animate-pulse-glow">
-        <span className="text-white text-xl font-bold font-display">Q</span>
+        <span className="text-white text-xl font-bold font-display">WTM</span>
       </div>
       <div className="flex items-center gap-2 text-dark-400">
         <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />

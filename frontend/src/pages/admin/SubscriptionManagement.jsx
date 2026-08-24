@@ -14,6 +14,7 @@ const SubscriptionManagement = () => {
   const [subscriptions, setSubscriptions] = useState([])
   const [loading, setLoading] = useState(true)
   const [requests, setRequests] = useState([])
+  const [basicPrice, setBasicPrice] = useState(199)
   const [starterPrice, setStarterPrice] = useState(299)
   const [proPrice, setProPrice] = useState(499)
   const [historyModalOpen, setHistoryModalOpen] = useState(false)
@@ -46,7 +47,8 @@ const SubscriptionManagement = () => {
     try {
       const res = await publicAPI.getSettings()
       const d = res.data?.data
-      if (d?.starter_price) setStarterPrice(d.starter_price)
+      if (d?.basic_price) setBasicPrice(d.basic_price)
+        if (d?.starter_price) setStarterPrice(d.starter_price)
       if (d?.pro_price) setProPrice(d.pro_price)
     } catch (err) {
       console.error(err)
@@ -130,7 +132,28 @@ const SubscriptionManagement = () => {
 
       {/* Plans summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 32 }}>
-        {/* Starter Plan */}
+        
+          {/* Basic Plan */}
+          <div
+            style={{ padding: '24px', borderRadius: 20, background: 'linear-gradient(145deg, rgba(59,130,246,0.1) 0%, rgba(255,255,255,0.02) 100%)', border: '1px solid rgba(59,130,246,0.2)', boxShadow: '0 8px 30px rgba(59,130,246,0.05)', transition: 'transform 0.2s', animation: 'slideUp 0.4s ease 0s both' }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)' }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg,#3b82f6,#2563eb)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 800 }}>
+                B
+              </div>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#fff' }}>Basic Plan</h3>
+                <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>The essentials</p>
+              </div>
+            </div>
+            <p style={{ fontSize: 32, fontWeight: 900, color: '#fff', margin: 0, fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
+              ₹{basicPrice}<span style={{ fontSize: 14, color: '#6b7280', fontWeight: 500, marginLeft: 4 }}>/month</span>
+            </p>
+          </div>
+
+          {/* Starter Plan */}
         <div
           style={{ padding: '24px', borderRadius: 20, background: 'linear-gradient(145deg, rgba(124,58,237,0.1) 0%, rgba(255,255,255,0.02) 100%)', border: '1px solid rgba(124,58,237,0.2)', boxShadow: '0 8px 30px rgba(124,58,237,0.05)', transition: 'transform 0.2s', animation: 'slideUp 0.4s ease 0s both' }}
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)' }}

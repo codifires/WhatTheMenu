@@ -18,6 +18,10 @@ const settingsSchema = new mongoose.Schema({
     default: 'INR'
   },
 
+  basic_price: {
+    type: Number,
+    default: 199
+  },
   starter_price: {
     type: Number,
     default: 299
@@ -61,6 +65,14 @@ const settingsSchema = new mongoose.Schema({
   maintenance_mode: {
     type: Boolean,
     default: false
+  },
+  basic_features: {
+    type: [String],
+    default: [
+      'Digital QR Menu',
+      'Basic Analytics',
+      'Up to 10 Menu Items'
+    ]
   },
   starter_features: {
     type: [String],

@@ -608,7 +608,7 @@ const getSettings = async (req, res, next) => {
 // @route   PUT /api/admin/settings
 const updateSettings = async (req, res, next) => {
   try {
-    const { trial_days, currency, tax_rate, payment_live_mode, platform_name, contact_email, support_phone, support_whatsapp, support_hours, starter_price, pro_price, yearly_discount_percentage, maintenance_mode, starter_features, pro_features } = req.body;
+    const { trial_days, currency, tax_rate, payment_live_mode, platform_name, contact_email, support_phone, support_whatsapp, support_hours, basic_price, starter_price, pro_price, yearly_discount_percentage, maintenance_mode, basic_features, starter_features, pro_features } = req.body;
     const settings = await Settings.getSettings();
 
     if (trial_days !== undefined) settings.trial_days = Number(trial_days);
@@ -620,10 +620,12 @@ const updateSettings = async (req, res, next) => {
     if (support_phone) settings.support_phone = support_phone;
     if (support_whatsapp) settings.support_whatsapp = support_whatsapp;
     if (support_hours) settings.support_hours = support_hours;
+    if (basic_price !== undefined) settings.basic_price = Number(basic_price);
     if (starter_price !== undefined) settings.starter_price = Number(starter_price);
     if (pro_price !== undefined) settings.pro_price = Number(pro_price);
     if (yearly_discount_percentage !== undefined) settings.yearly_discount_percentage = Number(yearly_discount_percentage);
     if (maintenance_mode !== undefined) settings.maintenance_mode = maintenance_mode;
+    if (basic_features !== undefined) settings.basic_features = basic_features;
     if (starter_features !== undefined) settings.starter_features = starter_features;
     if (pro_features !== undefined) settings.pro_features = pro_features;
 

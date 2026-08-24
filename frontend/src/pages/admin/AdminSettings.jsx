@@ -531,7 +531,8 @@ const AdminSettings = () => {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginTop: 20 }}>
-                 <InputField label="Starter Plan Price (Monthly)" type="number" prefix="₹" value={form.starterPrice} onChange={e => set('starterPrice', e.target.value)} helperText="Monthly price for the Starter plan." />
+                 <InputField label="Basic Plan Price (Monthly)" type="number" prefix="₹" value={form.basicPrice} onChange={e => set('basicPrice', e.target.value)} helperText="Monthly price for the Basic plan." />
+                  <InputField label="Starter Plan Price (Monthly)" type="number" prefix="₹" value={form.starterPrice} onChange={e => set('starterPrice', e.target.value)} helperText="Monthly price for the Starter plan." />
                  <InputField label="Pro Plan Price (Monthly)" type="number" prefix="₹" value={form.proPrice} onChange={e => set('proPrice', e.target.value)} helperText="Monthly price for the Pro plan." />
               </div>
 

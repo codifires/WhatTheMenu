@@ -108,7 +108,8 @@ const getDashboard = async (req, res, next) => {
         totalReviews: ratingResult[0]?.count || 0,
         subscription: subscriptionData,
         monthlyRevenueHistory,
-        dailyRevenueHistory
+        dailyRevenueHistory,
+        topItems
       }
     });
   } catch (error) {

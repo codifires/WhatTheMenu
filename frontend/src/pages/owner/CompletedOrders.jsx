@@ -66,11 +66,22 @@ const CompletedOrders = () => {
                   </span>
                 </div>
 
-                {/* Customer */}
+                {/* Customer & Items */}
                 <div style={{ padding: '12px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', marginBottom: 16 }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: '#e5e7eb', margin: '0 0 2px' }}>{order.customer_name || 'Guest'}</p>
                   {order.customer_phone && <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 8px' }}>{order.customer_phone}</p>}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  
+                  {/* Ordered Items List */}
+                  <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    {order.items && order.items.map((item, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                        <span style={{ color: '#d1d5db' }}>{item.quantity}x {item.name}</span>
+                        <span style={{ color: '#9ca3af' }}>₹{item.price * item.quantity}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
                     <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>Total amount</p>
                     <p style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: 0 }}>₹{order.total_amount}</p>
                   </div>

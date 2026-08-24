@@ -99,7 +99,7 @@ export default function LandingPage() {
   const [plans, setPlans] = useState(DEFAULT_PLANS)
   const [billingCycle, setBillingCycle] = useState('monthly')
   const [rawPrices, setRawPrices] = useState({
-    starter_price: 299, pro_price: 499,
+    basic_price: 199, starter_price: 299, pro_price: 499,
     yearly_discount_percentage: 20
   })
   const [realCafeCount, setRealCafeCount] = useState(0)
@@ -113,6 +113,7 @@ export default function LandingPage() {
       if (d) {
         setRealCafeCount(d.cafe_count || 0)
         setRawPrices({
+          basic_price: d.basic_price || 199,
           starter_price: d.starter_price || 299,
           pro_price: d.pro_price || 499,
           yearly_discount_percentage: d.yearly_discount_percentage || 20
@@ -120,6 +121,7 @@ export default function LandingPage() {
         
         const isYearly = billingCycle === 'yearly';
         const discount = d.yearly_discount_percentage || 20;
+        const basicYearly = Math.round((d.basic_price || 199) * 12 * (1 - discount / 100));
         const starterYearly = Math.round((d.starter_price || 299) * 12 * (1 - discount / 100));
         const proYearly = Math.round((d.pro_price || 499) * 12 * (1 - discount / 100));
 
@@ -161,10 +163,14 @@ export default function LandingPage() {
   useEffect(() => {
     const isYearly = billingCycle === 'yearly';
     const discount = rawPrices.yearly_discount_percentage;
+    const basicYearly = Math.round(rawPrices.basic_price * 12 * (1 - discount / 100));
     const starterYearly = Math.round(rawPrices.starter_price * 12 * (1 - discount / 100));
     const proYearly = Math.round(rawPrices.pro_price * 12 * (1 - discount / 100));
 
     setPlans(prevPlans => prevPlans.map(p => {
+      if (p.id === 'basic') {
+        return { ...p, price: `₹${isYearly ? basicYearly : rawPrices.basic_price}`, period: isYearly ? '/year' : '/month' }
+      }
       if (p.id === 'starter') {
         return { ...p, price: `₹${isYearly ? starterYearly : rawPrices.starter_price}`, period: isYearly ? '/year' : '/month' }
       }

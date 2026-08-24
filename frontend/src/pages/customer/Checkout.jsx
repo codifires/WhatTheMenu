@@ -39,7 +39,7 @@ const Checkout = () => {
   const { cafeId } = useParams()
   const navigate = useNavigate()
   const { items, totalAmount, clearCart } = useCart()
-  const [form, setForm] = useState({ table_number: '', notes: '' })
+  const [form, setForm] = useState({ customer_name: '', table_number: '', notes: '' })
   const [loading, setLoading] = useState(false)
   const [cafe, setCafe] = useState(null)
 
@@ -73,7 +73,7 @@ const Checkout = () => {
     try {
       const payload = {
         cafe_id: cafeId,
-        customer_name: 'Guest',
+        customer_name: form.customer_name || 'Guest',
         customer_phone: '',
         table_number: form.table_number || '',
         notes: form.notes || '',
@@ -122,7 +122,7 @@ const Checkout = () => {
             }
           },
           prefill: {
-            name: 'Guest',
+            name: form.customer_name || 'Guest',
             contact: ''
           },
           theme: {
@@ -180,6 +180,7 @@ const Checkout = () => {
             <span style={{ fontSize: 18 }}>📍</span>
             <h3 style={{ fontSize: 13, fontWeight: 800, color: '#e5e7eb', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>Dining Details</h3>
           </div>
+          <InputField label="Your Name (Optional)" placeholder="Enter your full name" value={form.customer_name} onChange={e => setForm({...form, customer_name: e.target.value})} />
           <InputField label="Table Number (If dining in)" placeholder="e.g. Table 4 or Takeaway" value={form.table_number} onChange={e => setForm({...form, table_number: e.target.value})} />
           <InputField label="Special Instructions" as="textarea" placeholder="e.g. Less spicy, extra napkins, warm water..." value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} />
         </div>

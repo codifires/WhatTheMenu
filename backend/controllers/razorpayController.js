@@ -152,11 +152,11 @@ const verifySubscriptionPayment = async (req, res, next) => {
     
     let price;
     if (billingCycle === 'yearly') {
-      const monthlyPrice = planName === 'pro' ? (settings.pro_price || 499) : (settings.starter_price || 299);
+      const monthlyPrice = planName === 'pro' ? (settings.pro_price || 499) : (planName === 'starter' ? (settings.starter_price || 299) : (settings.basic_price || 199));
       const discount = settings.yearly_discount_percentage || 20;
       price = Math.round(monthlyPrice * 12 * (1 - discount / 100));
     } else {
-      price = planName === 'pro' ? (settings.pro_price || 499) : (settings.starter_price || 299);
+      price = planName === 'pro' ? (settings.pro_price || 499) : (planName === 'starter' ? (settings.starter_price || 299) : (settings.basic_price || 199));
     }
 
     // Calculate end date
@@ -364,7 +364,7 @@ const handleSubscriptionWebhook = async (req, res, next) => {
         if (!cafe) break;
 
         const settings = await Settings.getSettings();
-        const price = planName === 'pro' ? (settings.pro_price || 499) : (settings.starter_price || 299);
+        const price = planName === 'pro' ? (settings.pro_price || 499) : (planName === 'starter' ? (settings.starter_price || 299) : (settings.basic_price || 199));
         const now = new Date();
         const endDate = new Date();
         endDate.setDate(endDate.getDate() + 30);

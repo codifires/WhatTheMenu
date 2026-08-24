@@ -26,7 +26,8 @@ const OrderManagement = () => {
   useEffect(() => {
     const socket = io(SOCKET_URL)
     socket.emit('join-cafe', user?.id)
-    socket.on('new-order', (order) => {
+    socket.on('new-order', (payload) => {
+      const order = payload.order || payload;
       if (order.payment_status === 'received' || order.payment_status === 'completed' || order.payment_method === 'cash') {
         setOrders(prev => [order, ...prev])
         toast.success(`New order received! #${order.order_number}`, { icon: '🔔' })
@@ -91,7 +92,8 @@ const OrderManagement = () => {
       </div>
 
       {/* ── Filters ── */}
-      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 16, marginBottom: 12, scrollbarWidth: 'none' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 16, scrollbarWidth: 'none', flex: 1 }}>
         <button
           onClick={() => setFilter('')}
           style={{
@@ -116,6 +118,26 @@ const OrderManagement = () => {
             {s}
           </button>
         ))}
+      </div>
+        <button 
+          onClick={fetchOrders}
+          style={{ 
+            marginBottom: 16,
+            padding: '8px 16px', 
+            borderRadius: 10, 
+            background: 'rgba(6,182,212,0.15)', 
+            border: '1px solid rgba(6,182,212,0.3)', 
+            color: '#67e8f9', 
+            cursor: 'pointer',
+            fontSize: 13,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6
+          }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21v-5h5"/></svg>
+          Reload
+        </button>
       </div>
 
       {/* ── Orders Grid ── */}

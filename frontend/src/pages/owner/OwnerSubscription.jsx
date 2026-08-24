@@ -11,12 +11,18 @@ const OwnerSubscription = () => {
   const [paymentIncomplete, setPaymentIncomplete] = useState(false)
   const [lastAttemptedPlan, setLastAttemptedPlan] = useState('pro')
   
+  const [basicPrice, setBasicPrice] = useState(199)
   const [starterPrice, setStarterPrice] = useState(299)
   const [proPrice, setProPrice] = useState(499)
   const [yearlyDiscountPercentage, setYearlyDiscountPercentage] = useState(20)
   const [billingCycle, setBillingCycle] = useState('monthly')
   const [adminUpiId, setAdminUpiId] = useState('superadmin@okaxis')
   const [platformName, setPlatformName] = useState('QRMenu SaaS')
+  const [basicFeatures, setBasicFeatures] = useState([
+    'Digital QR Menu',
+    'Basic Analytics',
+    'Up to 10 Menu Items'
+  ])
   const [starterFeatures, setStarterFeatures] = useState([
     'Digital QR Menu',
     'Order Management',
@@ -35,12 +41,14 @@ const OwnerSubscription = () => {
   const fetchSettings = () => {
     publicAPI.getSettings().then(res => {
       const d = res.data?.data
-      if (d?.starter_price) setStarterPrice(d.starter_price)
+      if (d?.basic_price) setBasicPrice(d.basic_price)
+        if (d?.starter_price) setStarterPrice(d.starter_price)
       if (d?.pro_price) setProPrice(d.pro_price)
       if (d?.yearly_discount_percentage) setYearlyDiscountPercentage(d.yearly_discount_percentage)
       if (d?.admin_upi_id) setAdminUpiId(d.admin_upi_id)
       if (d?.platform_name) setPlatformName(d.platform_name)
-      if (d?.starter_features?.length > 0) setStarterFeatures(d.starter_features)
+      if (d?.basic_features?.length > 0) setBasicFeatures(d.basic_features)
+        if (d?.starter_features?.length > 0) setStarterFeatures(d.starter_features)
       if (d?.pro_features?.length > 0) setProFeatures(d.pro_features)
     }).catch(() => {})
   }
@@ -56,11 +64,12 @@ const OwnerSubscription = () => {
   const planName = subscription?.plan_name || 'free'
   const endDate = subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'
   
-  const displayPlanName = planName === 'free' ? 'Free Trial' : planName === 'starter' ? 'Starter Plan' : 'Pro Plan'
+  const displayPlanName = planName === 'free' ? 'Free Trial' : planName === 'basic' ? 'Basic Plan' : planName === 'starter' ? 'Starter Plan' : 'Pro Plan'
   const isCurrentPlanYearly = subscription?.billing_cycle === 'yearly'
+  const basicPriceYearly = Math.round(basicPrice * 12 * (1 - yearlyDiscountPercentage / 100))
   const starterPriceYearly = Math.round(starterPrice * 12 * (1 - yearlyDiscountPercentage / 100))
   const proPriceYearly = Math.round(proPrice * 12 * (1 - yearlyDiscountPercentage / 100))
-  const currentPrice = planName === 'free' ? 0 : planName === 'starter' ? (isCurrentPlanYearly ? starterPriceYearly : starterPrice) : (isCurrentPlanYearly ? proPriceYearly : proPrice)
+  const currentPrice = planName === 'free' ? 0 : planName === 'basic' ? (isCurrentPlanYearly ? basicPriceYearly : basicPrice) : planName === 'starter' ? (isCurrentPlanYearly ? starterPriceYearly : starterPrice) : (isCurrentPlanYearly ? proPriceYearly : proPrice)
   const displayPrice = planName === 'free' ? '₹0/month' : `₹${currentPrice}/${isCurrentPlanYearly ? 'year' : 'month'}`
 
   const upcoming = user?.upcoming_subscription
@@ -368,9 +377,43 @@ const OwnerSubscription = () => {
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
         
-        {/* Starter Plan */}
-        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column' }}>
-          <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#9ca3af' }}>Starter</h4>
+        
+          {/* Basic Plan */}
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column' }}>
+            <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#9ca3af' }}>Basic</h4>
+            <div style={{ fontSize: 36, fontWeight: 800, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>
+              ₹{billingCycle === 'yearly' ? basicPriceYearly : basicPrice}
+              <span style={{ fontSize: 16, color: '#6b7280', fontWeight: 500 }}>/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
+            </div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+              {basicFeatures.map((feature, idx) => (
+                <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#d1d5db' }}>
+                  <span style={{ color: '#10b981' }}>✓</span> {feature}
+                </li>
+              ))}
+            </ul>
+            {planName === 'basic' ? (
+              <button style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 600 }}>Current Plan</button>
+            ) : (
+               <button
+                onClick={() => handleStartUpgrade('basic')}
+                disabled={loading}
+                style={{
+                  width: '100%', padding: '12px', borderRadius: 12, border: 'none',
+                  background: planName === 'starter' || planName === 'pro' ? 'rgba(255,255,255,0.1)' : '#3b82f6',
+                  color: '#fff', fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.7 : 1, transition: 'all 0.2s'
+                }}
+              >
+                {planName === 'starter' || planName === 'pro' ? 'Downgrade to Basic' : 'Select Basic'}
+              </button>
+            )}
+          </div>
+
+          {/* Starter Plan */}
+          <div style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.05), rgba(5,150,105,0.02))', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: -1, right: 24, transform: 'translateY(-50%)', padding: '4px 12px', borderRadius: 50, fontSize: 11, fontWeight: 800, color: '#fff', background: 'linear-gradient(135deg,#10b981,#059669)' }}>Highly Recommended</div>
+            <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#10b981' }}>Starter</h4>
           <div style={{ fontSize: 36, fontWeight: 800, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>
             ₹{billingCycle === 'yearly' ? starterPriceYearly : starterPrice}
             <span style={{ fontSize: 16, color: '#6b7280', fontWeight: 500 }}>/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 const PlanServicesManagement = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [basicFeatures, setBasicFeatures] = useState([]);
   const [starterFeatures, setStarterFeatures] = useState([]);
   const [proFeatures, setProFeatures] = useState([]);
 
@@ -17,7 +18,8 @@ const PlanServicesManagement = () => {
       setLoading(true);
       const res = await api.get('/admin/settings');
       if (res.data.success) {
-        setStarterFeatures(res.data.data.starter_features || []);
+        setBasicFeatures(res.data.data.basic_features || []);
+          setStarterFeatures(res.data.data.starter_features || []);
         setProFeatures(res.data.data.pro_features || []);
       }
     } catch (error) {
@@ -31,7 +33,8 @@ const PlanServicesManagement = () => {
     try {
       setSaving(true);
       const res = await api.put('/admin/settings', {
-        starter_features: starterFeatures,
+        basic_features: basicFeatures,
+          starter_features: starterFeatures,
         pro_features: proFeatures
       });
       if (res.data.success) {
@@ -45,12 +48,19 @@ const PlanServicesManagement = () => {
   };
 
   const addFeature = (plan) => {
-    if (plan === 'starter') setStarterFeatures([...starterFeatures, '']);
+    if (plan === 'basic') setBasicFeatures([...basicFeatures, '']);
+    else if (plan === 'starter') setStarterFeatures([...starterFeatures, '']);
     else setProFeatures([...proFeatures, '']);
   };
 
   const updateFeature = (plan, index, value) => {
-    if (plan === 'starter') {
+    if (plan === 'basic') {
+      const newFeatures = [...basicFeatures];
+      newFeatures[index] = value;
+      setBasicFeatures(newFeatures);
+    } else if (plan === 'basic') {
+      setBasicFeatures(basicFeatures.filter((_, i) => i !== index));
+    } else if (plan === 'starter') {
       const newFeatures = [...starterFeatures];
       newFeatures[index] = value;
       setStarterFeatures(newFeatures);
@@ -257,9 +267,13 @@ const PlanServicesManagement = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8" style={{ marginTop: '80px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8" style={{ marginTop: '80px' }}>
         <FeatureList 
-          title="Starter Plan Features" 
+          title="Basic Plan Features" 
+          features={basicFeatures} 
+          plan="basic" 
+        />
+        <FeatureList title="Starter Plan Features" 
           features={starterFeatures} 
           plan="starter" 
         />

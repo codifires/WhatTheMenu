@@ -45,6 +45,7 @@ const OwnerRegister = () => {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
   const [trialDays, setTrialDays] = useState(14)
+  const [basicPrice, setBasicPrice] = useState(199)
   const [starterPrice, setStarterPrice] = useState(299)
   const [proPrice, setProPrice] = useState(499)
   const navigate = useNavigate()
@@ -59,6 +60,7 @@ const OwnerRegister = () => {
       .then(res => {
         const d = res.data.data
         setTrialDays(d.trial_days || 14)
+        if(d.basic_price) setBasicPrice(d.basic_price)
         if(d.starter_price) setStarterPrice(d.starter_price)
         if(d.pro_price) setProPrice(d.pro_price)
       })
@@ -78,7 +80,7 @@ const OwnerRegister = () => {
       border: 'rgba(52,211,153,0.5)',
       icon: '🎁',
       iconBg: 'linear-gradient(135deg, #059669, #10b981)',
-      badge: 'BEST FOR STARTERS',
+      
       badgeBg: 'linear-gradient(135deg, #059669, #10b981)',
     },
     {
