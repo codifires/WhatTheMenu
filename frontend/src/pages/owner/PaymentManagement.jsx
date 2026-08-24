@@ -141,7 +141,7 @@ const PaymentManagement = () => {
                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1 }}>Transaction ID (UTR)</th>
                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1 }}>Date & Time</th>
                 <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1 }}>Status</th>
-                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, textAlign: 'right' }}>Action</th>
+                
               </tr>
             </thead>
             <tbody>
