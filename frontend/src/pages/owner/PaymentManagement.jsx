@@ -170,10 +170,20 @@ const PaymentManagement = () => {
                       </td>
                       <td style={{ padding: '16px 24px', fontSize: 15, fontWeight: 800, color: '#fff' }}>₹{order.total_amount}</td>
                       <td style={{ padding: '16px 24px', fontSize: 13, color: '#e5e7eb', textTransform: 'uppercase', fontWeight: 600 }}>
-                        {order.payment_method === 'online' ? <span style={{ color: '#10b981' }}>💳 Online</span> : order.payment_method === 'upi' ? <span style={{ color: '#3b82f6' }}>📱 UPI</span> : <span style={{ color: '#8b5cf6' }}>💵 Cash</span>}
+                        {order.payment_method_details ? (
+                          <span style={{ color: order.payment_method_details.toLowerCase().includes('upi') || order.payment_method_details.toLowerCase().includes('wallet') ? '#3b82f6' : '#10b981' }}>
+                            {order.payment_method_details.toLowerCase().includes('upi') || order.payment_method_details.toLowerCase().includes('wallet') || order.payment_method_details.toLowerCase().includes('pay') ? '📱' : '💳'} {order.payment_method_details}
+                          </span>
+                        ) : order.payment_method === 'online' || order.payment_method === 'razorpay' ? (
+                          <span style={{ color: '#10b981' }}>💳 Online</span>
+                        ) : order.payment_method === 'upi' ? (
+                          <span style={{ color: '#3b82f6' }}>📱 UPI</span>
+                        ) : (
+                          <span style={{ color: '#8b5cf6' }}>💵 Cash</span>
+                        )}
                       </td>
                       <td style={{ padding: '16px 24px' }}>
-                        {(order.payment_method === 'upi' || order.payment_method === 'online') && order.payment_transaction_id ? (
+                        {order.payment_transaction_id && order.payment_transaction_id !== 'null' ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <code style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: 6, fontSize: 13, color: '#9ca3af', border: '1px solid rgba(255,255,255,0.1)' }}>
                               {order.payment_transaction_id}

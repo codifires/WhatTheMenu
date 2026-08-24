@@ -5,6 +5,7 @@ const { protect } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimiter');
 const { validate } = require('../middleware/validator');
 const { loginValidator } = require('../validators/authValidators');
+const { setDefaultHighWaterMark } = require('nodemailer/lib/xoauth2');
 
 router.post('/register', authLimiter, register);
 router.post('/check-availability', authLimiter, checkAvailability);
@@ -15,3 +16,4 @@ router.get('/me', protect, getMe);
 router.post('/logout', protect, logout);
 
 module.exports = router;
+

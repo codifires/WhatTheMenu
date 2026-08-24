@@ -29,6 +29,10 @@ const orderRevenueSchema = new mongoose.Schema({
     enum: ['cash', 'upi', 'online'],
     required: true
   },
+  payment_method_details: {
+    type: String,
+    default: ''
+  },
   table_number: {
     type: String,
     default: ''

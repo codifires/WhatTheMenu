@@ -61,6 +61,10 @@ const orderSchema = new mongoose.Schema({
     enum: ['cash', 'online', 'razorpay'],
     required: true
   },
+  payment_method_details: {
+    type: String,
+    default: ''
+  },
   payment_transaction_id: {
     type: String,
     default: ''
