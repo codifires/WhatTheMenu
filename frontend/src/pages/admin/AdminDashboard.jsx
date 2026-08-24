@@ -22,8 +22,7 @@ const STAT_DEFS = [
     border: 'rgba(124,58,237,0.2)',
     glow: 'rgba(124,58,237,0.1)',
     accent: '#a78bfa',
-    trend: '+12%',
-    trendUp: true,
+    
   },
   {
     key: 'activePlans',
@@ -33,8 +32,7 @@ const STAT_DEFS = [
     border: 'rgba(16,185,129,0.2)',
     glow: 'rgba(16,185,129,0.08)',
     accent: '#34d399',
-    trend: '+5%',
-    trendUp: true,
+    
   },
   {
     key: 'expiredPlans',
@@ -44,8 +42,7 @@ const STAT_DEFS = [
     border: 'rgba(245,158,11,0.2)',
     glow: 'rgba(245,158,11,0.08)',
     accent: '#fbbf24',
-    trend: '-2%',
-    trendUp: false,
+    
   },
   {
     key: 'monthlyRevenue',
@@ -56,8 +53,7 @@ const STAT_DEFS = [
     glow: 'rgba(99,102,241,0.08)',
     accent: '#818cf8',
     format: (v) => `₹${(v || 0).toLocaleString()}`,
-    trend: 'Active',
-    trendUp: true,
+    
   },
   {
     key: 'openTickets',
@@ -67,8 +63,7 @@ const STAT_DEFS = [
     border: 'rgba(56,189,248,0.25)',
     glow: 'rgba(56,189,248,0.1)',
     accent: '#38bdf8',
-    trend: 'Live Tickets',
-    trendUp: true,
+    
   },
 ]
 
@@ -90,13 +85,7 @@ function StatCard({ def, value, index }) {
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div style={{ fontSize: 24 }}>{def.icon}</div>
-        <span style={{
-          fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 50,
-          color: def.trendUp ? '#34d399' : '#f87171',
-          background: def.trendUp ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-        }}>
-          {def.trend}
-        </span>
+        {def.trend && (<span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 50, color: def.trendUp ? '#34d399' : '#f87171', background: def.trendUp ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)' }}>{def.trend}</span>)}
       </div>
       <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 6px', fontWeight: 500 }}>{def.label}</p>
       <p style={{ fontSize: 30, fontWeight: 900, color: '#fff', margin: 0, fontFamily: "'Outfit',sans-serif", letterSpacing: '-1px' }}>

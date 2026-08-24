@@ -45,7 +45,8 @@ const getDashboard = async (req, res, next) => {
       dailyRevenueHistory,
       recentOrders,
       ratingResult,
-      activeSub
+      activeSub,
+      topItems
     ] = await Promise.all([
       Order.countDocuments({ cafe_id: cafeId, created_at: { $gte: today } }),
       Order.countDocuments({ cafe_id: cafeId, order_status: { $in: ['new', 'accepted', 'preparing'] } }),
@@ -71,7 +72,14 @@ const getDashboard = async (req, res, next) => {
         { $match: { cafe_id: cafeId } },
         { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } }
       ]),
-      Subscription.findOne({ cafe_id: cafeId, status: 'active' }).lean()
+      Subscription.findOne({ cafe_id: cafeId, status: 'active' }).lean(),
+      Order.aggregate([
+        { $match: { cafe_id: cafeId, order_status: 'completed' } },
+        { $unwind: "$items" },
+        { $group: { _id: "$items.name", sales: { $sum: "$items.quantity" } } },
+        { $sort: { sales: -1 } },
+        { $limit: 5 }
+      ])
     ]);
     let subscriptionData = null;
     if (activeSub) {

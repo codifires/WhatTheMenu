@@ -4,27 +4,30 @@ import { Link } from 'react-router-dom'
 import { ownerAPI } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
+
+
 
 const STAT_DEFS = [
   {
     key: 'todayOrders', label: "Today's Orders", icon: '📋',
     bg: 'rgba(6,182,212,0.08)', border: 'rgba(6,182,212,0.2)', glow: 'rgba(6,182,212,0.1)',
-    trend: '+12%', trendUp: true,
+    
   },
   {
     key: 'todayRevenue', label: "Today's Revenue", icon: '💸',
     bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)', glow: 'rgba(16,185,129,0.1)',
-    format: (v) => `₹${(v || 0).toLocaleString()}`, trend: '+8%', trendUp: true,
+    format: (v) => `₹${(v || 0).toLocaleString()}`, 
   },
   {
     key: 'pendingOrders', label: 'Pending Orders', icon: '⏳',
     bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', glow: 'rgba(245,158,11,0.1)',
-    trend: '-2', trendUp: false,
+    
   },
   {
     key: 'completedToday', label: 'Completed Today', icon: '✅',
     bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.2)', glow: 'rgba(139,92,246,0.1)',
-    trend: '+24', trendUp: true,
+    
   },
 ]
 
@@ -43,12 +46,7 @@ function StatCard({ def, value, index }) {
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div style={{ fontSize: 24 }}>{def.icon}</div>
-        <span style={{
-          fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 50,
-          color: def.trendUp ? '#34d399' : '#f87171', background: def.trendUp ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-        }}>
-          {def.trend}
-        </span>
+        {def.trend && (<span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 50, color: def.trendUp ? '#34d399' : '#f87171', background: def.trendUp ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)' }}>{def.trend}</span>)}
       </div>
       <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 6px', fontWeight: 500 }}>{def.label}</p>
       <p style={{ fontSize: 30, fontWeight: 900, color: '#fff', margin: 0, fontFamily: "'Outfit',sans-serif", letterSpacing: '-1px' }}>
@@ -93,6 +91,16 @@ const OwnerDashboard = () => {
       setLoading(false)
     }
   }
+
+    const chartRevenueData = (stats?.dailyRevenueHistory || []).map(item => ({
+    name: `${item._id.month}/${item._id.day}`,
+    value: item.total
+  })).reverse();
+
+  const chartTopItemsData = (stats?.topItems || []).map(item => ({
+    name: item._id,
+    sales: item.sales
+  }));
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
@@ -164,6 +172,50 @@ const OwnerDashboard = () => {
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: 32, fontWeight: 900, color: '#fff', margin: 0, fontFamily: "'Outfit',sans-serif" }}>{stats?.totalMenuItems || 0}</p>
             <p style={{ fontSize: 13, fontWeight: 500, color: '#22d3ee', margin: 0 }}>Menu Items</p>
+          </div>
+        </div>
+      </div>
+
+      
+      {/* 🚀 Charts Section 🚀 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16, marginBottom: 32 }}>
+        <div style={{ padding: '24px', borderRadius: 20, background: 'linear-gradient(145deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 24px', color: '#fff', fontFamily: "'Outfit',sans-serif" }}>Revenue Over Time</h2>
+          <div style={{ width: '100%', height: 260 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartRevenueData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="name" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                <YAxis stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} dx={-10} />
+                <RechartsTooltip contentStyle={{ backgroundColor: 'rgba(17,24,39,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 12, backdropFilter: 'blur(8px)' }} itemStyle={{ color: '#22d3ee', fontWeight: 600 }} />
+                <Area type="monotone" dataKey="value" stroke="#22d3ee" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" activeDot={{ r: 6, fill: '#22d3ee', stroke: '#fff', strokeWidth: 2 }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div style={{ padding: '24px', borderRadius: 20, background: 'linear-gradient(145deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 24px', color: '#fff', fontFamily: "'Outfit',sans-serif" }}>Top Selling Items</h2>
+          <div style={{ width: '100%', height: 260 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartTopItemsData} layout="vertical" margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+                <XAxis type="number" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                <YAxis dataKey="name" type="category" stroke="#e5e7eb" fontSize={13} tickLine={false} axisLine={false} width={90} fontWeight={500} />
+                <RechartsTooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} contentStyle={{ backgroundColor: 'rgba(17,24,39,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 12, backdropFilter: 'blur(8px)' }} itemStyle={{ color: '#a855f7', fontWeight: 600 }} />
+                <Bar dataKey="sales" radius={[0, 6, 6, 0]} barSize={16}>
+                  {chartTopItemsData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill="#a855f7" />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
