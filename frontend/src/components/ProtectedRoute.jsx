@@ -16,12 +16,12 @@ const ProtectedRoute = ({ children, role }) => {
   }
 
   if (!user) {
-    const redirectTo = role === 'superadmin' ? '/admin/login' : '/owner/login'
+    const redirectTo = role === 'superadmin' ? '/' : '/owner/login'
     return <Navigate to={redirectTo} replace />
   }
 
   if (role && user.role !== role) {
-    const redirectTo = role === 'superadmin' ? '/admin/login' : '/owner/login'
+    const redirectTo = role === 'superadmin' ? '/' : '/owner/login'
     return <Navigate to={redirectTo} replace />
   }
 

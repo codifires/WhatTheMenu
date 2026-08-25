@@ -12,6 +12,7 @@ const CustomerMenu = () => {
   const [allItems, setAllItems] = useState([])
   const [activeCategory, setActiveCategory] = useState('all')
   const [loading, setLoading] = useState(true)
+  const [isUnavailable, setIsUnavailable] = useState(false)
   const { addItem, items: cartItems, updateQuantity, removeItem } = useCart()
 
   useEffect(() => {
@@ -52,6 +53,20 @@ const CustomerMenu = () => {
     if (activeCategory === 'all') return allItems
     const cat = categories.find(c => c._id === activeCategory)
     return cat ? cat.items : []
+  }
+
+  if (isUnavailable) {
+    return (
+      <div style={{ padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center' }}>
+        <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(239,68,68,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 12, fontFamily: "'Outfit',sans-serif" }}>Menu Unavailable</h2>
+        <p style={{ color: '#9ca3af', fontSize: 16, maxWidth: 300, lineHeight: 1.5 }}>
+          We're sorry, but this restaurant's digital menu is temporarily offline. Please check back later or ask a staff member for assistance.
+        </p>
+      </div>
+    )
   }
 
   if (loading) {

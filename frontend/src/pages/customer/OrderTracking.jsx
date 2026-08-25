@@ -4,6 +4,7 @@ import { customerAPI, SOCKET_URL } from '../../services/api'
 import { io } from 'socket.io-client'
 import toast from 'react-hot-toast'
 import { playHardwareAlert } from '../../utils/hardwareAlerts'
+import BillReceipt from '../../components/BillReceipt'
 
 const STATUS_STEPS = [
   { key: 'new', label: 'Placed', icon: '📝' },
@@ -21,6 +22,7 @@ const OrderTracking = () => {
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(false)
   const [myOrders, setMyOrders] = useState([])
+  const [cafeDetails, setCafeDetails] = useState(null)
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('myOrders') || '[]')

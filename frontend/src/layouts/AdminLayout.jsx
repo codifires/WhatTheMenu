@@ -242,7 +242,7 @@ const AdminLayout = ({ children }) => {
 
   const handleLogout = () => {
     logout()
-    navigate('/admin/login')
+    navigate('/admin/codifires')
   }
 
   // Current page title from path

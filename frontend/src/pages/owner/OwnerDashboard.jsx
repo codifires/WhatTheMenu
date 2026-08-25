@@ -77,13 +77,14 @@ const STATUS_COLORS = {
 const OwnerDashboard = () => {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [revenueDays, setRevenueDays] = useState(30)
   const { user } = useAuth()
 
-  useEffect(() => { fetchDashboard() }, [])
+  useEffect(() => { fetchDashboard() }, [revenueDays])
 
   const fetchDashboard = async () => {
     try {
-      const res = await ownerAPI.getDashboard()
+      const res = await ownerAPI.getDashboard({ days: revenueDays })
       setStats(res.data.data)
     } catch {
       toast.error('Failed to load dashboard')
@@ -92,10 +93,22 @@ const OwnerDashboard = () => {
     }
   }
 
-    const chartRevenueData = (stats?.dailyRevenueHistory || []).map(item => ({
-    name: `${item._id.month}/${item._id.day}`,
-    value: item.total
-  })).reverse();
+    // Fill missing days
+    const chartRevenueData = [];
+    const revenueMap = {};
+    (stats?.dailyRevenueHistory || []).forEach(item => {
+      revenueMap[`${item._id.month}/${item._id.day}`] = item.total;
+    });
+
+    for (let i = revenueDays - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = `${d.getMonth() + 1}/${d.getDate()}`;
+      chartRevenueData.push({
+        name: key,
+        value: revenueMap[key] || 0
+      });
+    }
 
   const chartTopItemsData = (stats?.topItems || []).map(item => ({
     name: item._id,
@@ -180,7 +193,21 @@ const OwnerDashboard = () => {
       {/* 🚀 Charts Section 🚀 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16, marginBottom: 32 }}>
         <div style={{ padding: '24px', borderRadius: 20, background: 'linear-gradient(145deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 24px', color: '#fff', fontFamily: "'Outfit',sans-serif" }}>Revenue Over Time</h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 12, flexWrap: 'wrap' }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: '#fff', fontFamily: "'Outfit',sans-serif" }}>Revenue Over Time</h2>
+              <select
+                value={revenueDays}
+                onChange={(e) => setRevenueDays(Number(e.target.value))}
+                style={{
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#e5e7eb', borderRadius: 8, padding: '4px 12px', fontSize: 12, outline: 'none', cursor: 'pointer'
+                }}
+              >
+                <option value={7} style={{ background: '#0f172a', color: '#fff' }}>Last 7 Days</option>
+                <option value={30} style={{ background: '#0f172a', color: '#fff' }}>Last 30 Days</option>
+                <option value={90} style={{ background: '#0f172a', color: '#fff' }}>Last 90 Days</option>
+              </select>
+            </div>
           <div style={{ width: '100%', height: 260 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartRevenueData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>

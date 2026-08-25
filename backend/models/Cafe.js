@@ -67,6 +67,11 @@ const cafeSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  billing_settings: {
+    format: { type: String, enum: ['standard', 'minimal', 'detailed'], default: 'standard' },
+    tax_number: { type: String, default: '' },
+    thank_you_message: { type: String, default: 'Thank you for your visit!' }
+  },
   subscription_status: {
     type: String,
     enum: ['active', 'expired', 'suspended'],

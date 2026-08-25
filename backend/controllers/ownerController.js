@@ -686,8 +686,10 @@ const getFeedback = async (req, res, next) => {
 // @route   PUT /api/owner/settings
 const updateSettings = async (req, res, next) => {
   try {
-    const { name, phone, address, tax_percentage, razorpay_key_id, razorpay_key_secret, razorpay_webhook_secret } = req.body;
-    const updateData = {};
+    const { name, phone, address, tax_percentage, razorpay_key_id, razorpay_key_secret, razorpay_webhook_secret, billing_settings } = req.body;
+      const updateData = {};
+
+      if (billing_settings !== undefined) updateData.billing_settings = billing_settings;
 
     if (name !== undefined) updateData.name = name;
     if (phone !== undefined) updateData.phone = phone;

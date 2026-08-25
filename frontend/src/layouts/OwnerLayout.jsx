@@ -213,7 +213,7 @@ const OwnerLayout = ({ children }) => {
       </aside>
 
       <div style={S.main}>
-        <header style={S.topbar}>
+        <header style={S.topbar} className="owner-topbar">
           <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: 6, borderRadius: 8, display: 'none' }} className="owner-hamburger">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
@@ -224,7 +224,7 @@ const OwnerLayout = ({ children }) => {
             <span style={{ fontSize: 14, fontWeight: 600, color: '#e5e7eb' }}>{pageTitle}</span>
           </div>
 
-          <div id="topbar-alert-portal" style={{ flex: 1, margin: '0 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <div id="topbar-alert-portal" className="owner-topbar-alert" style={{ flex: 1, margin: '0 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
             {daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 3 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', padding: '6px 12px', borderRadius: 8, color: '#fbbf24', fontSize: 13, fontWeight: 600 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -268,6 +268,9 @@ const OwnerLayout = ({ children }) => {
           .owner-sidebar-desktop { display: none !important; }
           .owner-hamburger { display: flex !important; }
           .owner-content { padding: 16px !important; }
+          .owner-topbar { height: auto !important; padding: 12px 16px !important; flex-wrap: wrap; gap: 12px; }
+          .owner-topbar-alert { width: 100%; justify-content: flex-start !important; margin: 0 !important; flex: none !important; }
+          .owner-topbar-alert > div { width: 100%; white-space: normal; }
         }
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }

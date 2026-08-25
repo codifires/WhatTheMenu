@@ -35,7 +35,8 @@ const OwnerSettings = () => {
     tax_percentage: user?.tax_percentage || 0,
     razorpay_key_id: user?.razorpay_key_id || '',
     razorpay_key_secret: '',
-    razorpay_webhook_secret: ''
+    razorpay_webhook_secret: '',
+    billing_settings: user?.billing_settings || { format: 'standard', tax_number: '', thank_you_message: 'Thank you for your visit!' }
   })
   const [logoFile, setLogoFile] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -69,6 +70,7 @@ const OwnerSettings = () => {
       if (form.razorpay_key_secret) formData.append('razorpay_key_secret', form.razorpay_key_secret)
       if (form.razorpay_webhook_secret) formData.append('razorpay_webhook_secret', form.razorpay_webhook_secret)
       if (logoFile) formData.append('logo', logoFile)
+      formData.append('billing_settings', JSON.stringify(form.billing_settings))
 
       const res = await ownerAPI.updateSettings(formData)
       localStorage.setItem('user', JSON.stringify(res.data.data))
@@ -83,8 +85,9 @@ const OwnerSettings = () => {
 
   const TABS = [
     { id: 'profile', label: 'Café Profile', icon: '🏪' },
-    { id: 'branding', label: 'Branding', icon: '✨' },
+    { id: 'branding', label: 'Branding', icon: '🎨' },
     { id: 'payments', label: 'Payment & Billing', icon: '💳' },
+    { id: 'billing', label: 'Billing & Invoice', icon: '🧾' },
     { id: 'hours', label: 'Business Hours', icon: '🕒' },
     { id: 'alerts', label: 'Hardware Alerts', icon: '🔔' },
   ]
@@ -238,6 +241,48 @@ const OwnerSettings = () => {
               </div>
             )}
 
+            
+            {activeTab === 'billing' && (
+              <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>Billing & Invoice Settings</h2>
+                <div style={{ padding: '24px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
+                  
+                  <InputField 
+                    label="Tax / GST Number" 
+                    value={form.billing_settings.tax_number} 
+                    onChange={e => setForm({...form, billing_settings: {...form.billing_settings, tax_number: e.target.value}})} 
+                    helperText="This will appear on the customer's downloadable bill." 
+                  />
+
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#e5e7eb', display: 'block', marginBottom: 6 }}>Bill Format</label>
+                    <select
+                      value={form.billing_settings.format}
+                      onChange={e => setForm({...form, billing_settings: {...form.billing_settings, format: e.target.value}})}
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)', color: '#fff', fontSize: 14, outline: 'none' }}
+                    >
+                      <option style={{background: '#0f172a'}} value="standard">Standard Receipt</option>
+                      <option style={{background: '#0f172a'}} value="minimal">Minimal (Eco-friendly)</option>
+                      <option style={{background: '#0f172a'}} value="detailed">Detailed Invoice</option>
+                    </select>
+                  </div>
+
+                  <InputField 
+                    label="Custom Thank You Message" 
+                    as="textarea"
+                    value={form.billing_settings.thank_you_message} 
+                    onChange={e => setForm({...form, billing_settings: {...form.billing_settings, thank_you_message: e.target.value}})} 
+                    helperText="Leave a nice message at the bottom of the bill." 
+                  />
+                  
+                  <div style={{ marginTop: 24, padding: 16, background: 'rgba(6,182,212,0.05)', border: '1px dashed rgba(6,182,212,0.3)', borderRadius: 12 }}>
+                    <h4 style={{ margin: '0 0 12px', fontSize: 14, color: '#06b6d4' }}>Bill Preview Notes</h4>
+                    <p style={{ margin: 0, fontSize: 13, color: '#9ca3af' }}>Customers can download this bill from their order tracking page once the payment is completed. It will automatically include your Cafe Name: <strong>{form.name}</strong>, Phone: <strong>{form.phone}</strong>, and Address: <strong>{form.address}</strong>.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {activeTab === 'payments' && (
               <div style={{ animation: 'fadeIn 0.3s ease' }}>
                 <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>Payment & Billing Methods</h2>

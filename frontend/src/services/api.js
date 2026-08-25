@@ -31,7 +31,7 @@ api.interceptors.response.use(
       localStorage.removeItem('user')
       const path = window.location.pathname
       if (!path.includes('/login') && !path.includes('/register')) {
-        window.location.href = path.includes('/admin') ? '/admin/login' : '/owner/login'
+        window.location.href = path.includes('/admin') ? '/admin/codifires' : '/owner/login'
       }
     }
     return Promise.reject(error)
@@ -90,7 +90,7 @@ export const publicAPI = {
 
 // ============ OWNER ============
 export const ownerAPI = {
-  getDashboard: () => api.get('/owner/dashboard'),
+  getDashboard: (params) => api.get('/owner/dashboard', { params }),
   // Categories
   getCategories: () => api.get('/owner/categories'),
   createCategory: (data) => api.post('/owner/categories', data),

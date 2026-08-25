@@ -355,7 +355,7 @@ const OwnerSubscription = () => {
       </div>
 
       {/* ── Pricing Table ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <h3 style={{ fontSize: 20, fontWeight: 700, margin: 0, fontFamily: "'Outfit',sans-serif" }}>Available SaaS Plans</h3>
         
         {/* Toggle */}

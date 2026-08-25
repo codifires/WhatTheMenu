@@ -91,7 +91,7 @@ function App() {
     if (!settingsLoading && !loading) {
       const isSuperadmin = user?.role === 'superadmin'
       const isMaintenancePath = location.pathname === '/maintenance'
-      const isAdminLogin = location.pathname === '/admin/login'
+      const isAdminLogin = location.pathname === '/admin/codifires'
 
       if (maintenanceMode && !isSuperadmin && !isAdminLogin && !isMaintenancePath) {
         navigate('/maintenance', { replace: true })
@@ -114,7 +114,7 @@ function App() {
         {/* Auth Routes — separate portals */}
         <Route path="/set-password/:token" element={<SetPassword />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/admin/login" element={
+        <Route path="/admin/codifires" element={
           user?.role === 'superadmin' ? <Navigate to="/admin" /> : <AdminLogin />
         } />
         <Route path="/owner/login" element={
