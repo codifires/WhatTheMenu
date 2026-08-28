@@ -38,7 +38,11 @@ const CustomerMenu = () => {
       setCategories(res.data.data.categories)
       setAllItems(res.data.data.allItems)
     } catch (error) {
-      toast.error('Failed to load menu')
+      if (error.response?.status === 403) {
+          setIsUnavailable(true)
+        } else {
+          toast.error(error.response?.data?.message || 'Failed to load menu')
+        }
     } finally {
       setLoading(false)
     }

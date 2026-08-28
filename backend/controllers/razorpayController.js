@@ -502,8 +502,15 @@ const createOrderPayment = async (req, res, next) => {
       .select('+razorpay_key_secret subscription_status razorpay_key_id name tax_percentage upi_id')
       .lean();
 
-    if (!cafe || cafe.subscription_status !== 'active') {
-      return res.status(400).json({ success: false, message: 'Cannot place order - café is unavailable' });
+    if (!cafe) {
+      return res.status(404).json({ success: false, message: 'Cafe not found' });
+    }
+    
+    if (cafe.subscription_status !== 'active') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Cafe subscription has expired. You cannot use the QR menu system.' 
+      });
     }
 
     if (!cafe.razorpay_key_id || !cafe.razorpay_key_secret) {
@@ -585,6 +592,12 @@ const createOrderPayment = async (req, res, next) => {
     });
   } catch (error) {
     console.error('Create Razorpay order error:', error);
+    if (error.statusCode === 401 || error.error?.code === 'BAD_REQUEST_ERROR') {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment gateway configuration error. Please contact the restaurant staff.'
+      });
+    }
     next(error);
   }
 };

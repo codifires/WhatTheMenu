@@ -38,6 +38,20 @@ api.interceptors.response.use(
   }
 )
 
+
+// Separate public axios instance for customer-facing APIs (no auth redirect on 401)
+const publicApi = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+// No redirect interceptor - just pass error through
+publicApi.interceptors.response.use(
+  (response) => response,
+  (error) => Promise.reject(error)
+)
+
 // ============ AUTH ============
 export const authAPI = {
   login: (data) => api.post('/auth/login', data),

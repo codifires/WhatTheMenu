@@ -221,6 +221,8 @@ const getMe = async (req, res, next) => {
           address: user.address,
           upi_id: user.upi_id,
           tax_percentage: user.tax_percentage,
+            razorpay_key_id: user.razorpay_key_id,
+            billing_settings: user.billing_settings,
           subscription_status: user.subscription_status,
           subscription: subscription, // Use embedded subscription (patched if missing)
           upcoming_subscription: user.upcoming_subscription, // Add upcoming subscription

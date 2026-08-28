@@ -41,6 +41,8 @@ const OwnerSettings = () => {
   const [logoFile, setLogoFile] = useState(null)
   const [saving, setSaving] = useState(false)
   const [hardwareAlerts, setHardwareAlerts] = useState(loadAlertSettings())
+  const [editingRazorpay, setEditingRazorpay] = useState(false)
+  const [razorpayForm, setRazorpayForm] = useState({ key_id: '', key_secret: '' })
 
   const handleHardwareChange = (field, value) => {
     const newSettings = { ...hardwareAlerts, [field]: value }
@@ -66,8 +68,17 @@ const OwnerSettings = () => {
       formData.append('phone', form.phone)
       formData.append('address', form.address)
       formData.append('tax_percentage', form.tax_percentage)
-      formData.append('razorpay_key_id', form.razorpay_key_id)
-      if (form.razorpay_key_secret) formData.append('razorpay_key_secret', form.razorpay_key_secret)
+            // Only update Razorpay keys if the edit panel was intentionally opened and filled
+      if (editingRazorpay && razorpayForm.key_id.trim() && razorpayForm.key_secret.trim()) {
+        formData.append('razorpay_key_id', razorpayForm.key_id.trim())
+        formData.append('razorpay_key_secret', razorpayForm.key_secret.trim())
+        setEditingRazorpay(false)
+        setRazorpayForm({ key_id: '', key_secret: '' })
+      } else if (!editingRazorpay) {
+        // If they are not editing, send back the existing key_id so it doesn't get cleared by accident
+        formData.append('razorpay_key_id', form.razorpay_key_id || '')
+      }
+      
       if (form.razorpay_webhook_secret) formData.append('razorpay_webhook_secret', form.razorpay_webhook_secret)
       if (logoFile) formData.append('logo', logoFile)
       formData.append('billing_settings', JSON.stringify(form.billing_settings))
@@ -313,8 +324,67 @@ const OwnerSettings = () => {
                     <p style={{ fontSize: 12, color: '#9ca3af', margin: '0 0 14px' }}>
                       Get these from your Razorpay Dashboard ➔ Settings ➔ API Keys.
                     </p>
-                    <InputField label="Key ID" placeholder="rzp_live_..." value={form.razorpay_key_id} onChange={e => setForm({...form, razorpay_key_id: e.target.value})} />
-                    <InputField label="Key Secret" type="password" placeholder={form.razorpay_key_id ? "•••••••••••••••• (Leave blank to keep existing)" : "Enter key secret..."} value={form.razorpay_key_secret} onChange={e => setForm({...form, razorpay_key_secret: e.target.value})} />
+                    {!editingRazorpay ? (
+                        <>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <span style={{ fontSize: 13, color: '#9ca3af' }}>Key ID</span>
+                            <span style={{ fontSize: 13, fontFamily: 'monospace', color: '#e5e7eb' }}>
+                              {form.razorpay_key_id ? form.razorpay_key_id.slice(0, 12) + '••••••••' + form.razorpay_key_id.slice(-4) : '—'}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', marginBottom: 16 }}>
+                            <span style={{ fontSize: 13, color: '#9ca3af' }}>Key Secret</span>
+                            <span style={{ fontSize: 13, color: '#e5e7eb' }}>{form.razorpay_key_id ? '••••••••••••••••' : '—'}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => { setEditingRazorpay(true); setRazorpayForm({ key_id: '', key_secret: '' }) }}
+                            style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1.5px solid rgba(6,182,212,0.5)', background: 'rgba(6,182,212,0.06)', color: '#67e8f9', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(6,182,212,0.15)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(6,182,212,0.06)'}
+                          >
+                            🔑 Update Razorpay Keys
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', marginBottom: 16, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                            <span style={{ fontSize: 18, marginTop: 1 }}>⚠️</span>
+                            <p style={{ margin: 0, fontSize: 13, color: '#fbbf24', lineHeight: 1.5 }}>Enter new Razorpay credentials carefully. Old keys will be replaced only when you click <strong>Save Changes</strong>.</p>
+                          </div>
+                          <div style={{ marginBottom: 14 }}>
+                            <label style={{ fontSize: 13, fontWeight: 600, color: '#e5e7eb', display: 'block', marginBottom: 6 }}>New Key ID</label>
+                            <input
+                              type="text"
+                              placeholder="rzp_live_..."
+                              value={razorpayForm.key_id}
+                              onChange={e => setRazorpayForm({...razorpayForm, key_id: e.target.value})}
+                              autoComplete="off"
+                              autoCorrect="off"
+                              autoCapitalize="off"
+                              style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(245,158,11,0.4)', background: 'rgba(245,158,11,0.04)', color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                            />
+                          </div>
+                          <div style={{ marginBottom: 14 }}>
+                            <label style={{ fontSize: 13, fontWeight: 600, color: '#e5e7eb', display: 'block', marginBottom: 6 }}>New Key Secret</label>
+                            <input
+                              type="password"
+                              placeholder="Enter new key secret..."
+                              value={razorpayForm.key_secret}
+                              onChange={e => setRazorpayForm({...razorpayForm, key_secret: e.target.value})}
+                              autoComplete="new-password"
+                              style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(245,158,11,0.4)', background: 'rgba(245,158,11,0.04)', color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box', fontFamily: 'monospace' }}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => { setEditingRazorpay(false); setRazorpayForm({ key_id: '', key_secret: '' }) }}
+                            style={{ width: '100%', padding: '11px', borderRadius: 12, border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.08)', color: '#f87171', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      )}
                   </div>
 
                   <div style={{ padding: '20px', borderRadius: 14, border: '1px solid rgba(6,182,212,0.3)', background: 'rgba(6,182,212,0.04)', marginBottom: 24 }}>

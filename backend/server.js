@@ -123,6 +123,9 @@ app.use(errorHandler);
 const startSubscriptionCron = require('./jobs/subscriptionCron');
 startSubscriptionCron();
 
+const initPaymentReconciliationCron = require('./jobs/paymentReconciliationCron');
+initPaymentReconciliationCron(io);
+
 // Socket.io connection handling
 io.on('connection', (socket) => {
   console.log(`🔌 Client connected: ${socket.id}`);
