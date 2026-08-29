@@ -24,7 +24,8 @@ const PaymentManagement = () => {
   const fetchOrders = async () => {
     try {
       const res = await ownerAPI.getOrders()
-      setOrders(res.data.data)
+      const validOrders = res.data.data.filter(o => o.payment_status !== 'failed')
+      setOrders(validOrders)
     } catch (error) {
       toast.error('Failed to fetch payments')
     } finally {
@@ -52,7 +53,7 @@ const PaymentManagement = () => {
       if (filter === 'received') return o.payment_status === 'received'
       if (filter === 'upi') return o.payment_method === 'upi'
       if (filter === 'cash') return o.payment_method === 'cash'
-      if (filter === 'online') return o.payment_method === 'online'
+      if (filter === 'online') return o.payment_method === 'online' || o.payment_method === 'razorpay'
       return true
     })
   }, [orders, filter])
@@ -62,14 +63,15 @@ const PaymentManagement = () => {
       const amount = order.total_amount || 0
       if (order.payment_status === 'received') {
         acc.totalRevenue += amount
+        acc.totalTransactions += 1
         if (order.payment_method === 'upi') acc.upiRevenue += amount
         if (order.payment_method === 'cash') acc.cashRevenue += amount
-        if (order.payment_method === 'online') acc.onlineRevenue += amount
+        if (order.payment_method === 'online' || order.payment_method === 'razorpay') acc.onlineRevenue += amount
       } else if (order.payment_status === 'pending') {
         acc.pendingRevenue += amount
       }
       return acc
-    }, { totalRevenue: 0, pendingRevenue: 0, upiRevenue: 0, cashRevenue: 0, onlineRevenue: 0 })
+    }, { totalRevenue: 0, pendingRevenue: 0, upiRevenue: 0, cashRevenue: 0, onlineRevenue: 0, totalTransactions: 0 })
   }, [orders])
 
   return (
@@ -96,7 +98,7 @@ const PaymentManagement = () => {
         {[
           { label: 'Total Revenue (Received)', value: stats.totalRevenue, icon: '💰', color: '#10b981' },
           { label: 'Pending Collections', value: stats.pendingRevenue, icon: '⏳', color: '#f59e0b' },
-          { label: 'UPI Revenue', value: stats.upiRevenue, icon: '📱', color: '#3b82f6' },
+          { label: 'Total Transactions', value: stats.totalTransactions, icon: '📈', color: '#3b82f6', isCount: true },
           { label: 'Online Revenue', value: stats.onlineRevenue, icon: '💳', color: '#8b5cf6' },
         ].map((stat, i) => (
           <div key={i} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 20, padding: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -105,7 +107,7 @@ const PaymentManagement = () => {
             </div>
             <div>
               <p style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, margin: '0 0 4px' }}>{stat.label}</p>
-              <p style={{ fontSize: 24, fontWeight: 800, color: '#fff', margin: 0, fontFamily: "'Outfit',sans-serif" }}>₹{stat.value.toLocaleString()}</p>
+              <p style={{ fontSize: 24, fontWeight: 800, color: '#fff', margin: 0, fontFamily: "'Outfit',sans-serif" }}>{stat.isCount ? '' : '₹'}{stat.value.toLocaleString()}</p>
             </div>
           </div>
         ))}
@@ -223,3 +225,11 @@ const PaymentManagement = () => {
 }
 
 export default PaymentManagement
+ 
+
+ 
+
+ 
+
+ 
+

@@ -72,11 +72,21 @@ const STEPS = [
 
 const DEFAULT_PLANS = [
   {
+    name: 'Basic',
+    price: '₹199',
+    period: '/month',
+    desc: 'Just the essentials.',
+    features: ['Up to 20 Menu Items', 'Digital QR Menu', 'Cash & UPI Payments'],
+    cta: 'Start Free Trial',
+    popular: false,
+    id: 'basic'
+  },
+  {
     name: 'Starter',
     price: '₹299',
     period: '/month',
     desc: 'Perfect to get started.',
-    features: ['Unlimited menu items', 'Real-time orders', 'Cash & UPI support', 'Customer feedback', 'QR code download'],
+    features: ['Up to 50 Menu Items', 'Basic Analytics', 'Digital QR Menu', 'Email Support'],
     cta: 'Start Free Trial',
     popular: false,
     id: 'starter'
@@ -86,7 +96,7 @@ const DEFAULT_PLANS = [
     price: '₹499',
     period: '/month',
     desc: 'For growing cafés.',
-    features: ['Everything in Starter', 'Advanced analytics', 'Priority support', 'Custom branding', 'Unlimited QR regeneration'],
+    features: ['Unlimited Menu Items', 'Everything in Starter', 'Advanced Analytics', 'Priority Support', 'Custom Domain'],
     cta: 'Get Pro',
     popular: true,
     id: 'pro'
@@ -125,18 +135,24 @@ export default function LandingPage() {
         const starterYearly = Math.round((d.starter_price || 299) * 12 * (1 - discount / 100));
         const proYearly = Math.round((d.pro_price || 499) * 12 * (1 - discount / 100));
 
-        setPlans([
+                setPlans([
           {
             ...DEFAULT_PLANS[0],
-            price: `₹${isYearly ? starterYearly : (d.starter_price || 299)}`,
+            price: `₹${isYearly ? basicYearly : (d.basic_price || 199)}`,
             period: isYearly ? '/year' : '/month',
-            features: d.starter_features?.length > 0 ? d.starter_features : DEFAULT_PLANS[0].features
+            features: d.basic_features?.length > 0 ? d.basic_features : DEFAULT_PLANS[0].features
           },
           {
             ...DEFAULT_PLANS[1],
+            price: `₹${isYearly ? starterYearly : (d.starter_price || 299)}`,
+            period: isYearly ? '/year' : '/month',
+            features: d.starter_features?.length > 0 ? d.starter_features : DEFAULT_PLANS[1].features
+          },
+          {
+            ...DEFAULT_PLANS[2],
             price: `₹${isYearly ? proYearly : (d.pro_price || 499)}`,
             period: isYearly ? '/year' : '/month',
-            features: d.pro_features?.length > 0 ? d.pro_features : DEFAULT_PLANS[1].features
+            features: d.pro_features?.length > 0 ? d.pro_features : DEFAULT_PLANS[2].features
           }
         ])
       }
@@ -415,7 +431,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ PRICING ═══════════════ */}
       <section id="pricing" style={{ padding: '100px 24px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ maxWidth: 860, margin: '0 auto' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
             <p style={{ color: '#7c3aed', fontSize: 13, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 12 }}>Pricing</p>
             <h2 style={{ fontSize: 'clamp(28px,4vw,44px)', fontWeight: 800, margin: '0 0 16px', fontFamily: "'Outfit',sans-serif" }}>Simple, honest pricing</h2>
@@ -440,7 +456,7 @@ export default function LandingPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginTop: 32 }}>
             {plans.map(p => (
               <div key={p.name} style={{
-                padding: '36px 32px', borderRadius: 22, position: 'relative',
+                display: 'flex', flexDirection: 'column', padding: '36px 32px', borderRadius: 22, position: 'relative', height: '100%', boxSizing: 'border-box',
                 border: p.popular ? '1px solid rgba(124,58,237,0.5)' : '1px solid rgba(255,255,255,0.08)',
                 background: p.popular ? 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(79,70,229,0.08))' : 'rgba(255,255,255,0.02)',
                 boxShadow: p.popular ? '0 0 60px rgba(124,58,237,0.15)' : 'none',
@@ -465,7 +481,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <Link to="/owner/register" style={{
-                  display: 'block', textAlign: 'center', padding: '14px', borderRadius: 14,
+                  marginTop: 'auto', display: 'block', textAlign: 'center', padding: '14px', borderRadius: 14,
                   textDecoration: 'none', fontSize: 15, fontWeight: 700, color: '#fff',
                   background: p.popular ? 'linear-gradient(135deg,#7c3aed,#4f46e5)' : 'rgba(255,255,255,0.07)',
                   border: p.popular ? 'none' : '1px solid rgba(255,255,255,0.1)',

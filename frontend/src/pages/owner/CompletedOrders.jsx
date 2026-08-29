@@ -10,13 +10,14 @@ const STATUS_COLORS = {
 const CompletedOrders = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedDate, setSelectedDate] = useState('')
 
-  useEffect(() => { fetchOrders() }, [])
+  useEffect(() => { fetchOrders() }, [selectedDate])
 
   const fetchOrders = async () => {
     try {
       // Fetch specifically completed and cancelled orders
-      const res = await ownerAPI.getOrders({ status: 'completed' })
+      const res = await ownerAPI.getOrders({ status: 'completed', ...(selectedDate && { date: selectedDate }) })
       const validOrders = res.data.data.filter(order =>
         order.payment_status === 'received' ||
         order.payment_status === 'completed' ||
@@ -34,9 +35,27 @@ const CompletedOrders = () => {
     <div style={{ fontFamily: "'Inter',sans-serif", color: '#fff' }}>
 
       {/* ── Header ── */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 'clamp(20px,3vw,28px)', fontWeight: 900, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>Order History</h1>
-        <p style={{ fontSize: 14, color: '#4b5563', margin: 0 }}>View all completed and past orders.</p>
+      <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h1 style={{ fontSize: 'clamp(20px,3vw,28px)', fontWeight: 900, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>Order History</h1>
+          <p style={{ fontSize: 14, color: '#4b5563', margin: 0 }}>View all completed and past orders.</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '8px 16px' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <input 
+            type="date" 
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            onClick={(e) => e.target.showPicker && e.target.showPicker()}
+            onKeyDown={(e) => e.preventDefault()}
+            style={{ background: 'transparent', border: 'none', color: selectedDate ? '#fff' : '#9ca3af', fontSize: 14, outline: 'none', cursor: 'pointer', fontFamily: "'Inter',sans-serif", padding: 0 }}
+          />
+          {selectedDate && (
+            <button onClick={() => setSelectedDate('')} style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0, marginLeft: 8 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Orders Grid ── */}
@@ -94,7 +113,10 @@ const CompletedOrders = () => {
                   </span>
 
                   <span style={{ fontSize: 12, color: '#9ca3af' }}>
-                    {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(order.created_at).toLocaleString('en-IN', {
+                      day: '2-digit', month: 'short', year: 'numeric',
+                      hour: '2-digit', minute: '2-digit', hour12: true
+                    })}
                   </span>
                 </div>
 
@@ -119,3 +141,7 @@ const CompletedOrders = () => {
 }
 
 export default CompletedOrders
+ 
+
+ 
+

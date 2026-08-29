@@ -50,20 +50,15 @@ const initPaymentReconciliationCron = (io) => {
             try {
               const existingRev = await OrderRevenue.findOne({ order_id: order._id });
               if (!existingRev) {
-                await OrderRevenue.create({
-                  order_id: order._id,
+                                await OrderRevenue.create({
                   cafe_id: order.cafe_id,
                   order_number: order.order_number,
-                  token_number: order.token_number,
-                  customer_name: order.customer_name,
-                  table_number: order.table_number,
-                  items: order.items.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
                   total_amount: order.total_amount,
-                  payment_method: 'razorpay',
-                  payment_transaction_id: order.payment_transaction_id,
-                  payment_status: 'received',
-                  order_created_at: order.created_at,
-                  payment_confirmed_at: new Date()
+                  payment_method: 'online',
+                  payment_method_details: 'razorpay',
+                  table_number: order.table_number || '',
+                  items_count: order.items?.length || 0,
+                  payment_date: new Date()
                 });
               }
             } catch (revErr) {}

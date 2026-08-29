@@ -49,7 +49,7 @@ const getDashboard = async (req, res, next) => {
       topItems
     ] = await Promise.all([
       Order.countDocuments({ cafe_id: cafeId, created_at: { $gte: today } }),
-      Order.countDocuments({ cafe_id: cafeId, order_status: { $in: ['new', 'accepted', 'preparing'] } }),
+      Order.countDocuments({ cafe_id: cafeId, order_status: { $in: ['new', 'accepted', 'preparing'] }, created_at: { $gte: today } }),
       Order.countDocuments({ cafe_id: cafeId, order_status: 'completed', created_at: { $gte: today } }),
       Order.aggregate([
         { $match: { cafe_id: cafeId, created_at: { $gte: today }, payment_status: { $in: ['received', 'completed'] } } },
@@ -407,10 +407,19 @@ const getOrders = async (req, res, next) => {
     if (status) query.order_status = status;
 
     if (date === 'today') {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      query.created_at = { $gte: today };
-    }
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        query.created_at = { $gte: today };
+      } else if (date) {
+        // Assume date is in YYYY-MM-DD format
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        query.created_at = { $gte: startOfDay, $lte: endOfDay };
+      }
 
     const total = await Order.countDocuments(query);
     const orders = await Order.find(query)
@@ -497,7 +506,8 @@ const updatePaymentStatus = async (req, res, next) => {
             cafe_id: order.cafe_id,
             order_number: order.order_number,
             total_amount: order.total_amount,
-            payment_method: order.payment_method,
+            payment_method: order.payment_method === 'razorpay' ? 'online' : order.payment_method,
+              payment_method_details: order.payment_method === 'razorpay' ? 'razorpay' : '',
             table_number: order.table_number || '',
             items_count: order.items?.length || 0,
             payment_date: new Date()

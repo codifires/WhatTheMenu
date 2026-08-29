@@ -123,6 +123,9 @@ app.use(errorHandler);
 const startSubscriptionCron = require('./jobs/subscriptionCron');
 startSubscriptionCron();
 
+const initOrderCleanupCron = require('./jobs/orderCleanupCron');
+initOrderCleanupCron();
+
 const initPaymentReconciliationCron = require('./jobs/paymentReconciliationCron');
 initPaymentReconciliationCron(io);
 
