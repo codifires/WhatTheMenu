@@ -126,7 +126,7 @@ const S = {
     boxShadow: open ? '4px 0 40px rgba(0,0,0,0.5)' : 'none',
   }),
   sidebarDesktop: {
-    position: 'relative', transform: 'none',
+    transform: 'none',
     width: 256, flexShrink: 0,
     background: 'rgba(10,13,24,0.95)',
     borderRight: '1px solid rgba(124,58,237,0.1)',

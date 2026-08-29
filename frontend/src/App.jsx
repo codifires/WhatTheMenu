@@ -41,7 +41,7 @@ const CompletedOrders = lazy(() => import('./pages/owner/CompletedOrders'))
 const PaymentManagement = lazy(() => import('./pages/owner/PaymentManagement'))
 const OwnerRevenueManagement = lazy(() => import('./pages/owner/RevenueManagement'))
 const MenuManagement = lazy(() => import('./pages/owner/MenuManagement'))
-const CategoryManagement = lazy(() => import('./pages/owner/CategoryManagement'))
+
 const QRCodePage = lazy(() => import('./pages/owner/QRCodePage'))
 const FeedbackPage = lazy(() => import('./pages/owner/FeedbackPage'))
 const OwnerSettings = lazy(() => import('./pages/owner/OwnerSettings'))
@@ -209,11 +209,7 @@ function App() {
             <OwnerLayout><MenuManagement /></OwnerLayout>
           </ProtectedRoute>
         } />
-        <Route path="/owner/categories" element={
-          <ProtectedRoute role="owner">
-            <OwnerLayout><CategoryManagement /></OwnerLayout>
-          </ProtectedRoute>
-        } />
+        
         <Route path="/owner/qr-code" element={
           <ProtectedRoute role="owner">
             <OwnerLayout><QRCodePage /></OwnerLayout>
