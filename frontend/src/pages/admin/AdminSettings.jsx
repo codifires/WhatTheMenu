@@ -7,8 +7,8 @@ const INPUT = {
   padding: '12px 14px',
   borderRadius: 12,
   border: '1px solid rgba(255,255,255,0.1)',
-  background: 'rgba(255,255,255,0.03)',
-  color: '#fff',
+  background: 'var(--bg-input)',
+  color: 'var(--text-primary)',
   fontSize: 14,
   outline: 'none',
   boxSizing: 'border-box',
@@ -19,19 +19,19 @@ const INPUT = {
 function InputField({ label, helperText, prefix, suffix, type = 'text', ...props }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <label style={{ fontSize: 13, fontWeight: 600, color: '#e5e7eb', display: 'block', marginBottom: 6 }}>{label}</label>
+      <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>{label}</label>
       <div style={{ position: 'relative' }}>
-        {prefix && <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#6b7280', fontSize: 14 }}>{prefix}</span>}
+        {prefix && <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', fontSize: 14 }}>{prefix}</span>}
         <input
           type={type}
           style={{ ...INPUT, paddingLeft: prefix ? 32 : 14, paddingRight: suffix ? 40 : 14 }}
           onFocus={e => e.target.style.borderColor = 'rgba(124,58,237,0.6)'}
-          onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+          onBlur={e => e.target.style.borderColor = 'var(--border-hover)'}
           {...props}
         />
-        {suffix && <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: '#6b7280', fontSize: 14 }}>{suffix}</span>}
+        {suffix && <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', fontSize: 14 }}>{suffix}</span>}
       </div>
-      {helperText && <p style={{ fontSize: 12, color: '#6b7280', margin: '6px 0 0' }}>{helperText}</p>}
+      {helperText && <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: '6px 0 0' }}>{helperText}</p>}
     </div>
   )
 }
@@ -40,20 +40,20 @@ function Toggle({ checked, onChange, label, description }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
       <div>
-        <p style={{ fontSize: 14, fontWeight: 600, color: '#e5e7eb', margin: '0 0 4px' }}>{label}</p>
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>{description}</p>
+        <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>{label}</p>
+        <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>{description}</p>
       </div>
       <button
         type="button"
         onClick={() => onChange(!checked)}
         style={{
           width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', position: 'relative',
-          background: checked ? '#7c3aed' : 'rgba(255,255,255,0.1)',
+          background: checked ? '#7c3aed' : 'var(--border-hover)',
           transition: 'background 0.2s', flexShrink: 0
         }}
       >
         <div style={{
-          width: 18, height: 18, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3,
+          width: 18, height: 18, borderRadius: '50%', background: 'var(--text-primary)', position: 'absolute', top: 3,
           left: checked ? 23 : 3, transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
           boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
         }} />
@@ -137,7 +137,7 @@ function ScheduleHoursPicker({ value, onChange }) {
 
   return (
     <div style={{
-      background: 'rgba(255, 255, 255, 0.02)',
+      background: 'var(--bg-card)',
       border: '1px solid rgba(255, 255, 255, 0.08)',
       borderRadius: 16,
       padding: '20px 22px',
@@ -146,10 +146,10 @@ function ScheduleHoursPicker({ value, onChange }) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <label style={{ fontSize: 13, fontWeight: 700, color: '#e5e7eb', display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
             <span>📅 Support Operating Schedule & Calendar Hours</span>
           </label>
-          <p style={{ fontSize: 12, color: '#9ca3af', margin: '4px 0 0' }}>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '4px 0 0' }}>
             Set operating days & calendar time schedule for café helpdesk.
           </p>
         </div>
@@ -185,8 +185,8 @@ function ScheduleHoursPicker({ value, onChange }) {
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
-                background: !is24x7 && startDay === 'Mon' && endDay === 'Sun' ? '#7c3aed' : 'rgba(255,255,255,0.05)',
-                color: '#fff',
+                background: !is24x7 && startDay === 'Mon' && endDay === 'Sun' ? '#7c3aed' : 'var(--border-light)',
+                color: 'var(--text-primary)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 transition: 'all 0.15s'
               }}
@@ -202,8 +202,8 @@ function ScheduleHoursPicker({ value, onChange }) {
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
-                background: !is24x7 && startDay === 'Mon' && endDay === 'Fri' ? '#7c3aed' : 'rgba(255,255,255,0.05)',
-                color: '#fff',
+                background: !is24x7 && startDay === 'Mon' && endDay === 'Fri' ? '#7c3aed' : 'var(--border-light)',
+                color: 'var(--text-primary)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 transition: 'all 0.15s'
               }}
@@ -219,8 +219,8 @@ function ScheduleHoursPicker({ value, onChange }) {
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
-                background: is24x7 ? '#7c3aed' : 'rgba(255,255,255,0.05)',
-                color: '#fff',
+                background: is24x7 ? '#7c3aed' : 'var(--border-light)',
+                color: 'var(--text-primary)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 transition: 'all 0.15s'
               }}
@@ -233,7 +233,7 @@ function ScheduleHoursPicker({ value, onChange }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
               {/* Start Day */}
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', display: 'block', marginBottom: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
                   Start Day 📆
                 </label>
                 <select
@@ -242,14 +242,14 @@ function ScheduleHoursPicker({ value, onChange }) {
                   style={{ ...INPUT, cursor: 'pointer' }}
                 >
                   {DAYS.map(d => (
-                    <option key={d.short} value={d.short} style={{ background: '#0f172a' }}>{d.full}</option>
+                    <option key={d.short} value={d.short} style={{ background: 'var(--bg-shell)' }}>{d.full}</option>
                   ))}
                 </select>
               </div>
 
               {/* End Day */}
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', display: 'block', marginBottom: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
                   End Day 📆
                 </label>
                 <select
@@ -258,14 +258,14 @@ function ScheduleHoursPicker({ value, onChange }) {
                   style={{ ...INPUT, cursor: 'pointer' }}
                 >
                   {DAYS.map(d => (
-                    <option key={d.short} value={d.short} style={{ background: '#0f172a' }}>{d.full}</option>
+                    <option key={d.short} value={d.short} style={{ background: 'var(--bg-shell)' }}>{d.full}</option>
                   ))}
                 </select>
               </div>
 
               {/* Opening Time Clock */}
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', display: 'block', marginBottom: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
                   Opening Time ⏰
                 </label>
                 <input
@@ -278,7 +278,7 @@ function ScheduleHoursPicker({ value, onChange }) {
 
               {/* Closing Time Clock */}
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', display: 'block', marginBottom: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
                   Closing Time ⏰
                 </label>
                 <input
@@ -291,7 +291,7 @@ function ScheduleHoursPicker({ value, onChange }) {
 
               {/* Timezone */}
               <div style={{ gridColumn: 'span 2' }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', display: 'block', marginBottom: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
                   Timezone / Region 🌐
                 </label>
                 <select
@@ -300,7 +300,7 @@ function ScheduleHoursPicker({ value, onChange }) {
                   style={{ ...INPUT, cursor: 'pointer' }}
                 >
                   {TIMEZONES.map(tz => (
-                    <option key={tz.code} value={tz.code} style={{ background: '#0f172a' }}>{tz.label}</option>
+                    <option key={tz.code} value={tz.code} style={{ background: 'var(--bg-shell)' }}>{tz.label}</option>
                   ))}
                 </select>
               </div>
@@ -325,7 +325,7 @@ function ScheduleHoursPicker({ value, onChange }) {
             <div style={{
               fontSize: 13,
               fontWeight: 800,
-              color: '#fff',
+              color: 'var(--text-primary)',
               background: 'rgba(0,0,0,0.35)',
               padding: '4px 12px',
               borderRadius: 8,
@@ -430,18 +430,18 @@ const AdminSettings = () => {
   ]
 
   return (
-    <div style={{ fontFamily: "'Inter',sans-serif", color: '#fff', maxWidth: 1000 }}>
+    <div style={{ fontFamily: "'Inter',sans-serif", color: 'var(--text-primary)', maxWidth: 1000 }}>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
         <div>
           <h1 style={{ fontSize: 'clamp(20px,3vw,28px)', fontWeight: 900, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>Platform Settings</h1>
-          <p style={{ fontSize: 14, color: '#4b5563', margin: 0 }}>Configure global platform behavior and defaults.</p>
+          <p style={{ fontSize: 14, color: 'var(--text-tertiary)', margin: 0 }}>Configure global platform behavior and defaults.</p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 24px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, boxShadow: '0 4px 20px rgba(124,58,237,0.3)', transition: 'transform 0.2s' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 24px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', color: 'var(--text-primary)', fontSize: 14, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, boxShadow: '0 4px 20px rgba(124,58,237,0.3)', transition: 'transform 0.2s' }}
           onMouseEnter={e => { if(!saving) e.currentTarget.style.transform = 'translateY(-1px)' }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
         >
@@ -461,9 +461,9 @@ const AdminSettings = () => {
                 display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, border: 'none', cursor: 'pointer',
                 fontSize: 14, fontWeight: 600, transition: 'all 0.15s', textAlign: 'left',
                 background: activeTab === tab.id ? 'rgba(124,58,237,0.1)' : 'transparent',
-                color: activeTab === tab.id ? '#c4b5fd' : '#9ca3af',
+                color: activeTab === tab.id ? '#c4b5fd' : 'var(--text-secondary)',
               }}
-              onMouseEnter={e => { if (activeTab !== tab.id) e.currentTarget.style.background = 'rgba(255,255,255,0.03)' }}
+              onMouseEnter={e => { if (activeTab !== tab.id) e.currentTarget.style.background = 'var(--bg-input)' }}
               onMouseLeave={e => { if (activeTab !== tab.id) e.currentTarget.style.background = 'transparent' }}
             >
               <span style={{ fontSize: 16 }}>{tab.icon}</span>
@@ -473,7 +473,7 @@ const AdminSettings = () => {
         </div>
 
         {/* Content area */}
-        <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: 32 }}>
+        <div style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: 32 }}>
           
           {/* General Tab */}
           {activeTab === 'general' && (
@@ -486,7 +486,7 @@ const AdminSettings = () => {
               </div>
 
               <div style={{ marginTop: 20 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 700, color: '#9ca3af', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>🎧 Owner Support Channels</h3>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>🎧 Owner Support Channels</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
                   <InputField label="Support WhatsApp Number" value={form.supportWhatsapp} onChange={e => set('supportWhatsapp', e.target.value)} helperText="Digits with country code (e.g. 919876543210 for wa.me)." />
                   <InputField label="Support Phone / Helpline" value={form.supportPhone} onChange={e => set('supportPhone', e.target.value)} helperText="Shown on the Help & Support page." />
@@ -498,7 +498,7 @@ const AdminSettings = () => {
               </div>
 
               <div style={{ marginTop: 20 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 700, color: '#9ca3af', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>System Status</h3>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>System Status</h3>
                 <Toggle
                   label="Maintenance Mode"
                   description="Disable access to all cafés (shows maintenance page). Admins can still log in."
@@ -517,7 +517,7 @@ const AdminSettings = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
                 <InputField label="Default Trial Days" type="number" value={form.trialDays} onChange={e => set('trialDays', e.target.value)} suffix="days" helperText="Free trial length for new signups." />
                 <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: '#e5e7eb', display: 'block', marginBottom: 6 }}>Currency</label>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>Currency</label>
                   <select
                     value={form.currency} onChange={e => set('currency', e.target.value)}
                     style={{ ...INPUT, cursor: 'pointer' }}
@@ -541,7 +541,7 @@ const AdminSettings = () => {
               </div>
 
               <div style={{ marginTop: 20 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 700, color: '#9ca3af', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Payment Gateway</h3>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Payment Gateway</h3>
                 <Toggle
                   label="Live Mode"
                   description="Toggle between test mode (mock payments) and live mode."
@@ -565,10 +565,10 @@ const AdminSettings = () => {
               />
 
               <div style={{ marginTop: 32, padding: 20, borderRadius: 12, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.05)' }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#f87171', margin: '0 0 8px' }}>Danger Zone</h3>
-                <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 16px' }}>These actions are destructive and cannot be reversed.</p>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--danger-text)', margin: '0 0 8px' }}>Danger Zone</h3>
+                <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 16px' }}>These actions are destructive and cannot be reversed.</p>
                 <button
-                  style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#f87171', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                  style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: 'var(--danger-text)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
                   onClick={() => alert('Feature disabled in demo mode')}
                 >
                   Clear All Cache

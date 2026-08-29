@@ -44,7 +44,7 @@ const CustomerLayout = ({ children }) => {
   ]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0d14', color: '#fff', paddingBottom: isCheckout ? 0 : 100, maxWidth: 500, margin: '0 auto', position: 'relative', fontFamily: "'Inter',sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#0a0d14', color: 'var(--text-primary)', paddingBottom: isCheckout ? 0 : 100, maxWidth: 500, margin: '0 auto', position: 'relative', fontFamily: "'Inter',sans-serif" }}>
       
       {/* Content Area */}
       {children}
@@ -65,8 +65,8 @@ const CustomerLayout = ({ children }) => {
                 style={({ isActive }) => ({
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '8px 12px', borderRadius: 20,
                   textDecoration: 'none', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative',
-                  color: isActive ? '#f59e0b' : '#6b7280',
-                  background: isActive ? 'rgba(245,158,11,0.1)' : 'transparent',
+                  color: isActive ? '#f59e0b' : 'var(--text-tertiary)',
+                  background: isActive ? 'var(--warning-light)' : 'transparent',
                   transform: isActive ? 'translateY(-2px)' : 'translateY(0)'
                 })}
               >
@@ -74,7 +74,7 @@ const CustomerLayout = ({ children }) => {
                   {item.icon}
                   {item.badge > 0 && (
                     <span style={{
-                      position: 'absolute', top: -4, right: -8, minWidth: 18, height: 18, background: '#ef4444', color: '#fff',
+                      position: 'absolute', top: -4, right: -8, minWidth: 18, height: 18, background: '#ef4444', color: 'var(--text-primary)',
                       fontSize: 10, fontWeight: 800, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
                       border: '2px solid #141823', padding: '0 4px', animation: 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
                     }}>

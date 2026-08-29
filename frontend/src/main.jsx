@@ -7,11 +7,13 @@ import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { NotificationProvider } from './context/NotificationContext'
 import './index.css'
+import { ThemeProvider } from './context/ThemeContext'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
+        <ThemeProvider>
         <NotificationProvider>
           <CartProvider>
             <App />
@@ -20,8 +22,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               toastOptions={{
                 duration: 3000,
                 style: {
-                  background: '#1e293b',
-                  color: '#f1f5f9',
+                  background: 'var(--bg-elevated)',
+                  color: 'var(--text-primary)',
                   border: '1px solid rgba(99, 102, 241, 0.2)',
                   borderRadius: '12px',
                   fontSize: '0.875rem',
@@ -36,6 +38,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             />
           </CartProvider>
         </NotificationProvider>
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

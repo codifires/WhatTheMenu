@@ -105,13 +105,13 @@ const S = {
   // layout
   shell: {
     display: 'flex', minHeight: '100vh',
-    background: '#080c14',
+    background: 'var(--bg-shell)',
     fontFamily: "'Inter', system-ui, sans-serif",
-    color: '#fff',
+    color: 'var(--text-primary)',
   },
   // sidebar
   overlay: {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+    position: 'fixed', inset: 0, background: 'var(--overlay-bg)',
     zIndex: 200, backdropFilter: 'blur(4px)',
   },
   sidebar: (open) => ({
@@ -145,7 +145,7 @@ const S = {
     flexShrink: 0,
   },
   nav: { flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto' },
-  navLabel: { fontSize: 10, fontWeight: 700, color: '#374151', letterSpacing: 2, textTransform: 'uppercase', padding: '12px 12px 6px' },
+  navLabel: { fontSize: 10, fontWeight: 700, color: 'var(--border-hover)', letterSpacing: 2, textTransform: 'uppercase', padding: '12px 12px 6px' },
   // topbar
   topbar: {
     height: 64, display: 'flex', alignItems: 'center',
@@ -171,12 +171,12 @@ function NavItem({ link, onClick }) {
         padding: '10px 14px', borderRadius: 12,
         textDecoration: 'none', fontSize: 14, fontWeight: 500,
         transition: 'all 0.15s',
-        color: isActive ? '#c4b5fd' : '#6b7280',
+        color: isActive ? '#c4b5fd' : 'var(--text-tertiary)',
         background: isActive ? 'rgba(124,58,237,0.12)' : 'transparent',
         border: isActive ? '1px solid rgba(124,58,237,0.2)' : '1px solid transparent',
       })}
-      onMouseEnter={e => { if (!e.currentTarget.style.background.includes('124')) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#e5e7eb' }}}
-      onMouseLeave={e => { if (!e.currentTarget.style.background.includes('124')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280' }}}
+      onMouseEnter={e => { if (!e.currentTarget.style.background.includes('124')) { e.currentTarget.style.background = 'var(--bg-card-hover)'; e.currentTarget.style.color = 'var(--text-primary)' }}}
+      onMouseLeave={e => { if (!e.currentTarget.style.background.includes('124')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-tertiary)' }}}
     >
       {link.icon}
       {link.label}
@@ -193,7 +193,7 @@ function SidebarContent({ user, onLogout, onClose }) {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM17 17h4M17 21v-4M21 14h-4v4"/></svg>
         </div>
         <div>
-          <p style={{ fontSize: 16, fontWeight: 800, color: '#fff', margin: 0, fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.3px' }}>QRMenu</p>
+          <p style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0, fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.3px' }}>QRMenu</p>
           <p style={{ fontSize: 11, color: '#7c3aed', margin: 0, fontWeight: 600, letterSpacing: 1 }}>ADMIN PANEL</p>
         </div>
       </div>
@@ -209,21 +209,21 @@ function SidebarContent({ user, onLogout, onClose }) {
       {/* User footer */}
       <div style={{ padding: '16px 12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         {/* User info */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'var(--bg-input)', marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', flexShrink: 0 }}>
             {user?.name?.charAt(0)?.toUpperCase() || 'A'}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: '#e5e7eb', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</p>
-            <p style={{ fontSize: 11, color: '#4b5563', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</p>
+            <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
           </div>
         </div>
         {/* Logout */}
         <button
           onClick={onLogout}
-          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: 'none', border: '1px solid transparent', width: '100%', cursor: 'pointer', fontSize: 14, fontWeight: 500, color: '#6b7280', transition: 'all 0.15s' }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#6b7280'; e.currentTarget.style.borderColor = 'transparent' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: 'none', border: '1px solid transparent', width: '100%', cursor: 'pointer', fontSize: 14, fontWeight: 500, color: 'var(--text-tertiary)', transition: 'all 0.15s' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--danger-light)'; e.currentTarget.style.color = 'var(--danger-text)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.borderColor = 'transparent' }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
           Sign Out
@@ -259,7 +259,7 @@ const AdminLayout = ({ children }) => {
       <aside style={S.sidebar(sidebarOpen)} className="admin-sidebar-mobile">
         <button
           onClick={() => setSidebarOpen(false)}
-          style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', padding: 4 }}
+          style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: 4 }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -278,7 +278,7 @@ const AdminLayout = ({ children }) => {
           {/* Hamburger (mobile) */}
           <button
             onClick={() => setSidebarOpen(true)}
-            style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: 6, borderRadius: 8, display: 'none' }}
+            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 6, borderRadius: 8, display: 'none' }}
             className="admin-hamburger"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -286,9 +286,9 @@ const AdminLayout = ({ children }) => {
 
           {/* Breadcrumb */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12, color: '#4b5563', fontWeight: 500 }}>Admin</span>
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontWeight: 500 }}>Admin</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#e5e7eb' }}>{pageTitle}</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{pageTitle}</span>
           </div>
 
           {/* Right actions */}

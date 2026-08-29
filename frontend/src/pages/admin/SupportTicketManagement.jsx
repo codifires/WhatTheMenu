@@ -93,11 +93,11 @@ export default function SupportTicketManagement() {
       case 'in_progress':
         return { bg: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.3)', label: 'In Progress' }
       case 'resolved':
-        return { bg: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: 'rgba(16, 185, 129, 0.3)', label: 'Resolved' }
+        return { bg: 'rgba(16, 185, 129, 0.15)', color: 'var(--success-text)', border: 'rgba(16, 185, 129, 0.3)', label: 'Resolved' }
       case 'closed':
         return { bg: 'rgba(100, 116, 139, 0.15)', color: '#94a3b8', border: 'rgba(100, 116, 139, 0.3)', label: 'Closed' }
       default:
-        return { bg: 'rgba(255, 255, 255, 0.1)', color: '#fff', border: 'rgba(255, 255, 255, 0.2)', label: status }
+        return { bg: 'var(--border-hover)', color: 'var(--text-primary)', border: 'var(--border-hover)', label: status }
     }
   }
 
@@ -107,7 +107,7 @@ export default function SupportTicketManagement() {
       {/* ── Page Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: '#fff', margin: '0 0 6px', fontFamily: "'Outfit', sans-serif" }}>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 6px', fontFamily: "'Outfit', sans-serif" }}>
             🎧 Café Support & Issue Tickets
           </h1>
           <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>
@@ -120,7 +120,7 @@ export default function SupportTicketManagement() {
           style={{
             padding: '10px 18px',
             borderRadius: 12,
-            background: 'rgba(255, 255, 255, 0.05)',
+            background: 'var(--border-light)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
             color: '#e2e8f0',
             fontSize: 13,
@@ -148,7 +148,7 @@ export default function SupportTicketManagement() {
           <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 6 }}>
             Total Tickets
           </div>
-          <div style={{ fontSize: 26, fontWeight: 900, color: '#fff' }}>
+          <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)' }}>
             {counts.total}
           </div>
         </div>
@@ -170,13 +170,13 @@ export default function SupportTicketManagement() {
         <div style={{
           padding: '20px',
           borderRadius: 16,
-          background: 'rgba(239, 68, 68, 0.08)',
+          background: 'var(--danger-light)',
           border: '1px solid rgba(239, 68, 68, 0.25)'
         }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#f87171', textTransform: 'uppercase', marginBottom: 6 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--danger-text)', textTransform: 'uppercase', marginBottom: 6 }}>
             ⚡ Urgent / Pro Plan
           </div>
-          <div style={{ fontSize: 26, fontWeight: 900, color: '#f87171' }}>
+          <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--danger-text)' }}>
             {counts.urgent}
           </div>
         </div>
@@ -187,10 +187,10 @@ export default function SupportTicketManagement() {
           background: 'rgba(16, 185, 129, 0.08)',
           border: '1px solid rgba(16, 185, 129, 0.25)'
         }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#34d399', textTransform: 'uppercase', marginBottom: 6 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--success-text)', textTransform: 'uppercase', marginBottom: 6 }}>
             Resolved Tickets
           </div>
-          <div style={{ fontSize: 26, fontWeight: 900, color: '#34d399' }}>
+          <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--success-text)' }}>
             {counts.resolved}
           </div>
         </div>
@@ -220,9 +220,9 @@ export default function SupportTicketManagement() {
               boxSizing: 'border-box',
               padding: '10px 14px',
               borderRadius: 10,
-              background: 'rgba(255, 255, 255, 0.04)',
+              background: 'var(--bg-card-hover)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: '#fff',
+              color: 'var(--text-primary)',
               fontSize: 13,
               outline: 'none'
             }}
@@ -236,9 +236,9 @@ export default function SupportTicketManagement() {
           style={{
             padding: '10px 14px',
             borderRadius: 10,
-            background: '#0f172a',
+            background: 'var(--bg-shell)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: '#fff',
+            color: 'var(--text-primary)',
             fontSize: 13,
             outline: 'none',
             cursor: 'pointer'
@@ -258,9 +258,9 @@ export default function SupportTicketManagement() {
           style={{
             padding: '10px 14px',
             borderRadius: 10,
-            background: '#0f172a',
+            background: 'var(--bg-shell)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: '#fff',
+            color: 'var(--text-primary)',
             fontSize: 13,
             outline: 'none',
             cursor: 'pointer'
@@ -278,9 +278,9 @@ export default function SupportTicketManagement() {
           style={{
             padding: '10px 14px',
             borderRadius: 10,
-            background: '#0f172a',
+            background: 'var(--bg-shell)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: '#fff',
+            color: 'var(--text-primary)',
             fontSize: 13,
             outline: 'none',
             cursor: 'pointer'
@@ -316,7 +316,7 @@ export default function SupportTicketManagement() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: 'rgba(255, 255, 255, 0.02)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
                   <th style={{ padding: '14px 18px', color: '#94a3b8', fontWeight: 700 }}>Ticket ID</th>
                   <th style={{ padding: '14px 18px', color: '#94a3b8', fontWeight: 700 }}>Café & Plan</th>
                   <th style={{ padding: '14px 18px', color: '#94a3b8', fontWeight: 700 }}>Subject & Category</th>
@@ -337,14 +337,14 @@ export default function SupportTicketManagement() {
                         borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
                         transition: 'background 0.15s ease'
                       }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)'}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card)'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
                       <td style={{ padding: '14px 18px', fontWeight: 800, fontFamily: 'monospace', color: '#60a5fa' }}>
                         {t.ticket_number}
                       </td>
                       <td style={{ padding: '14px 18px' }}>
-                        <div style={{ fontWeight: 700, color: '#fff' }}>{t.cafe_id?.name || 'Unknown Café'}</div>
+                        <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{t.cafe_id?.name || 'Unknown Café'}</div>
                         <div style={{ fontSize: 11, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span>{t.cafe_id?.email}</span>
                           {isPro && (
@@ -368,8 +368,8 @@ export default function SupportTicketManagement() {
                           borderRadius: 6,
                           fontSize: 11,
                           fontWeight: 800,
-                          background: t.priority === 'urgent' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                          color: t.priority === 'urgent' ? '#f87171' : '#94a3b8',
+                          background: t.priority === 'urgent' ? 'rgba(239, 68, 68, 0.15)' : 'var(--border-light)',
+                          color: t.priority === 'urgent' ? 'var(--danger-text)' : '#94a3b8',
                           border: t.priority === 'urgent' ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)'
                         }}>
                           {t.priority === 'urgent' ? '⚡ Urgent' : 'Standard'}
@@ -398,7 +398,7 @@ export default function SupportTicketManagement() {
                             padding: '6px 14px',
                             borderRadius: 8,
                             background: '#2563eb',
-                            color: '#fff',
+                            color: 'var(--text-primary)',
                             border: 'none',
                             fontSize: 12,
                             fontWeight: 700,
@@ -431,7 +431,7 @@ export default function SupportTicketManagement() {
           zIndex: 999
         }}>
           <div style={{
-            background: '#0f172a',
+            background: 'var(--bg-shell)',
             border: '1px solid rgba(255, 255, 255, 0.12)',
             borderRadius: 20,
             width: '100%',
@@ -444,7 +444,7 @@ export default function SupportTicketManagement() {
                 <span style={{ fontSize: 12, fontWeight: 800, color: '#60a5fa', fontFamily: 'monospace' }}>
                   {selectedTicket.ticket_number}
                 </span>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '2px 0 0' }}>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: '2px 0 0' }}>
                   {selectedTicket.subject}
                 </h3>
               </div>
@@ -460,7 +460,7 @@ export default function SupportTicketManagement() {
             <div style={{
               padding: '12px 14px',
               borderRadius: 12,
-              background: 'rgba(255, 255, 255, 0.03)',
+              background: 'var(--bg-input)',
               border: '1px solid rgba(255, 255, 255, 0.06)',
               marginBottom: 16,
               fontSize: 13,
@@ -507,9 +507,9 @@ export default function SupportTicketManagement() {
                     boxSizing: 'border-box',
                     padding: '12px 14px',
                     borderRadius: 10,
-                    background: 'rgba(255, 255, 255, 0.04)',
+                    background: 'var(--bg-card-hover)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: '#fff',
+                    color: 'var(--text-primary)',
                     fontSize: 13,
                     outline: 'none',
                     resize: 'vertical',
@@ -529,9 +529,9 @@ export default function SupportTicketManagement() {
                     width: '100%',
                     padding: '10px 14px',
                     borderRadius: 10,
-                    background: '#1e293b',
+                    background: 'var(--bg-elevated)',
                     border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: '#fff',
+                    color: 'var(--text-primary)',
                     fontSize: 13,
                     outline: 'none',
                     cursor: 'pointer'
@@ -569,7 +569,7 @@ export default function SupportTicketManagement() {
                     borderRadius: 10,
                     background: '#2563eb',
                     border: 'none',
-                    color: '#fff',
+                    color: 'var(--text-primary)',
                     fontSize: 13,
                     fontWeight: 800,
                     cursor: saving ? 'not-allowed' : 'pointer',

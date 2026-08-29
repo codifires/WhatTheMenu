@@ -44,7 +44,7 @@ const Maintenance = () => {
         zIndex: 10,
         maxWidth: 520,
         width: '100%',
-        background: 'rgba(255, 255, 255, 0.02)',
+        background: 'var(--bg-card)',
         border: '1px solid rgba(255, 255, 255, 0.06)',
         borderRadius: 24,
         padding: '48px 40px',
@@ -124,7 +124,7 @@ const Maintenance = () => {
           boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.2)'
         }}>
           <div style={{ position: 'relative', width: 8, height: 8 }}>
-            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: '#34d399', animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite' }} />
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'var(--success-text)', animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite' }} />
             <div style={{ position: 'relative', width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
           </div>
           <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', letterSpacing: '0.5px', textTransform: 'uppercase' }}>

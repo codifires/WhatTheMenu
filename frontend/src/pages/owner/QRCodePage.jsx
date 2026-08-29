@@ -67,7 +67,7 @@ const QRCodePage = () => {
 
       img.onload = () => {
         // Draw white background
-        ctx.fillStyle = '#ffffff'
+        ctx.fillStyle = 'var(--text-primary)'
         ctx.fillRect(0, 0, 600, 600)
         // Draw QR code centered with padding
         ctx.drawImage(img, 50, 50, 500, 500)
@@ -114,7 +114,7 @@ const QRCodePage = () => {
               max-width: 440px;
               padding: 48px 36px;
               border-radius: 32px;
-              box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+              box-shadow: 0 20px 40px var(--overlay-bg);
               border: 3px solid #0f172a;
               text-align: center;
             }
@@ -137,7 +137,7 @@ const QRCodePage = () => {
               padding: 24px;
               border-radius: 24px;
               display: inline-block;
-              box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+              box-shadow: 0 10px 30px var(--overlay-bg);
               border: 2px solid #e2e8f0;
               margin-bottom: 28px;
             }
@@ -180,35 +180,35 @@ const QRCodePage = () => {
   }
 
   return (
-    <div style={{ fontFamily: "'Inter',sans-serif", color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: 'calc(100vh - 120px)', padding: '20px 16px' }}>
+    <div style={{ fontFamily: "'Inter',sans-serif", color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: 'calc(100vh - 120px)', padding: '20px 16px' }}>
       
       {/* ── Header ── */}
       <div style={{ textAlign: 'center', marginBottom: 32, animation: 'fadeIn 0.5s ease' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 99, background: 'rgba(6,182,212,0.1)', border: '1px solid rgba(6,182,212,0.25)', color: '#22d3ee', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 99, background: 'var(--cyan-bg-light)', border: '1px solid rgba(6,182,212,0.25)', color: 'var(--cyan-text)', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>
           <QrIcon size={16} /> Tabletop QR Standee
         </div>
         <h1 style={{ fontSize: 'clamp(26px,4vw,38px)', fontWeight: 900, margin: '0 0 8px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
           Your Digital Menu QR Code
         </h1>
-        <p style={{ fontSize: 14, color: '#9ca3af', margin: 0, maxWidth: 460 }}>
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0, maxWidth: 460 }}>
           Customers scan this QR code with their mobile phone camera to view your menu, customize items, and place instant orders.
         </p>
       </div>
 
       {/* ── QR Card ── */}
       <div style={{ width: '100%', maxWidth: 440, animation: 'slideUp 0.5s ease 0.1s both' }}>
-        <div style={{ padding: '36px 28px', borderRadius: 28, background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.09)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ padding: '36px 28px', borderRadius: 28, background: 'linear-gradient(145deg, var(--border-light) 0%, var(--border-light) 100%)', border: '1px solid var(--border-medium)', boxShadow: '0 25px 50px -12px var(--overlay-bg)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
           
           {/* Decorative Radial Glow */}
-          <div style={{ position: 'absolute', top: '40%', left: '50%', width: 220, height: 220, background: 'rgba(6,182,212,0.22)', filter: 'blur(80px)', transform: 'translate(-50%, -50%)', zIndex: 0, pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: '40%', left: '50%', width: 220, height: 220, background: 'var(--cyan-bg-light)', filter: 'blur(80px)', transform: 'translate(-50%, -50%)', zIndex: 0, pointerEvents: 'none' }} />
 
           <div style={{ position: 'relative', zIndex: 1 }}>
             {loading ? (
-              <div style={{ width: 220, height: 220, margin: '0 auto 24px', borderRadius: 24, background: 'rgba(255,255,255,0.05)', animation: 'pulse 1.5s ease infinite' }} />
+              <div style={{ width: 220, height: 220, margin: '0 auto 24px', borderRadius: 24, background: 'var(--border-light)', animation: 'pulse 1.5s ease infinite' }} />
             ) : (
               <>
                 {/* QR Code Container */}
-                <div style={{ background: '#ffffff', padding: 18, borderRadius: 24, display: 'inline-block', marginBottom: 20, boxShadow: '0 12px 36px rgba(0,0,0,0.35)' }}>
+                <div style={{ background: 'var(--text-primary)', padding: 18, borderRadius: 24, display: 'inline-block', marginBottom: 20, boxShadow: '0 12px 36px var(--overlay-bg)' }}>
                   <QRCode
                     id="digital-menu-qr-code"
                     value={liveMenuUrl}
@@ -218,19 +218,19 @@ const QRCodePage = () => {
                   />
                 </div>
 
-                <p style={{ fontSize: 19, fontWeight: 900, color: '#ffffff', margin: '0 0 6px', fontFamily: "'Outfit',sans-serif" }}>
+                <p style={{ fontSize: 19, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 6px', fontFamily: "'Outfit',sans-serif" }}>
                   Scan to Order
                 </p>
 
                 {/* Clickable Live URL Box */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', padding: '8px 12px', borderRadius: 12, margin: '0 0 24px', textAlign: 'left' }}>
-                  <span style={{ fontSize: 11, color: '#94a3b8', wordBreak: 'break-all', flex: 1, fontFamily: 'monospace' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-card-hover)', border: '1px solid var(--border-medium)', padding: '8px 12px', borderRadius: 12, margin: '0 0 24px', textAlign: 'left' }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-secondary)', wordBreak: 'break-all', flex: 1, fontFamily: 'monospace' }}>
                     {liveMenuUrl}
                   </span>
                   <button
                     onClick={handleCopyUrl}
                     title="Copy Link"
-                    style={{ background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 8, padding: '6px', color: copied ? '#34d399' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
+                    style={{ background: 'var(--border-medium)', border: 'none', borderRadius: 8, padding: '6px', color: copied ? 'var(--success-text)' : 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }}
                   >
                     {copied ? <Check size={14} /> : <Copy size={14} />}
                   </button>
@@ -239,7 +239,7 @@ const QRCodePage = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     title="Open Live Menu"
-                    style={{ background: 'rgba(6,182,212,0.15)', border: '1px solid rgba(6,182,212,0.3)', borderRadius: 8, padding: '6px', color: '#22d3ee', display: 'flex', alignItems: 'center' }}
+                    style={{ background: 'var(--cyan-border-medium)', border: '1px solid rgba(6,182,212,0.3)', borderRadius: 8, padding: '6px', color: 'var(--cyan-text)', display: 'flex', alignItems: 'center' }}
                   >
                     <ExternalLink size={14} />
                   </a>
@@ -249,7 +249,7 @@ const QRCodePage = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <button
                     onClick={handleDownload}
-                    style={{ padding: '13px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg,#06b6d4,#4f46e5)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 6px 20px rgba(6,182,212,0.3)', transition: 'transform 0.2s' }}
+                    style={{ padding: '13px', borderRadius: 14, border: 'none', background: 'linear-gradient(135deg,#06b6d4,#4f46e5)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 6px 20px rgba(6,182,212,0.3)', transition: 'transform 0.2s' }}
                     onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
                     onMouseLeave={e => e.currentTarget.style.transform='translateY(0)'}
                   >
@@ -257,9 +257,9 @@ const QRCodePage = () => {
                   </button>
                   <button
                     onClick={handlePrint}
-                    style={{ padding: '13px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 0.2s' }}
-                    onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.12)'}
-                    onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.06)'}
+                    style={{ padding: '13px', borderRadius: 14, border: '1px solid var(--border-medium)', background: 'var(--border-light)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'background 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.background='var(--border-hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background='var(--border-light)'}
                   >
                     <Printer size={16} /> Print Standee
                   </button>
@@ -269,9 +269,9 @@ const QRCodePage = () => {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 18 }}>
                   <button
                     onClick={handleRegenerate}
-                    style={{ border: 'none', background: 'transparent', color: '#9ca3af', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'color 0.2s' }}
-                    onMouseEnter={e => e.currentTarget.style.color='#fff'}
-                    onMouseLeave={e => e.currentTarget.style.color='#9ca3af'}
+                    style={{ border: 'none', background: 'transparent', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'color 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.color='var(--text-primary)'}
+                    onMouseLeave={e => e.currentTarget.style.color='var(--text-secondary)'}
                   >
                     <RefreshCw size={13} /> Refresh Cloud QR
                   </button>

@@ -5,11 +5,11 @@ const MenuHeader = ({ onAddNew }) => {
     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 28 }}>
       <div>
         <h1 style={{ fontSize: 'clamp(20px,3vw,28px)', fontWeight: 900, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>Menu Items</h1>
-        <p style={{ fontSize: 14, color: '#4b5563', margin: 0 }}>Create and manage your café's menu offerings.</p>
+        <p style={{ fontSize: 14, color: 'var(--text-tertiary)', margin: 0 }}>Create and manage your café's menu offerings.</p>
       </div>
       <button
         onClick={onAddNew}
-        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: '#fff', background: 'linear-gradient(135deg,#06b6d4,#4f46e5)', boxShadow: '0 4px 16px rgba(6,182,212,0.3)', transition: 'transform 0.2s', whiteSpace: 'nowrap' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', background: 'linear-gradient(135deg,#06b6d4,#4f46e5)', boxShadow: '0 4px 16px rgba(6,182,212,0.3)', transition: 'transform 0.2s', whiteSpace: 'nowrap' }}
         onMouseEnter={e => e.currentTarget.style.transform='translateY(-1px)'}
         onMouseLeave={e => e.currentTarget.style.transform='translateY(0)'}
       >

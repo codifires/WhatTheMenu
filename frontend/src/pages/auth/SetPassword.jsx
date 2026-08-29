@@ -50,20 +50,20 @@ export default function SetPassword() {
     padding: '12px 14px 12px 42px',
     borderRadius: 12,
     border: '1px solid rgba(255,255,255,0.1)',
-    background: 'rgba(255,255,255,0.05)',
-    color: '#fff',
+    background: 'var(--border-light)',
+    color: 'var(--text-primary)',
     fontSize: 14,
     outline: 'none',
     boxSizing: 'border-box',
     transition: 'border-color 0.2s',
   }
   const focus = e => e.target.style.borderColor = 'rgba(79,70,229,0.6)'
-  const blur  = e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'
-  const labelStyle = { fontSize: 13, fontWeight: 600, color: '#d1d5db', display: 'block', marginBottom: 8 }
+  const blur  = e => e.target.style.borderColor = 'var(--border-hover)'
+  const labelStyle = { fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 8 }
   const iconStyle  = { position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16 }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#080c14', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '40px 20px', fontFamily: "'Inter', sans-serif", position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-shell)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '40px 20px', fontFamily: "'Inter', sans-serif", position: 'relative', overflow: 'hidden' }}>
       
       {/* Background Effects */}
       <div style={{ position: 'fixed', top: '10%', left: '20%', transform: 'translate(-50%,-50%)', width: 400, height: 400, background: 'radial-gradient(circle, rgba(79,70,229,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
@@ -75,29 +75,29 @@ export default function SetPassword() {
           <div style={{ width: 64, height: 64, borderRadius: 16, background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 8px 32px rgba(79,70,229,0.4)' }}>
             <span style={{ fontSize: 32 }}>☕</span>
           </div>
-          <h2 style={{ fontSize: 28, fontWeight: 900, color: '#fff', margin: '0 0 8px', fontFamily: "'Outfit',sans-serif" }}>
+          <h2 style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 8px', fontFamily: "'Outfit',sans-serif" }}>
             Welcome to QRMenu
           </h2>
-          <p style={{ fontSize: 14, color: '#9ca3af', margin: 0 }}>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
             Set a secure password to access your Owner Dashboard
           </p>
         </div>
 
         {/* Card */}
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 32, backdropFilter: 'blur(10px)' }}>
+        <div style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 32, backdropFilter: 'blur(10px)' }}>
           {success ? (
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
               <div style={{ width: 64, height: 64, background: 'rgba(52,211,153,0.15)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                 <span style={{ fontSize: 32 }}>✅</span>
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, color: '#fff', margin: '0 0 8px' }}>Password Set Successfully!</h3>
-              <p style={{ fontSize: 14, color: '#9ca3af', margin: 0 }}>Logging you into your dashboard...</p>
+              <h3 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 8px' }}>Password Set Successfully!</h3>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>Logging you into your dashboard...</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {error && (
                 <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: 12, textAlign: 'center' }}>
-                  <p style={{ fontSize: 13, color: '#f87171', margin: 0 }}>{error}</p>
+                  <p style={{ fontSize: 13, color: 'var(--danger-text)', margin: 0 }}>{error}</p>
                 </div>
               )}
 
@@ -139,7 +139,7 @@ export default function SetPassword() {
                 style={{
                   width: '100%', padding: '14px', borderRadius: 12, border: 'none',
                   cursor: loading ? 'not-allowed' : 'pointer', fontSize: 15, fontWeight: 700,
-                  color: '#fff', background: 'linear-gradient(135deg,#4f46e5,#06b6d4)',
+                  color: 'var(--text-primary)', background: 'linear-gradient(135deg,#4f46e5,#06b6d4)',
                   opacity: loading ? 0.7 : 1, boxShadow: '0 8px 24px rgba(79,70,229,0.35)',
                   marginTop: 8, transition: 'transform 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
                 }}

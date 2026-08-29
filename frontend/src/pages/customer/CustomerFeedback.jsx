@@ -5,23 +5,23 @@ import toast from 'react-hot-toast'
 
 const INPUT = {
   width: '100%', padding: '14px 16px', borderRadius: 16,
-  border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)',
-  color: '#fff', fontSize: 15, outline: 'none', boxSizing: 'border-box',
+  border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg-input)',
+  color: 'var(--text-primary)', fontSize: 15, outline: 'none', boxSizing: 'border-box',
   fontFamily: 'inherit', transition: 'all 0.3s',
 }
 
 function InputField({ label, as, children, ...props }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <label style={{ fontSize: 13, fontWeight: 700, color: '#d1d5db', display: 'block', marginBottom: 8, paddingLeft: 4 }}>{label}</label>
+      <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 8, paddingLeft: 4 }}>{label}</label>
       {as === 'select' ? (
-        <select style={INPUT} onFocus={e => {e.target.style.borderColor = 'rgba(245,158,11,0.6)'; e.target.style.background = 'rgba(245,158,11,0.05)'}} onBlur={e => {e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.03)'}} {...props}>
+        <select style={INPUT} onFocus={e => {e.target.style.borderColor = 'rgba(245,158,11,0.6)'; e.target.style.background = 'rgba(245,158,11,0.05)'}} onBlur={e => {e.target.style.borderColor = 'var(--border-hover)'; e.target.style.background = 'var(--bg-input)'}} {...props}>
           {children}
         </select>
       ) : as === 'textarea' ? (
-        <textarea style={{ ...INPUT, resize: 'vertical', minHeight: 80 }} onFocus={e => {e.target.style.borderColor = 'rgba(245,158,11,0.6)'; e.target.style.background = 'rgba(245,158,11,0.05)'}} onBlur={e => {e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.03)'}} {...props} />
+        <textarea style={{ ...INPUT, resize: 'vertical', minHeight: 80 }} onFocus={e => {e.target.style.borderColor = 'rgba(245,158,11,0.6)'; e.target.style.background = 'rgba(245,158,11,0.05)'}} onBlur={e => {e.target.style.borderColor = 'var(--border-hover)'; e.target.style.background = 'var(--bg-input)'}} {...props} />
       ) : (
-        <input style={INPUT} onFocus={e => {e.target.style.borderColor = 'rgba(245,158,11,0.6)'; e.target.style.background = 'rgba(245,158,11,0.05)'}} onBlur={e => {e.target.style.borderColor = 'rgba(255,255,255,0.1)'; e.target.style.background = 'rgba(255,255,255,0.03)'}} {...props} />
+        <input style={INPUT} onFocus={e => {e.target.style.borderColor = 'rgba(245,158,11,0.6)'; e.target.style.background = 'rgba(245,158,11,0.05)'}} onBlur={e => {e.target.style.borderColor = 'var(--border-hover)'; e.target.style.background = 'var(--bg-input)'}} {...props} />
       )}
     </div>
   )
@@ -66,16 +66,16 @@ const CustomerFeedback = () => {
   if (submitted) {
     return (
       <div style={{ padding: '60px 20px', textAlign: 'center', animation: 'fadeIn 0.5s ease' }}>
-        <div style={{ width: 100, height: 100, borderRadius: '50%', background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', animation: 'pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
+        <div style={{ width: 100, height: 100, borderRadius: '50%', background: 'var(--success-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', animation: 'pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <h2 style={{ fontSize: 28, fontWeight: 900, color: '#fff', margin: '0 0 8px', fontFamily: "'Outfit',sans-serif" }}>Thank You!</h2>
-        <p style={{ fontSize: 14, color: '#9ca3af', margin: '0 0 32px' }}>Your feedback helps us improve and serve you better.</p>
+        <h2 style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 8px', fontFamily: "'Outfit',sans-serif" }}>Thank You!</h2>
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '0 0 32px' }}>Your feedback helps us improve and serve you better.</p>
         <button
           onClick={() => { setSubmitted(false); setRating(0); setReview(''); setOrderId('') }}
-          style={{ padding: '14px 28px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s' }}
-          onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.1)'}
-          onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.05)'}
+          style={{ padding: '14px 28px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)', background: 'var(--border-light)', color: 'var(--text-primary)', fontSize: 15, fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s' }}
+          onMouseEnter={e => e.currentTarget.style.background='var(--border-hover)'}
+          onMouseLeave={e => e.currentTarget.style.background='var(--border-light)'}
         >
           Submit Another Review
         </button>
@@ -88,11 +88,11 @@ const CustomerFeedback = () => {
       
       {/* ── Header ── */}
       <div style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: 28, fontWeight: 900, color: '#fff', margin: '0 0 4px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>Leave Feedback</h2>
-        <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>How was your experience today?</p>
+        <h2 style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>Leave Feedback</h2>
+        <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>How was your experience today?</p>
       </div>
 
-      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 28, padding: 24 }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 28, padding: 24 }}>
         
         <InputField label="Select Order" as={myOrders.length > 0 ? 'select' : 'input'} placeholder="Enter Order ID" value={orderId} onChange={e => setOrderId(e.target.value)}>
           {myOrders.length > 0 && (
@@ -104,8 +104,8 @@ const CustomerFeedback = () => {
         </InputField>
 
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 13, fontWeight: 700, color: '#d1d5db', display: 'block', marginBottom: 12, paddingLeft: 4 }}>Rating</label>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', background: 'rgba(255,255,255,0.02)', padding: 16, borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)' }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 12, paddingLeft: 4 }}>Rating</label>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', background: 'var(--bg-card)', padding: 16, borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)' }}>
             {[1, 2, 3, 4, 5].map(star => {
               const active = star <= (hoverRating || rating)
               return (
@@ -116,7 +116,7 @@ const CustomerFeedback = () => {
                   onClick={() => setRating(star)}
                   style={{ cursor: 'pointer', padding: 4, transition: 'transform 0.2s', transform: active ? 'scale(1.1)' : 'scale(1)' }}
                 >
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill={active ? '#f59e0b' : 'none'} stroke={active ? '#f59e0b' : '#4b5563'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'all 0.2s', filter: active ? 'drop-shadow(0 0 10px rgba(245,158,11,0.5))' : 'none' }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill={active ? '#f59e0b' : 'none'} stroke={active ? '#f59e0b' : 'var(--text-tertiary)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'all 0.2s', filter: active ? 'drop-shadow(0 0 10px rgba(245,158,11,0.5))' : 'none' }}>
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                   </svg>
                 </div>
@@ -130,7 +130,7 @@ const CustomerFeedback = () => {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          style={{ width: '100%', padding: '16px', borderRadius: 16, border: 'none', background: 'linear-gradient(135deg, #f59e0b, #ea580c)', color: '#fff', fontSize: 16, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 10px 30px rgba(245,158,11,0.4)', transition: 'transform 0.2s', opacity: loading ? 0.7 : 1, marginTop: 8 }}
+          style={{ width: '100%', padding: '16px', borderRadius: 16, border: 'none', background: 'linear-gradient(135deg, #f59e0b, #ea580c)', color: 'var(--text-primary)', fontSize: 16, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 10px 30px rgba(245,158,11,0.4)', transition: 'transform 0.2s', opacity: loading ? 0.7 : 1, marginTop: 8 }}
           onMouseEnter={e => { if(!loading) e.currentTarget.style.transform='translateY(-2px)' }}
           onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)' }}
         >

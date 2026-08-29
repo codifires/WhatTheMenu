@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import NotificationBell from '../components/NotificationBell'
 
 const NAV_LINKS = [
@@ -54,19 +55,19 @@ const NAV_LINKS = [
 const S = {
   shell: {
     display: 'flex', minHeight: '100vh',
-    background: '#080c14',
+    background: 'var(--bg-shell)',
     fontFamily: "'Inter', system-ui, sans-serif",
-    color: '#fff',
+    color: 'var(--text-primary)',
   },
   overlay: {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+    position: 'fixed', inset: 0, background: 'var(--overlay-bg)',
     zIndex: 200, backdropFilter: 'blur(4px)',
   },
   sidebar: (open) => ({
     position: 'fixed', top: 0, left: 0, bottom: 0,
     width: 256, zIndex: 300,
-    background: 'rgba(10,13,24,0.98)',
-    borderRight: '1px solid rgba(6,182,212,0.15)',
+    background: 'var(--bg-sidebar)',
+    borderRight: '1px solid var(--border-medium)',
     backdropFilter: 'blur(20px)',
     display: 'flex', flexDirection: 'column',
     transform: open ? 'translateX(0)' : 'translateX(-100%)',
@@ -76,13 +77,13 @@ const S = {
   sidebarDesktop: {
     transform: 'none',
     width: 256, flexShrink: 0,
-    background: 'rgba(10,13,24,0.95)',
-    borderRight: '1px solid rgba(6,182,212,0.12)',
+    background: 'var(--bg-sidebar)',
+    borderRight: '1px solid var(--border-medium)',
     display: 'flex', flexDirection: 'column',
     height: '100vh', position: 'sticky', top: 0,
   },
   logo: {
-    padding: '24px 20px', borderBottom: '1px solid rgba(6,182,212,0.12)',
+    padding: '24px 20px', borderBottom: '1px solid var(--border-medium)',
     display: 'flex', alignItems: 'center', gap: 12,
   },
   logoIcon: {
@@ -90,14 +91,14 @@ const S = {
     background: 'linear-gradient(135deg,#4f46e5,#06b6d4)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     boxShadow: '0 4px 16px rgba(6,182,212,0.3)',
-    flexShrink: 0, fontSize: 18, color: '#fff'
+    flexShrink: 0, fontSize: 18, color: 'var(--text-primary)'
   },
   nav: { flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto' },
-  navLabel: { fontSize: 10, fontWeight: 700, color: '#4b5563', letterSpacing: 2, textTransform: 'uppercase', padding: '12px 12px 6px' },
+  navLabel: { fontSize: 10, fontWeight: 700, color: 'var(--text-tertiary)', letterSpacing: 2, textTransform: 'uppercase', padding: '12px 12px 6px' },
   topbar: {
     height: 64, display: 'flex', alignItems: 'center',
     justifyContent: 'space-between', padding: '0 24px',
-    background: 'rgba(10,13,24,0.85)', backdropFilter: 'blur(16px)',
+    background: 'var(--bg-topbar)', backdropFilter: 'blur(16px)',
     borderBottom: '1px solid rgba(255,255,255,0.06)',
     position: 'sticky', top: 0, zIndex: 100,
   },
@@ -114,12 +115,12 @@ function NavItem({ link, onClick }) {
         padding: '10px 14px', borderRadius: 12,
         textDecoration: 'none', fontSize: 14, fontWeight: 500,
         transition: 'all 0.15s',
-        color: isActive ? '#67e8f9' : '#6b7280',
-        background: isActive ? 'rgba(6,182,212,0.12)' : 'transparent',
+        color: isActive ? '#67e8f9' : 'var(--text-tertiary)',
+        background: isActive ? 'var(--cyan-border-light)' : 'transparent',
         border: isActive ? '1px solid rgba(6,182,212,0.2)' : '1px solid transparent',
       })}
-      onMouseEnter={e => { if (!e.currentTarget.style.background.includes('182')) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#e5e7eb' }}}
-      onMouseLeave={e => { if (!e.currentTarget.style.background.includes('182')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280' }}}
+      onMouseEnter={e => { if (!e.currentTarget.style.background.includes('182')) { e.currentTarget.style.background = 'var(--bg-card-hover)'; e.currentTarget.style.color = 'var(--text-primary)' }}}
+      onMouseLeave={e => { if (!e.currentTarget.style.background.includes('182')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-tertiary)' }}}
     >
       {link.icon}
       {link.label}
@@ -134,7 +135,7 @@ function SidebarContent({ user, onLogout, onClose }) {
       <div style={S.logo}>
         <div style={S.logoIcon}>☕</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 16, fontWeight: 800, color: '#fff', margin: 0, fontFamily: "'Outfit',sans-serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <p style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0, fontFamily: "'Outfit',sans-serif", overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {user?.name || 'My Café'}
           </p>
           <p style={{ fontSize: 11, color: '#06b6d4', margin: 0, fontWeight: 600, letterSpacing: 1 }}>OWNER PORTAL</p>
@@ -151,20 +152,20 @@ function SidebarContent({ user, onLogout, onClose }) {
 
       {/* User footer */}
       <div style={{ padding: '16px 12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'var(--bg-input)', marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', flexShrink: 0 }}>
             {user?.name?.charAt(0)?.toUpperCase() || 'C'}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: '#e5e7eb', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</p>
-            <p style={{ fontSize: 11, color: '#4b5563', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</p>
+            <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
           </div>
         </div>
         <button
           onClick={onLogout}
-          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: 'none', border: '1px solid transparent', width: '100%', cursor: 'pointer', fontSize: 14, fontWeight: 500, color: '#6b7280', transition: 'all 0.15s' }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#6b7280'; e.currentTarget.style.borderColor = 'transparent' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: 'none', border: '1px solid transparent', width: '100%', cursor: 'pointer', fontSize: 14, fontWeight: 500, color: 'var(--text-tertiary)', transition: 'all 0.15s' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--danger-light)'; e.currentTarget.style.color = 'var(--danger-text)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.borderColor = 'transparent' }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
           Sign Out
@@ -177,6 +178,7 @@ function SidebarContent({ user, onLogout, onClose }) {
 const OwnerLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -199,7 +201,7 @@ const OwnerLayout = ({ children }) => {
       {sidebarOpen && <div style={S.overlay} onClick={() => setSidebarOpen(false)} />}
 
       <aside style={S.sidebar(sidebarOpen)} className="owner-sidebar-mobile">
-        <button onClick={() => setSidebarOpen(false)} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', padding: 4 }}>
+        <button onClick={() => setSidebarOpen(false)} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: 4 }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
         <SidebarContent user={user} onLogout={handleLogout} onClose={() => setSidebarOpen(false)} />
@@ -211,35 +213,48 @@ const OwnerLayout = ({ children }) => {
 
       <div style={S.main}>
         <header style={S.topbar} className="owner-topbar">
-          <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: 6, borderRadius: 8, display: 'none' }} className="owner-hamburger">
+          <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 6, borderRadius: 8, display: 'none' }} className="owner-hamburger">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12, color: '#4b5563', fontWeight: 500 }}>Café</span>
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontWeight: 500 }}>Café</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#e5e7eb' }}>{pageTitle}</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{pageTitle}</span>
           </div>
 
           <div id="topbar-alert-portal" className="owner-topbar-alert" style={{ flex: 1, margin: '0 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
             {daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 3 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', padding: '6px 12px', borderRadius: 8, color: '#fbbf24', fontSize: 13, fontWeight: 600 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--warning-light)', border: '1px solid rgba(245,158,11,0.3)', padding: '6px 12px', borderRadius: 8, color: '#fbbf24', fontSize: 13, fontWeight: 600 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 {daysRemaining === 0 ? 'Your plan expires today!' : `Your plan expires in ${daysRemaining} day${daysRemaining > 1 ? 's' : ''}!`}
-                <Link to="/owner/subscription" style={{ color: '#fff', marginLeft: 8, textDecoration: 'underline' }}>Upgrade</Link>
+                <Link to="/owner/subscription" style={{ color: 'var(--text-primary)', marginLeft: 8, textDecoration: 'underline' }}>Upgrade</Link>
               </div>
             )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Link to={`/menu/${user?.id}`} target="_blank" title="Preview Store"
-              style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#9ca3af', textDecoration: 'none', transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.1)'; e.currentTarget.style.color = '#10b981' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#9ca3af' }}>
+              style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--bg-card-hover)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)', textDecoration: 'none', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--success-light)'; e.currentTarget.style.color = '#10b981' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card-hover)'; e.currentTarget.style.color = 'var(--text-secondary)' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </Link>
             
             {/* Real-Time Live Notification Bell */}
+            
+            {/* Theme Toggle */}
+            <button onClick={toggleTheme} title="Toggle Theme"
+              style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--bg-card-hover)', border: '1px solid var(--border-medium)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--border-light)'; e.currentTarget.style.color = 'var(--text-primary)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card-hover)'; e.currentTarget.style.color = 'var(--text-secondary)' }}>
+              {theme === 'light' ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"></line></svg>
+              )}
+            </button>
+
             <NotificationBell role="owner" />
             <div style={{ width: 38, height: 38, borderRadius: 10, background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700 }}>
               {user?.name?.charAt(0)?.toUpperCase() || 'C'}

@@ -91,7 +91,7 @@ const PlanServicesManagement = () => {
     <div style={{
       background: plan === 'pro' 
         ? 'linear-gradient(180deg, rgba(6,182,212,0.05) 0%, rgba(255,255,255,0.01) 100%)' 
-        : 'rgba(255,255,255,0.02)',
+        : 'var(--bg-card)',
       border: plan === 'pro'
         ? '1px solid rgba(6,182,212,0.2)'
         : '1px solid rgba(255,255,255,0.05)',
@@ -100,12 +100,12 @@ const PlanServicesManagement = () => {
       position: 'relative'
     }}>
       {plan === 'pro' && (
-        <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(90deg, #06b6d4, #4f46e5)', padding: '4px 14px', borderRadius: 20, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: '#fff', boxShadow: '0 4px 12px rgba(6,182,212,0.3)' }}>Premium</div>
+        <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(90deg, #06b6d4, #4f46e5)', padding: '4px 14px', borderRadius: 20, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-primary)', boxShadow: '0 4px 12px rgba(6,182,212,0.3)' }}>Premium</div>
       )}
       
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h2 className="text-2xl font-bold font-display" style={{ color: plan === 'pro' ? '#06b6d4' : '#fff' }}>
+          <h2 className="text-2xl font-bold font-display" style={{ color: plan === 'pro' ? '#06b6d4' : 'var(--text-primary)' }}>
             {title}
           </h2>
           <p className="text-sm text-dark-400 mt-1">Configure {plan} tier perks</p>
@@ -116,8 +116,8 @@ const PlanServicesManagement = () => {
             padding: '10px 18px',
             borderRadius: '12px',
             border: plan === 'pro' ? 'none' : '1px solid rgba(255,255,255,0.1)',
-            background: plan === 'pro' ? '#06b6d4' : 'rgba(255,255,255,0.05)',
-            color: plan === 'pro' ? '#080c14' : '#fff',
+            background: plan === 'pro' ? '#06b6d4' : 'var(--border-light)',
+            color: plan === 'pro' ? 'var(--bg-shell)' : 'var(--text-primary)',
             fontSize: '14px',
             fontWeight: 700,
             cursor: 'pointer',
@@ -128,11 +128,11 @@ const PlanServicesManagement = () => {
           }}
           onMouseEnter={e => {
             if (plan === 'pro') e.currentTarget.style.transform = 'translateY(-2px)'
-            else e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+            else e.currentTarget.style.background = 'var(--border-hover)'
           }}
           onMouseLeave={e => {
             if (plan === 'pro') e.currentTarget.style.transform = 'translateY(0)'
-            else e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+            else e.currentTarget.style.background = 'var(--border-light)'
           }}
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -147,10 +147,10 @@ const PlanServicesManagement = () => {
           <div key={index} className="flex gap-3 items-center group relative">
             <div style={{
               width: '32px', height: '32px', borderRadius: '10px',
-              background: plan === 'pro' ? 'rgba(6,182,212,0.1)' : 'rgba(255,255,255,0.05)',
+              background: plan === 'pro' ? 'var(--cyan-bg-light)' : 'var(--border-light)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
             }}>
-              <span style={{ color: plan === 'pro' ? '#06b6d4' : '#9ca3af', fontSize: '14px', fontWeight: 600 }}>{index + 1}</span>
+              <span style={{ color: plan === 'pro' ? '#06b6d4' : 'var(--text-secondary)', fontSize: '14px', fontWeight: 600 }}>{index + 1}</span>
             </div>
             <div className="flex-1 relative">
               <input
@@ -164,7 +164,7 @@ const PlanServicesManagement = () => {
                   border: '1px solid rgba(255,255,255,0.05)',
                   borderRadius: '12px',
                   padding: '14px 16px',
-                  color: '#fff',
+                  color: 'var(--text-primary)',
                   fontSize: '14px',
                   outline: 'none',
                   transition: 'border-color 0.2s, box-shadow 0.2s'
@@ -174,7 +174,7 @@ const PlanServicesManagement = () => {
                   e.target.style.boxShadow = plan === 'pro' ? '0 0 0 3px rgba(6,182,212,0.1)' : '0 0 0 3px rgba(124,58,237,0.1)'
                 }}
                 onBlur={e => {
-                  e.target.style.borderColor = 'rgba(255,255,255,0.05)'
+                  e.target.style.borderColor = 'var(--border-light)'
                   e.target.style.boxShadow = 'none'
                 }}
               />
@@ -192,7 +192,7 @@ const PlanServicesManagement = () => {
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.background = '#ef4444'
-                e.currentTarget.style.color = '#fff'
+                e.currentTarget.style.color = 'var(--text-primary)'
                 e.currentTarget.style.opacity = 1
               }}
               onMouseLeave={e => {
@@ -214,7 +214,7 @@ const PlanServicesManagement = () => {
             border: '1px dashed rgba(255,255,255,0.1)', 
             borderRadius: '16px', background: 'rgba(0,0,0,0.1)'
           }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
               <svg className="w-6 h-6 text-dark-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
             <p className="text-dark-400 font-medium text-sm">No perks added yet.</p>
@@ -240,7 +240,7 @@ const PlanServicesManagement = () => {
             borderRadius: '14px',
             border: 'none',
             background: 'linear-gradient(135deg,#7c3aed,#4f46e5)',
-            color: '#fff',
+            color: 'var(--text-primary)',
             fontSize: '15px',
             fontWeight: 700,
             cursor: saving ? 'not-allowed' : 'pointer',

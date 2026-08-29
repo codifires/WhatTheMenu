@@ -7,27 +7,27 @@ import { ArrowRight } from 'lucide-react'
 
 const INPUT = {
   width: '100%', padding: '14px 16px', borderRadius: 16,
-  border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)',
-  color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  border: '1px solid rgba(255,255,255,0.08)', background: 'var(--bg-input)',
+  color: 'var(--text-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box',
   fontFamily: 'inherit', transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
 }
 
 function InputField({ label, as, ...props }) {
   return (
     <div style={{ marginBottom: 14 }}>
-      <label style={{ fontSize: 12, fontWeight: 700, color: '#9ca3af', display: 'block', marginBottom: 6, letterSpacing: 0.2 }}>{label}</label>
+      <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 6, letterSpacing: 0.2 }}>{label}</label>
       {as === 'textarea' ? (
         <textarea
           style={{ ...INPUT, resize: 'vertical', minHeight: 74 }}
           onFocus={e => {e.target.style.borderColor = '#f59e0b'; e.target.style.background = 'rgba(245,158,11,0.04)'; e.target.style.boxShadow = '0 0 12px rgba(245,158,11,0.15)'}}
-          onBlur={e => {e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.background = 'rgba(255,255,255,0.03)'; e.target.style.boxShadow = 'none'}}
+          onBlur={e => {e.target.style.borderColor = 'var(--border-medium)'; e.target.style.background = 'var(--bg-input)'; e.target.style.boxShadow = 'none'}}
           {...props}
         />
       ) : (
         <input
           style={INPUT}
           onFocus={e => {e.target.style.borderColor = '#f59e0b'; e.target.style.background = 'rgba(245,158,11,0.04)'; e.target.style.boxShadow = '0 0 12px rgba(245,158,11,0.15)'}}
-          onBlur={e => {e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.background = 'rgba(255,255,255,0.03)'; e.target.style.boxShadow = 'none'}}
+          onBlur={e => {e.target.style.borderColor = 'var(--border-medium)'; e.target.style.background = 'var(--bg-input)'; e.target.style.boxShadow = 'none'}}
           {...props}
         />
       )}
@@ -60,7 +60,7 @@ const Checkout = () => {
   // Primary action button: Initiates real-time payment session
   const handleProceed = async () => {
     if (cafe?.email === 'cafe@demo.com') {
-      toast.error('⚠️ Demo Template: Real orders and payments are disabled.', { style: { background: '#fff', color: '#000', fontWeight: 'bold' } })
+      toast.error('⚠️ Demo Template: Real orders and payments are disabled.', { style: { background: 'var(--text-primary)', color: '#000', fontWeight: 'bold' } })
       return
     }
 
@@ -158,15 +158,15 @@ const Checkout = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
         <button
           onClick={() => navigate(-1)}
-          style={{ width: 42, height: 42, borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
-          onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.08)'}
-          onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.04)'}
+          style={{ width: 42, height: 42, borderRadius: 14, background: 'var(--bg-card-hover)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }}
+          onMouseEnter={e => e.currentTarget.style.background='var(--border-medium)'}
+          onMouseLeave={e => e.currentTarget.style.background='var(--bg-card-hover)'}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <div>
-          <h2 style={{ fontSize: 22, fontWeight: 900, color: '#fff', margin: '0 0 2px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>Checkout</h2>
-          <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Review dining details & payment</p>
+          <h2 style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 2px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>Checkout</h2>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>Review dining details & payment</p>
         </div>
       </div>
 
@@ -178,7 +178,7 @@ const Checkout = () => {
         <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <span style={{ fontSize: 18 }}>📍</span>
-            <h3 style={{ fontSize: 13, fontWeight: 800, color: '#e5e7eb', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>Dining Details</h3>
+            <h3 style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>Dining Details</h3>
           </div>
           <InputField label="Your Name (Optional)" placeholder="Enter your full name" value={form.customer_name} onChange={e => setForm({...form, customer_name: e.target.value})} />
           <InputField label="Table Number (If dining in)" placeholder="e.g. Table 4 or Takeaway" value={form.table_number} onChange={e => setForm({...form, table_number: e.target.value})} />
@@ -189,7 +189,7 @@ const Checkout = () => {
         <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <span style={{ fontSize: 18 }}>💳</span>
-            <h3 style={{ fontSize: 13, fontWeight: 800, color: '#e5e7eb', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>Payment Method</h3>
+            <h3 style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>Payment Method</h3>
           </div>
           
           {/* Razorpay Option */}
@@ -211,9 +211,9 @@ const Checkout = () => {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <p style={{ fontSize: 15, fontWeight: 800, color: '#fbbf24', margin: 0 }}>Pay Online</p>
-                    <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(16,185,129,0.2)', color: '#34d399', padding: '2px 6px', borderRadius: 4 }}>Recommended</span>
+                    <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(16,185,129,0.2)', color: 'var(--success-text)', padding: '2px 6px', borderRadius: 4 }}>Recommended</span>
                   </div>
-                  <p style={{ fontSize: 12, color: '#9ca3af', margin: '2px 0 0' }}>Cards, UPI, Wallets (via Razorpay)</p>
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0' }}>Cards, UPI, Wallets (via Razorpay)</p>
                 </div>
               </div>
 
@@ -222,7 +222,7 @@ const Checkout = () => {
               </div>
             </div>
           ) : (
-            <div style={{ padding: '16px', borderRadius: 18, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#f87171', fontSize: 13, textAlign: 'center' }}>
+            <div style={{ padding: '16px', borderRadius: 18, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: 'var(--danger-text)', fontSize: 13, textAlign: 'center' }}>
               Online payments are currently disabled for this café.
             </div>
           )}
@@ -232,23 +232,23 @@ const Checkout = () => {
         <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 24, padding: 20, boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <span style={{ fontSize: 18 }}>🧾</span>
-            <h3 style={{ fontSize: 13, fontWeight: 800, color: '#e5e7eb', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>Bill Summary</h3>
+            <h3 style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: 0.8, margin: 0 }}>Bill Summary</h3>
           </div>
           {items.map(item => (
             <div key={item._id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-              <span style={{ fontSize: 14, color: '#d1d5db' }}><span style={{ color: '#f59e0b', fontWeight: 700, marginRight: 8 }}>{item.quantity}x</span>{item.name}</span>
-              <span style={{ fontSize: 14, color: '#fff', fontWeight: 600 }}>₹{item.price * item.quantity}</span>
+              <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}><span style={{ color: '#f59e0b', fontWeight: 700, marginRight: 8 }}>{item.quantity}x</span>{item.name}</span>
+              <span style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600 }}>₹{item.price * item.quantity}</span>
             </div>
           ))}
-          <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '14px 0' }} />
+          <div style={{ height: 1, background: 'var(--border-medium)', margin: '14px 0' }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 13, color: '#9ca3af' }}>Taxes & Charges {taxPercentage > 0 ? `(${taxPercentage}%)` : ''}</span>
-            <span style={{ fontSize: 13, color: taxAmount > 0 ? '#fff' : '#10b981', fontWeight: 600 }}>
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Taxes & Charges {taxPercentage > 0 ? `(${taxPercentage}%)` : ''}</span>
+            <span style={{ fontSize: 13, color: taxAmount > 0 ? 'var(--text-primary)' : '#10b981', fontWeight: 600 }}>
               {taxAmount > 0 ? `₹${taxAmount.toFixed(2)}` : 'Included'}
             </span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Total Payable</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>Total Payable</span>
             <span style={{ fontSize: 24, fontWeight: 900, color: '#f59e0b', fontFamily: "'Outfit',sans-serif" }}>₹{grandTotal.toFixed(2)}</span>
           </div>
         </div>
@@ -266,9 +266,9 @@ const Checkout = () => {
           
           {/* Price Preview on Left */}
           <div>
-            <span style={{ fontSize: 10, fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block' }}>Total to Pay</span>
+            <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block' }}>Total to Pay</span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-              <span style={{ fontSize: 22, fontWeight: 900, color: '#fff', fontFamily: "'Outfit',sans-serif" }}>₹{grandTotal.toFixed(2)}</span>
+              <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', fontFamily: "'Outfit',sans-serif" }}>₹{grandTotal.toFixed(2)}</span>
             </div>
             <span style={{ fontSize: 10, color: '#10b981', fontWeight: 700 }}>Taxes Included</span>
           </div>
@@ -280,7 +280,7 @@ const Checkout = () => {
             style={{
               flex: 1, height: 52, borderRadius: 16, border: 'none',
               background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
-              color: '#fff', fontSize: 15, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer',
+              color: 'var(--text-primary)', fontSize: 15, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               boxShadow: '0 6px 20px rgba(245,158,11,0.45)',
               transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', opacity: loading ? 0.7 : 1

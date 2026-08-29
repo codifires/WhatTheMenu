@@ -360,9 +360,9 @@ export const NotificationProvider = ({ children }) => {
         toast.success(`🔔 New Order ${orderNum} received from ${table}!`, {
           duration: 4500,
           style: {
-            background: '#0f172a',
+            background: 'var(--bg-shell)',
             border: '1px solid rgba(34, 197, 94, 0.4)',
-            color: '#fff',
+            color: 'var(--text-primary)',
             fontWeight: 600
           }
         })
@@ -384,9 +384,9 @@ export const NotificationProvider = ({ children }) => {
         toast.error(`🛎️ ${data.customer_name || 'Customer'} at ${data.table_number || 'Takeaway'} requested ${data.type === 'waiter' ? 'a waiter' : 'the bill'}!`, {
           duration: 6000,
           style: {
-            background: '#0f172a',
+            background: 'var(--bg-shell)',
             border: '1px solid rgba(239, 68, 68, 0.4)',
-            color: '#fff',
+            color: 'var(--text-primary)',
             fontWeight: 700
           }
         })
@@ -407,9 +407,9 @@ export const NotificationProvider = ({ children }) => {
         toast.success(`🎉 Subscription successfully activated!`, {
           duration: 5000,
           style: {
-            background: '#0f172a',
+            background: 'var(--bg-shell)',
             border: '1px solid rgba(168, 85, 247, 0.4)',
-            color: '#fff',
+            color: 'var(--text-primary)',
             fontWeight: 600
           }
         })
@@ -434,9 +434,9 @@ export const NotificationProvider = ({ children }) => {
         toast.success(`🎧 Support Team responded to #${ticket.ticket_number || ''}!`, {
           duration: 5000,
           style: {
-            background: '#0f172a',
+            background: 'var(--bg-shell)',
             border: '1px solid rgba(56, 189, 248, 0.4)',
-            color: '#fff',
+            color: 'var(--text-primary)',
             fontWeight: 600
           }
         })
@@ -468,9 +468,9 @@ export const NotificationProvider = ({ children }) => {
         toast.success(`🏪 New Café Registered: ${data.name}!`, {
           duration: 4500,
           style: {
-            background: '#0f172a',
+            background: 'var(--bg-shell)',
             border: '1px solid rgba(124, 58, 237, 0.4)',
-            color: '#fff',
+            color: 'var(--text-primary)',
             fontWeight: 600
           }
         })
@@ -490,9 +490,9 @@ export const NotificationProvider = ({ children }) => {
         toast.success(`💰 New Revenue: ₹${data.amount} from ${data.cafe_name || 'Café'}!`, {
           duration: 4500,
           style: {
-            background: '#0f172a',
+            background: 'var(--bg-shell)',
             border: '1px solid rgba(34, 197, 94, 0.4)',
-            color: '#fff',
+            color: 'var(--text-primary)',
             fontWeight: 600
           }
         })
@@ -514,9 +514,9 @@ export const NotificationProvider = ({ children }) => {
           duration: 5000,
           icon: isUrgent ? '🚨' : '🎧',
           style: {
-            background: '#0f172a',
+            background: 'var(--bg-shell)',
             border: isUrgent ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(6, 182, 212, 0.4)',
-            color: '#fff',
+            color: 'var(--text-primary)',
             fontWeight: 600
           }
         })

@@ -2,16 +2,16 @@ import { Link } from 'react-router-dom'
 
 const PrivacyPolicy = () => {
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0f', color: '#e5e7eb', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#0a0a0f', color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif" }}>
       
       {/* Header */}
-      <div style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '20px 24px' }}>
+      <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '20px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12 }}>
             <img src="/logo.png" alt="WTM Logo" style={{ height: 40, width: 40, objectFit: 'cover', borderRadius: '50%' }} />
-            <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.5px', fontFamily: "'Outfit', sans-serif", color: '#fff' }}>WTM</span>
+            <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.5px', fontFamily: "'Outfit', sans-serif", color: 'var(--text-primary)' }}>WTM</span>
           </Link>
-          <Link to="/" style={{ fontSize: 14, color: '#9ca3af', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Link to="/" style={{ fontSize: 14, color: 'var(--text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
             ← Back to Home
           </Link>
         </div>
@@ -20,10 +20,10 @@ const PrivacyPolicy = () => {
       {/* Content */}
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '48px 24px 80px' }}>
         
-        <h1 style={{ fontSize: 36, fontWeight: 900, fontFamily: "'Outfit', sans-serif", color: '#fff', margin: '0 0 8px' }}>Privacy Policy</h1>
-        <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 40px' }}>Last Updated: August 10, 2026</p>
+        <h1 style={{ fontSize: 36, fontWeight: 900, fontFamily: "'Outfit', sans-serif", color: 'var(--text-primary)', margin: '0 0 8px' }}>Privacy Policy</h1>
+        <p style={{ fontSize: 14, color: 'var(--text-tertiary)', margin: '0 0 40px' }}>Last Updated: August 10, 2026</p>
 
-        <div style={{ lineHeight: 1.8, fontSize: 15, color: '#d1d5db' }}>
+        <div style={{ lineHeight: 1.8, fontSize: 15, color: 'var(--text-secondary)' }}>
 
           <Section title="1. Introduction">
             <p>WTM ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.</p>
@@ -32,7 +32,7 @@ const PrivacyPolicy = () => {
 
           <Section title="2. Information We Collect">
             
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: '16px 0 8px' }}>2.1 Café Owner Information</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '16px 0 8px' }}>2.1 Café Owner Information</h3>
             <ul style={{ paddingLeft: 20 }}>
               <li>Full name and contact details (email, phone number)</li>
               <li>Café name, address, and logo</li>
@@ -42,7 +42,7 @@ const PrivacyPolicy = () => {
               <li>Login credentials (passwords are encrypted and never stored in plain text)</li>
             </ul>
 
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: '16px 0 8px' }}>2.2 Customer Information</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '16px 0 8px' }}>2.2 Customer Information</h3>
             <ul style={{ paddingLeft: 20 }}>
               <li>Order details (items ordered, quantities, total amount)</li>
               <li>Table number (if provided)</li>
@@ -51,7 +51,7 @@ const PrivacyPolicy = () => {
             </ul>
             <p><strong>Note:</strong> Customers are NOT required to create an account or provide personal information to browse menus or place orders.</p>
 
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: '16px 0 8px' }}>2.3 Automatically Collected Information</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '16px 0 8px' }}>2.3 Automatically Collected Information</h3>
             <ul style={{ paddingLeft: 20 }}>
               <li>IP address and approximate location</li>
               <li>Browser type and device information</li>
@@ -151,7 +151,7 @@ const PrivacyPolicy = () => {
 
       {/* Footer */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '24px', textAlign: 'center' }}>
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>© 2026 WTM. All rights reserved.</p>
+        <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>© 2026 WTM. All rights reserved.</p>
       </div>
 
       <style>{`
@@ -163,8 +163,8 @@ const PrivacyPolicy = () => {
 
 const Section = ({ title, children }) => (
   <div style={{ marginBottom: 32 }}>
-    <h2 style={{ fontSize: 20, fontWeight: 800, color: '#fff', margin: '0 0 12px', fontFamily: "'Outfit', sans-serif" }}>{title}</h2>
-    <div style={{ color: '#d1d5db' }}>{children}</div>
+    <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 12px', fontFamily: "'Outfit', sans-serif" }}>{title}</h2>
+    <div style={{ color: 'var(--text-secondary)' }}>{children}</div>
   </div>
 )
 

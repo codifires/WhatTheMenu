@@ -114,9 +114,9 @@ export default function NotificationBell({ role = 'owner' }) {
       case 'support':
         return {
           icon: '🎧',
-          bg: 'rgba(6, 182, 212, 0.12)',
+          bg: 'var(--cyan-border-light)',
           border: 'rgba(6, 182, 212, 0.3)',
-          badgeColor: '#22d3ee'
+          badgeColor: 'var(--cyan-text)'
         }
       default:
         return {
@@ -158,13 +158,13 @@ export default function NotificationBell({ role = 'owner' }) {
           width: 38,
           height: 38,
           borderRadius: 10,
-          background: open ? 'rgba(124, 58, 237, 0.15)' : 'rgba(255,255,255,0.04)',
+          background: open ? 'rgba(124, 58, 237, 0.15)' : 'var(--bg-card-hover)',
           border: open ? '1px solid rgba(124, 58, 237, 0.4)' : '1px solid rgba(255,255,255,0.08)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          color: open ? '#a78bfa' : activeRoleUnreadCount > 0 ? '#fff' : '#9ca3af',
+          color: open ? '#a78bfa' : activeRoleUnreadCount > 0 ? 'var(--text-primary)' : 'var(--text-secondary)',
           position: 'relative',
           transition: 'all 0.2s',
           outline: 'none'
@@ -175,8 +175,8 @@ export default function NotificationBell({ role = 'owner' }) {
         }}
         onMouseLeave={e => {
           if (!open) {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
-            e.currentTarget.style.color = activeRoleUnreadCount > 0 ? '#fff' : '#9ca3af'
+            e.currentTarget.style.background = 'var(--bg-card-hover)'
+            e.currentTarget.style.color = activeRoleUnreadCount > 0 ? 'var(--text-primary)' : 'var(--text-secondary)'
           }
         }}
       >
@@ -197,7 +197,7 @@ export default function NotificationBell({ role = 'owner' }) {
               borderRadius: 9,
               background: '#ef4444',
               border: '2px solid #080c14',
-              color: '#fff',
+              color: 'var(--text-primary)',
               fontSize: 10,
               fontWeight: 800,
               display: 'flex',
@@ -238,19 +238,19 @@ export default function NotificationBell({ role = 'owner' }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              background: 'rgba(255, 255, 255, 0.02)'
+              background: 'var(--bg-card)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 16 }}>🔔</span>
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#fff', fontFamily: "'Outfit', sans-serif" }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', fontFamily: "'Outfit', sans-serif" }}>
                 {isAdmin ? 'Admin Notifications' : 'Notifications'}
               </span>
               {activeRoleUnreadCount > 0 && (
                 <span
                   style={{
                     background: 'rgba(239, 68, 68, 0.2)',
-                    color: '#f87171',
+                    color: 'var(--danger-text)',
                     border: '1px solid rgba(239, 68, 68, 0.3)',
                     fontSize: 11,
                     fontWeight: 700,
@@ -272,7 +272,7 @@ export default function NotificationBell({ role = 'owner' }) {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: soundEnabled ? '#22c55e' : '#6b7280',
+                  color: soundEnabled ? '#22c55e' : 'var(--text-tertiary)',
                   cursor: 'pointer',
                   fontSize: 14,
                   padding: 4,
@@ -329,7 +329,7 @@ export default function NotificationBell({ role = 'owner' }) {
                   border: 'none',
                   cursor: 'pointer',
                   background: filter === t.id ? 'rgba(124, 58, 237, 0.25)' : 'transparent',
-                  color: filter === t.id ? '#c4b5fd' : '#9ca3af',
+                  color: filter === t.id ? '#c4b5fd' : 'var(--text-secondary)',
                   transition: 'all 0.15s'
                 }}
               >
@@ -352,14 +352,14 @@ export default function NotificationBell({ role = 'owner' }) {
                 style={{
                   padding: '36px 20px',
                   textAlign: 'center',
-                  color: '#6b7280'
+                  color: 'var(--text-tertiary)'
                 }}
               >
                 <div style={{ fontSize: 32, marginBottom: 8 }}>{isAdmin ? '👑' : '☕'}</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#9ca3af', marginBottom: 4 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>
                   You're all caught up!
                 </div>
-                <div style={{ fontSize: 12, color: '#4b5563', maxWidth: 260, margin: '0 auto', lineHeight: 1.4 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-tertiary)', maxWidth: 260, margin: '0 auto', lineHeight: 1.4 }}>
                   {isAdmin
                     ? 'New café partner signups, subscription revenue, and support tickets will appear here in real-time.'
                     : 'Live orders, subscription alerts, and support updates will pop up here.'}
@@ -383,7 +383,7 @@ export default function NotificationBell({ role = 'owner' }) {
                       transition: 'background 0.15s',
                       position: 'relative'
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)'}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card-hover)'}
                     onMouseLeave={e => {
                       e.currentTarget.style.background = item.read ? 'transparent' : 'rgba(124, 58, 237, 0.06)'
                     }}
@@ -427,7 +427,7 @@ export default function NotificationBell({ role = 'owner' }) {
                           style={{
                             fontSize: 13,
                             fontWeight: item.read ? 600 : 700,
-                            color: item.read ? '#e5e7eb' : '#fff',
+                            color: item.read ? 'var(--text-primary)' : 'var(--text-primary)',
                             margin: 0,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
@@ -436,7 +436,7 @@ export default function NotificationBell({ role = 'owner' }) {
                         >
                           {item.title}
                         </h4>
-                        <span style={{ fontSize: 10, color: '#6b7280', flexShrink: 0, marginLeft: 8 }}>
+                        <span style={{ fontSize: 10, color: 'var(--text-tertiary)', flexShrink: 0, marginLeft: 8 }}>
                           {timeAgo(item.createdAt)}
                         </span>
                       </div>
@@ -444,7 +444,7 @@ export default function NotificationBell({ role = 'owner' }) {
                       <p
                         style={{
                           fontSize: 12,
-                          color: '#9ca3af',
+                          color: 'var(--text-secondary)',
                           margin: '0 0 6px',
                           lineHeight: 1.4
                         }}
@@ -482,7 +482,7 @@ export default function NotificationBell({ role = 'owner' }) {
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: '#4b5563',
+                        color: 'var(--text-tertiary)',
                         cursor: 'pointer',
                         padding: 2,
                         fontSize: 14,
@@ -494,7 +494,7 @@ export default function NotificationBell({ role = 'owner' }) {
                         e.currentTarget.style.opacity = 1
                       }}
                       onMouseLeave={e => {
-                        e.currentTarget.style.color = '#4b5563'
+                        e.currentTarget.style.color = 'var(--text-tertiary)'
                         e.currentTarget.style.opacity = 0.6
                       }}
                     >
@@ -524,18 +524,18 @@ export default function NotificationBell({ role = 'owner' }) {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#6b7280',
+                  color: 'var(--text-tertiary)',
                   fontSize: 11,
                   fontWeight: 500,
                   cursor: 'pointer'
                 }}
                 onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-                onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}
               >
                 Clear all notifications
               </button>
 
-              <span style={{ fontSize: 10, color: '#4b5563' }}>
+              <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>
                 🟢 Real-Time Live
               </span>
             </div>

@@ -120,11 +120,11 @@ export default function OwnerSupport() {
       case 'in_progress':
         return { bg: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.3)', label: 'In Progress' }
       case 'resolved':
-        return { bg: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: 'rgba(16, 185, 129, 0.3)', label: 'Resolved' }
+        return { bg: 'rgba(16, 185, 129, 0.15)', color: 'var(--success-text)', border: 'rgba(16, 185, 129, 0.3)', label: 'Resolved' }
       case 'closed':
-        return { bg: 'rgba(100, 116, 139, 0.15)', color: '#94a3b8', border: 'rgba(100, 116, 139, 0.3)', label: 'Closed' }
+        return { bg: 'rgba(100, 116, 139, 0.15)', color: 'var(--text-secondary)', border: 'rgba(100, 116, 139, 0.3)', label: 'Closed' }
       default:
-        return { bg: 'rgba(255, 255, 255, 0.1)', color: '#fff', border: 'rgba(255, 255, 255, 0.2)', label: status }
+        return { bg: 'var(--border-hover)', color: 'var(--text-primary)', border: 'var(--border-hover)', label: status }
     }
   }
 
@@ -143,10 +143,10 @@ export default function OwnerSupport() {
       {/* ── Page Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 28 }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: '#fff', margin: '0 0 6px', fontFamily: "'Outfit', sans-serif" }}>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 6px', fontFamily: "'Outfit', sans-serif" }}>
             🎧 Help & Support Center
           </h1>
-          <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
             Instant help for menu setup, 0% UPI payments, table QR codes, and kitchen orders.
           </p>
         </div>
@@ -157,8 +157,8 @@ export default function OwnerSupport() {
           borderRadius: 14,
           background: isPro 
             ? 'linear-gradient(135deg, rgba(147, 51, 234, 0.18), rgba(79, 70, 229, 0.18))' 
-            : 'rgba(255, 255, 255, 0.05)',
-          border: isPro ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+            : 'var(--border-light)',
+          border: isPro ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid var(--border-medium)',
           display: 'flex',
           alignItems: 'center',
           gap: 10,
@@ -166,10 +166,10 @@ export default function OwnerSupport() {
         }}>
           <span style={{ fontSize: 20 }}>{isPro ? '⚡' : '🛡️'}</span>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: isPro ? '#c084fc' : '#e2e8f0' }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: isPro ? '#c084fc' : 'var(--text-primary)' }}>
               {isPro ? 'Pro Priority Support Active' : 'Standard Support Tier'}
             </div>
-            <div style={{ fontSize: 11, color: '#94a3b8' }}>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
               {displayInfo.sla || 'Fast assistance for all café partners'}
             </div>
           </div>
@@ -191,7 +191,7 @@ export default function OwnerSupport() {
           style={{
             padding: '20px 22px',
             borderRadius: 18,
-            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(16, 185, 129, 0.05))',
+            background: 'var(--success-light)',
             border: '1px solid rgba(34, 197, 94, 0.25)',
             textDecoration: 'none',
             display: 'flex',
@@ -220,7 +220,7 @@ export default function OwnerSupport() {
             <div style={{ fontSize: 15, fontWeight: 700, color: '#4ade80', marginBottom: 2 }}>
               WhatsApp Instant Chat
             </div>
-            <div style={{ fontSize: 12, color: '#94a3b8' }}>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
               Direct message our technical support team
             </div>
           </div>
@@ -232,7 +232,7 @@ export default function OwnerSupport() {
           style={{
             padding: '20px 22px',
             borderRadius: 18,
-            background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(14, 165, 233, 0.05))',
+            background: 'var(--cyan-bg-light)',
             border: '1px solid rgba(56, 189, 248, 0.25)',
             textDecoration: 'none',
             display: 'flex',
@@ -261,7 +261,7 @@ export default function OwnerSupport() {
             <div style={{ fontSize: 15, fontWeight: 700, color: '#38bdf8', marginBottom: 2 }}>
               Email Support
             </div>
-            <div style={{ fontSize: 12, color: '#94a3b8' }}>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
               {displayInfo.contact_email || 'support@qrmenu.com'}
             </div>
           </div>
@@ -271,8 +271,8 @@ export default function OwnerSupport() {
         <div style={{
           padding: '20px 22px',
           borderRadius: 18,
-          background: 'rgba(15, 23, 42, 0.6)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border-medium)',
           display: 'flex',
           alignItems: 'center',
           gap: 16
@@ -294,7 +294,7 @@ export default function OwnerSupport() {
             <div style={{ fontSize: 15, fontWeight: 700, color: '#fbbf24', marginBottom: 2 }}>
               Helpline & Hours
             </div>
-            <div style={{ fontSize: 12, color: '#94a3b8' }}>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
               {displayInfo.support_hours || 'Mon - Sun, 9:00 AM - 10:00 PM'}
             </div>
           </div>
@@ -302,7 +302,7 @@ export default function OwnerSupport() {
       </div>
 
       {/* ── Navigation Tabs ── */}
-      <div style={{ display: 'flex', gap: 10, borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: 12, marginBottom: 28 }}>
+      <div style={{ display: 'flex', gap: 10, borderBottom: '1px solid var(--border-medium)', paddingBottom: 12, marginBottom: 28 }}>
         <button
           onClick={() => setActiveTab('contact')}
           style={{
@@ -313,7 +313,7 @@ export default function OwnerSupport() {
             fontWeight: 700,
             cursor: 'pointer',
             background: activeTab === 'contact' ? '#2563eb' : 'transparent',
-            color: activeTab === 'contact' ? '#fff' : '#94a3b8',
+            color: activeTab === 'contact' ? 'var(--text-primary)' : '#94a3b8',
             transition: 'all 0.15s ease'
           }}
         >
@@ -330,7 +330,7 @@ export default function OwnerSupport() {
             fontWeight: 700,
             cursor: 'pointer',
             background: activeTab === 'tickets' ? '#2563eb' : 'transparent',
-            color: activeTab === 'tickets' ? '#fff' : '#94a3b8',
+            color: activeTab === 'tickets' ? 'var(--text-primary)' : '#94a3b8',
             display: 'flex',
             alignItems: 'center',
             gap: 8,
@@ -340,7 +340,7 @@ export default function OwnerSupport() {
           <span>🎫 My Tickets</span>
           {tickets.length > 0 && (
             <span style={{
-              background: 'rgba(255,255,255,0.2)',
+              background: 'var(--border-hover)',
               padding: '2px 8px',
               borderRadius: 20,
               fontSize: 11,
@@ -361,7 +361,7 @@ export default function OwnerSupport() {
             fontWeight: 700,
             cursor: 'pointer',
             background: activeTab === 'faqs' ? '#2563eb' : 'transparent',
-            color: activeTab === 'faqs' ? '#fff' : '#94a3b8',
+            color: activeTab === 'faqs' ? 'var(--text-primary)' : '#94a3b8',
             transition: 'all 0.15s ease'
           }}
         >
@@ -372,23 +372,23 @@ export default function OwnerSupport() {
       {/* ── TAB 1: SUBMIT TICKET ── */}
       {activeTab === 'contact' && (
         <div style={{
-          background: 'rgba(15, 23, 42, 0.75)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border-medium)',
           borderRadius: 20,
           padding: '28px 24px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)'
+          boxShadow: '0 8px 32px var(--overlay-bg)'
         }}>
-          <h2 style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '0 0 8px' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px' }}>
             Open a Support Request
           </h2>
-          <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 24px' }}>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 24px' }}>
             Fill out the details below. Pro Plan tickets receive instant high-priority routing.
           </p>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Category Grid */}
             <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 10 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>
                 Select Issue Category:
               </label>
               <div style={{
@@ -403,16 +403,16 @@ export default function OwnerSupport() {
                     style={{
                       padding: '14px 16px',
                       borderRadius: 12,
-                      background: form.category === cat.value ? 'rgba(37, 99, 235, 0.18)' : 'rgba(255, 255, 255, 0.02)',
-                      border: form.category === cat.value ? '1px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.06)',
+                      background: form.category === cat.value ? 'rgba(37, 99, 235, 0.18)' : 'var(--bg-card)',
+                      border: form.category === cat.value ? '1px solid #3b82f6' : '1px solid var(--border-light)',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease'
                     }}
                   >
-                    <div style={{ fontSize: 13, fontWeight: 700, color: form.category === cat.value ? '#60a5fa' : '#f1f5f9', marginBottom: 3 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: form.category === cat.value ? '#60a5fa' : 'var(--text-primary)', marginBottom: 3 }}>
                       {cat.label}
                     </div>
-                    <div style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.3 }}>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.3 }}>
                       {cat.desc}
                     </div>
                   </div>
@@ -422,7 +422,7 @@ export default function OwnerSupport() {
 
             {/* Subject */}
             <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 8 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
                 Subject / Brief Summary:
               </label>
               <input
@@ -435,9 +435,9 @@ export default function OwnerSupport() {
                   boxSizing: 'border-box',
                   padding: '12px 16px',
                   borderRadius: 12,
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#fff',
+                  background: 'var(--bg-card-hover)',
+                  border: '1px solid var(--border-medium)',
+                  color: 'var(--text-primary)',
                   fontSize: 14,
                   outline: 'none'
                 }}
@@ -446,7 +446,7 @@ export default function OwnerSupport() {
 
             {/* Description */}
             <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#e2e8f0', marginBottom: 8 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
                 Detailed Description:
               </label>
               <textarea
@@ -459,9 +459,9 @@ export default function OwnerSupport() {
                   boxSizing: 'border-box',
                   padding: '12px 16px',
                   borderRadius: 12,
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: '#fff',
+                  background: 'var(--bg-card-hover)',
+                  border: '1px solid var(--border-medium)',
+                  color: 'var(--text-primary)',
                   fontSize: 14,
                   outline: 'none',
                   resize: 'vertical',
@@ -478,7 +478,7 @@ export default function OwnerSupport() {
                   padding: '12px 28px',
                   borderRadius: 12,
                   background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
-                  color: '#fff',
+                  color: 'var(--text-primary)',
                   fontSize: 14,
                   fontWeight: 800,
                   border: 'none',
@@ -502,13 +502,13 @@ export default function OwnerSupport() {
             <div style={{
               padding: '60px 20px',
               textAlign: 'center',
-              background: 'rgba(15, 23, 42, 0.5)',
+              background: 'var(--bg-elevated)',
               borderRadius: 20,
-              border: '1px solid rgba(255, 255, 255, 0.06)'
+              border: '1px solid var(--border-medium)'
             }}>
               <span style={{ fontSize: 42, display: 'block', marginBottom: 12 }}>🎫</span>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: '0 0 6px' }}>No Support Tickets Yet</h3>
-              <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 16px' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px' }}>No Support Tickets Yet</h3>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 16px' }}>
                 You have not opened any support requests yet.
               </p>
               <button
@@ -517,7 +517,7 @@ export default function OwnerSupport() {
                   padding: '10px 20px',
                   borderRadius: 12,
                   background: '#2563eb',
-                  color: '#fff',
+                  color: 'var(--text-primary)',
                   border: 'none',
                   fontWeight: 700,
                   fontSize: 13,
@@ -536,9 +536,9 @@ export default function OwnerSupport() {
                   style={{
                     padding: '22px 24px',
                     borderRadius: 18,
-                    background: 'rgba(15, 23, 42, 0.8)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border-medium)',
+                    boxShadow: '0 4px 20px var(--overlay-bg)'
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
@@ -552,17 +552,17 @@ export default function OwnerSupport() {
                           borderRadius: 6,
                           fontSize: 11,
                           fontWeight: 700,
-                          background: t.priority === 'urgent' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                          color: t.priority === 'urgent' ? '#f87171' : '#94a3b8',
-                          border: t.priority === 'urgent' ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)'
+                          background: t.priority === 'urgent' ? 'rgba(239, 68, 68, 0.15)' : 'var(--border-light)',
+                          color: t.priority === 'urgent' ? 'var(--danger-text)' : '#94a3b8',
+                          border: t.priority === 'urgent' ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border-medium)'
                         }}>
                           {t.priority === 'urgent' ? '⚡ Priority' : 'Standard'}
                         </span>
                       </div>
-                      <h3 style={{ fontSize: 16, fontWeight: 800, color: '#fff', margin: '0 0 4px' }}>
+                      <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 4px' }}>
                         {t.subject}
                       </h3>
-                      <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                         {getCategoryLabel(t.category)} • Opened on {new Date(t.created_at).toLocaleDateString()} at {new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
@@ -584,8 +584,8 @@ export default function OwnerSupport() {
                   <div style={{
                     padding: '12px 14px',
                     borderRadius: 10,
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    background: 'var(--bg-input)',
+                    border: '1px solid var(--border-medium)',
                     fontSize: 13,
                     color: '#cbd5e1',
                     lineHeight: 1.5,
@@ -605,11 +605,11 @@ export default function OwnerSupport() {
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                         <span style={{ fontSize: 14 }}>💬</span>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: '#34d399' }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--success-text)' }}>
                           Support Team Response:
                         </span>
                       </div>
-                      <p style={{ fontSize: 13, color: '#e2e8f0', margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+                      <p style={{ fontSize: 13, color: 'var(--text-primary)', margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
                         {t.admin_reply}
                       </p>
                     </div>
@@ -631,8 +631,8 @@ export default function OwnerSupport() {
                 key={idx}
                 style={{
                   borderRadius: 16,
-                  background: 'rgba(15, 23, 42, 0.75)',
-                  border: isExpanded ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(255, 255, 255, 0.06)',
+                  background: 'var(--bg-elevated)',
+                  border: isExpanded ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid var(--border-light)',
                   overflow: 'hidden',
                   transition: 'all 0.2s ease'
                 }}
@@ -648,7 +648,7 @@ export default function OwnerSupport() {
                     background: 'transparent',
                     border: 'none',
                     textAlign: 'left',
-                    color: isExpanded ? '#38bdf8' : '#fff',
+                    color: isExpanded ? '#38bdf8' : 'var(--text-primary)',
                     fontSize: 15,
                     fontWeight: 700,
                     cursor: 'pointer'
@@ -664,9 +664,9 @@ export default function OwnerSupport() {
                   <div style={{
                     padding: '0 22px 18px',
                     fontSize: 13,
-                    color: '#94a3b8',
+                    color: 'var(--text-secondary)',
                     lineHeight: 1.6,
-                    borderTop: '1px solid rgba(255, 255, 255, 0.04)'
+                    borderTop: '1px solid var(--border-medium)'
                   }}>
                     {faq.a}
                   </div>

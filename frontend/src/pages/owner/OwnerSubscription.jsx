@@ -98,7 +98,7 @@ const OwnerSubscription = () => {
   // 2. Initiate Razorpay Checkout for Subscription
   const handleStartUpgrade = async (targetPlan) => {
     if (user?.email === 'cafe@demo.com') {
-      toast.error('⚠️ Demo Template: Subscription upgrades are disabled.', { style: { background: '#fff', color: '#000', fontWeight: 'bold' } })
+      toast.error('⚠️ Demo Template: Subscription upgrades are disabled.', { style: { background: '#3b82f6', color: '#fff', fontWeight: 'bold' } })
       return
     }
 
@@ -196,7 +196,7 @@ const OwnerSubscription = () => {
   }, [user?._id])
 
   return (
-    <div style={{ fontFamily: "'Inter',sans-serif", color: '#fff', maxWidth: 1000, margin: '0 auto', paddingBottom: 60 }}>
+    <div style={{ fontFamily: "'Inter',sans-serif", color: 'var(--text-primary)', maxWidth: 1000, margin: '0 auto', paddingBottom: 60 }}>
       {/* ── CSS Keyframe for Pulse Radar Animation ── */}
       <style>{`
         @keyframes pulse-radar {
@@ -211,7 +211,7 @@ const OwnerSubscription = () => {
         <h1 style={{ fontSize: 'clamp(24px,4vw,32px)', fontWeight: 900, margin: '0 0 8px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
           Subscription & Billing
         </h1>
-        <p style={{ fontSize: 15, color: '#9ca3af', margin: 0 }}>
+        <p style={{ fontSize: 15, color: 'var(--text-secondary)', margin: 0 }}>
           Manage your subscription and billing details seamlessly with Razorpay.
         </p>
       </div>
@@ -236,7 +236,7 @@ const OwnerSubscription = () => {
               <div style={{ fontSize: 14, fontWeight: 700, color: '#fca5a5' }}>
                 Payment Incomplete
               </div>
-              <div style={{ fontSize: 13, color: '#f87171' }}>
+              <div style={{ fontSize: 13, color: 'var(--danger-text)' }}>
                 Your {lastAttemptedPlan === 'pro' ? 'Pro Plan' : 'Starter Plan'} upgrade was not completed.
               </div>
             </div>
@@ -246,7 +246,7 @@ const OwnerSubscription = () => {
             disabled={loading}
             style={{
               background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-              color: '#fff',
+              color: 'var(--text-primary)',
               border: 'none',
               borderRadius: 10,
               padding: '10px 18px',
@@ -267,7 +267,7 @@ const OwnerSubscription = () => {
       {/* ── Approval Pending Banner (Legacy Fallback) ── */}
       {isPending && (
         <div style={{ background: 'linear-gradient(90deg, rgba(245,158,11,0.1), rgba(217,119,6,0.15))', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 16, padding: '20px 24px', marginBottom: 32, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ background: 'rgba(245,158,11,0.2)', width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>⏳</div>
+          <div style={{ background: 'var(--warning-light)', width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>⏳</div>
           <div>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fbbf24', margin: '0 0 4px' }}>Approval Pending</h3>
             <p style={{ fontSize: 14, color: '#d97706', margin: 0 }}>Your request to upgrade to the <strong>{pendingRequest.plan_name === 'pro' ? 'Pro Plan' : 'Starter Plan'}</strong> is currently under review by Admin. Your plan will activate once verified.</p>
@@ -280,15 +280,15 @@ const OwnerSubscription = () => {
         
         {/* ── Current Plan Card ── */}
         <div style={{ 
-          background: 'linear-gradient(145deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.9) 100%)', 
-          border: '1px solid rgba(255,255,255,0.08)', 
+          background: 'var(--bg-elevated)', 
+          border: '1px solid var(--border-medium)', 
           borderRadius: 24, 
           padding: '32px',
           position: 'relative',
           overflow: 'hidden',
           flex: '1 1 300px'
         }}>
-          <div style={{ position: 'absolute', top: -100, right: -100, width: 300, height: 300, background: 'radial-gradient(circle, rgba(6,182,212,0.15) 0%, transparent 70%)', borderRadius: '50%' }} />
+          <div style={{ position: 'absolute', top: -100, right: -100, width: 300, height: 300, background: 'var(--cyan-bg-light)', borderRadius: '50%' }} />
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24, height: '100%', justifyContent: 'space-between' }}>
             <div>
@@ -297,14 +297,14 @@ const OwnerSubscription = () => {
                 <span style={{ 
                   padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1,
                   background: isActive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-                  color: isActive ? '#34d399' : '#f87171',
+                  color: isActive ? 'var(--success-text)' : 'var(--danger-text)',
                   border: isActive ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(239,68,68,0.3)'
                 }}>
                   {isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
-              <p style={{ fontSize: 15, color: '#cbd5e1', margin: '0 0 8px' }}>Billing period ends on <strong>{endDate}</strong>.</p>
-              <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>Renews at {displayPrice} with 0% platform transaction fees.</p>
+              <p style={{ fontSize: 15, color: 'rgb(31 33 36)', margin: '0 0 8px' }}>Billing period ends on <strong>{endDate}</strong>.</p>
+              <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>Renews at {displayPrice} with 0% platform transaction fees.</p>
             </div>
 
             <div style={{ display: 'flex', gap: 16 }}>
@@ -313,7 +313,7 @@ const OwnerSubscription = () => {
                 disabled={loading}
                 style={{ 
                   padding: '12px 24px', borderRadius: 12, border: 'none', 
-                  background: 'linear-gradient(135deg, #06b6d4, #4f46e5)', color: '#fff', 
+                  background: 'linear-gradient(135deg, #06b6d4, #4f46e5)', color: 'var(--text-primary)', 
                   fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 4px 14px rgba(6,182,212,0.3)',
                   transition: 'transform 0.2s',
                   opacity: loading ? 0.7 : 1
@@ -330,7 +330,7 @@ const OwnerSubscription = () => {
         {/* Upcoming Plan Card */}
         {hasUpcoming && (
           <div style={{ 
-            background: 'linear-gradient(145deg, rgba(30,41,59,0.7) 0%, rgba(15,23,42,0.9) 100%)', 
+            background: 'var(--bg-elevated)', 
             border: '1px dashed rgba(79, 70, 229, 0.4)', 
             borderRadius: 24, 
             padding: '32px',
@@ -338,16 +338,16 @@ const OwnerSubscription = () => {
             overflow: 'hidden',
             flex: '1 1 300px'
           }}>
-            <div style={{ position: 'absolute', top: -100, left: -100, width: 300, height: 300, background: 'radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%)', borderRadius: '50%' }} />
+            <div style={{ position: 'absolute', top: -100, left: -100, width: 300, height: 300, background: 'var(--bg-card-hover)', borderRadius: '50%' }} />
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24, height: '100%', justifyContent: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0, fontFamily: "'Outfit',sans-serif", textTransform: 'capitalize' }}>{upcomingPlanName}</h2>
-                <span style={{ background: 'rgba(79, 70, 229, 0.2)', color: '#a5b4fc', padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 800, letterSpacing: 1 }}>UPCOMING</span>
+                <span style={{ background: 'var(--border-medium)', color: '#a5b4fc', padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 800, letterSpacing: 1 }}>UPCOMING</span>
               </div>
               <div>
                 <p style={{ fontSize: 15, color: '#cbd5e1', margin: '0 0 8px' }}>Automatically starts on <strong>{endDate}</strong>.</p>
-                <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>Your plan is securely queued and will activate without any downtime.</p>
+                <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>Your plan is securely queued and will activate without any downtime.</p>
               </div>
             </div>
           </div>
@@ -359,18 +359,18 @@ const OwnerSubscription = () => {
         <h3 style={{ fontSize: 20, fontWeight: 700, margin: 0, fontFamily: "'Outfit',sans-serif" }}>Available SaaS Plans</h3>
         
         {/* Toggle */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: 100, padding: 4 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--border-light)', borderRadius: 100, padding: 4 }}>
           <button
             onClick={() => setBillingCycle('monthly')}
-            style={{ padding: '6px 16px', borderRadius: 100, border: 'none', background: billingCycle === 'monthly' ? '#7c3aed' : 'transparent', color: billingCycle === 'monthly' ? '#fff' : '#9ca3af', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+            style={{ padding: '6px 16px', borderRadius: 100, border: 'none', background: billingCycle === 'monthly' ? '#7c3aed' : 'transparent', color: billingCycle === 'monthly' ? 'var(--text-primary)' : 'var(--text-secondary)', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
           >
             Monthly
           </button>
           <button
             onClick={() => setBillingCycle('yearly')}
-            style={{ padding: '6px 16px', borderRadius: 100, border: 'none', background: billingCycle === 'yearly' ? '#7c3aed' : 'transparent', color: billingCycle === 'yearly' ? '#fff' : '#9ca3af', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
+            style={{ padding: '6px 16px', borderRadius: 100, border: 'none', background: billingCycle === 'yearly' ? '#7c3aed' : 'transparent', color: billingCycle === 'yearly' ? 'var(--text-primary)' : 'var(--text-secondary)', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            Yearly <span style={{ fontSize: 10, background: '#10b981', color: '#fff', padding: '2px 6px', borderRadius: 50, fontWeight: 800 }}>-{yearlyDiscountPercentage}%</span>
+            Yearly <span style={{ fontSize: 10, background: '#10b981', color: 'var(--text-primary)', padding: '2px 6px', borderRadius: 50, fontWeight: 800 }}>-{yearlyDiscountPercentage}%</span>
           </button>
         </div>
       </div>
@@ -379,29 +379,29 @@ const OwnerSubscription = () => {
         
         
           {/* Basic Plan */}
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column' }}>
-            <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#9ca3af' }}>Basic</h4>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-medium)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column' }}>
+            <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: 'var(--text-secondary)' }}>Basic</h4>
             <div style={{ fontSize: 36, fontWeight: 800, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>
               ₹{billingCycle === 'yearly' ? basicPriceYearly : basicPrice}
-              <span style={{ fontSize: 16, color: '#6b7280', fontWeight: 500 }}>/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
+              <span style={{ fontSize: 16, color: 'var(--text-tertiary)', fontWeight: 500 }}>/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
             </div>
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
               {basicFeatures.map((feature, idx) => (
-                <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#d1d5db' }}>
+                <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--text-secondary)' }}>
                   <span style={{ color: '#10b981' }}>✓</span> {feature}
                 </li>
               ))}
             </ul>
             {planName === 'basic' ? (
-              <button style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 600 }}>Current Plan</button>
+              <button style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1px solid var(--border-medium)', background: 'transparent', color: 'var(--text-primary)', fontSize: 14, fontWeight: 600 }}>Current Plan</button>
             ) : (
                <button
                 onClick={() => handleStartUpgrade('basic')}
                 disabled={loading}
                 style={{
                   width: '100%', padding: '12px', borderRadius: 12, border: 'none',
-                  background: planName === 'starter' || planName === 'pro' ? 'rgba(255,255,255,0.1)' : '#3b82f6',
-                  color: '#fff', fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
+                  background: planName === 'starter' || planName === 'pro' ? 'var(--border-hover)' : '#3b82f6',
+                  color: 'var(--text-primary)', fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
                   opacity: loading ? 0.7 : 1, transition: 'all 0.2s'
                 }}
               >
@@ -411,22 +411,22 @@ const OwnerSubscription = () => {
           </div>
 
           {/* Starter Plan */}
-          <div style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.05), rgba(5,150,105,0.02))', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: -1, right: 24, transform: 'translateY(-50%)', padding: '4px 12px', borderRadius: 50, fontSize: 11, fontWeight: 800, color: '#fff', background: 'linear-gradient(135deg,#10b981,#059669)' }}>Highly Recommended</div>
+          <div style={{ background: 'var(--success-light)', border: '1px solid var(--success-border)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: -1, right: 24, transform: 'translateY(-50%)', padding: '4px 12px', borderRadius: 50, fontSize: 11, fontWeight: 800, color: 'var(--text-primary)', background: 'linear-gradient(135deg,#10b981,#059669)' }}>Highly Recommended</div>
             <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#10b981' }}>Starter</h4>
           <div style={{ fontSize: 36, fontWeight: 800, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>
             ₹{billingCycle === 'yearly' ? starterPriceYearly : starterPrice}
-            <span style={{ fontSize: 16, color: '#6b7280', fontWeight: 500 }}>/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
+            <span style={{ fontSize: 16, color: 'var(--text-tertiary)', fontWeight: 500 }}>/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
           </div>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
             {starterFeatures.map((feature, idx) => (
-              <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#d1d5db' }}>
+              <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--text-secondary)' }}>
                 <span style={{ color: '#10b981' }}>✓</span> {feature}
               </li>
             ))}
           </ul>
           {planName === 'starter' ? (
-            <button style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 600 }}>Current Plan</button>
+            <button style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1px solid var(--border-medium)', background: 'transparent', color: 'var(--text-primary)', fontSize: 14, fontWeight: 600 }}>Current Plan</button>
           ) : (
              <button
               onClick={() => handleStartUpgrade('starter')}
@@ -441,27 +441,27 @@ const OwnerSubscription = () => {
         </div>
 
         {/* Pro Plan */}
-        <div style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.1), rgba(79,70,229,0.05))', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: -1, right: 24, transform: 'translateY(-50%)', padding: '4px 12px', borderRadius: 50, fontSize: 11, fontWeight: 800, color: '#fff', background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>Most Popular</div>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--purple-text)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: -1, right: 24, transform: 'translateY(-50%)', padding: '4px 12px', borderRadius: 50, fontSize: 11, fontWeight: 800, color: 'var(--text-primary)', background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>Most Popular</div>
           <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#c4b5fd' }}>Pro</h4>
           <div style={{ fontSize: 36, fontWeight: 800, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>
             ₹{billingCycle === 'yearly' ? proPriceYearly : proPrice}
-            <span style={{ fontSize: 16, color: '#6b7280', fontWeight: 500 }}>/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
+            <span style={{ fontSize: 16, color: 'var(--text-tertiary)', fontWeight: 500 }}>/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
           </div>
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px', display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
             {proFeatures.map((feature, idx) => (
-              <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#fff' }}>
+              <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--text-primary)' }}>
                 <span style={{ color: '#06b6d4' }}>✓</span> {feature}
               </li>
             ))}
           </ul>
           {planName === 'pro' ? (
-            <button style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: '#06b6d4', color: '#080c14', fontSize: 14, fontWeight: 700, cursor: 'not-allowed' }} disabled>Current Plan</button>
+            <button style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: '#06b6d4', color: 'var(--bg-shell)', fontSize: 14, fontWeight: 700, cursor: 'not-allowed' }} disabled>Current Plan</button>
           ) : (
             <button
               onClick={() => handleStartUpgrade('pro')}
               disabled={loading}
-              style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: '#06b6d4', color: '#080c14', fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'transform 0.2s', opacity: loading ? 0.7 : 1 }}
+              style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: '#06b6d4', color: 'var(--bg-shell)', fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'transform 0.2s', opacity: loading ? 0.7 : 1 }}
               onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
             >

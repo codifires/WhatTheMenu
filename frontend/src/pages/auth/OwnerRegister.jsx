@@ -75,7 +75,7 @@ const OwnerRegister = () => {
       period: '',
       description: 'Full Pro features, no credit card required',
       features: ['Everything in Pro Plan', 'Advanced Analytics', 'Custom Branding', 'Multiple QR Codes', 'Priority Support'],
-      color: '#34d399',
+      color: 'var(--success-text)',
       gradient: 'linear-gradient(135deg, rgba(52,211,153,0.18), rgba(16,185,129,0.05))',
       border: 'rgba(52,211,153,0.5)',
       icon: '🎁',
@@ -204,13 +204,13 @@ const OwnerRegister = () => {
   // ── Shared input styles ──
   const input = {
     width: '100%', padding: '12px 14px 12px 42px', borderRadius: 12,
-    border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)',
-    color: '#fff', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+    border: '1px solid rgba(255,255,255,0.1)', background: 'var(--border-light)',
+    color: 'var(--text-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box',
     transition: 'border-color 0.2s',
   }
   const focus = e => e.target.style.borderColor = 'rgba(79,70,229,0.6)'
-  const blur  = e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'
-  const label = { fontSize: 13, fontWeight: 600, color: '#d1d5db', display: 'block', marginBottom: 8 }
+  const blur  = e => e.target.style.borderColor = 'var(--border-hover)'
+  const label = { fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 8 }
   const icon  = { position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16 }
 
   // ── Progress segments ──
@@ -222,19 +222,19 @@ const OwnerRegister = () => {
             flex: 1, height: 3, borderRadius: 2,
             background: step >= s
               ? 'linear-gradient(90deg,#4f46e5,#06b6d4)'
-              : 'rgba(255,255,255,0.08)',
+              : 'var(--border-medium)',
             transition: 'background 0.4s'
           }} />
         ))}
       </div>
-      <p style={{ fontSize: 12, color: '#4b5563', marginTop: 8 }}>
+      <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 8 }}>
         Step {step} of 3 — {stage.subtitle}
       </p>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#080c14', display: 'flex', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-shell)', display: 'flex', fontFamily: "'Inter', sans-serif" }}>
 
       {/* ─── LEFT PANEL (desktop only) ─── */}
       <div className="reg-left-panel" style={{
@@ -248,7 +248,7 @@ const OwnerRegister = () => {
           <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           </div>
-          <span style={{ fontSize: 18, fontWeight: 800, color: '#fff', fontFamily: "'Outfit',sans-serif" }}>QRMenu <span style={{ color: '#67e8f9' }}>Café</span></span>
+          <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', fontFamily: "'Outfit',sans-serif" }}>QRMenu <span style={{ color: '#67e8f9' }}>Café</span></span>
         </div>
 
         {/* Stage image — full bleed */}
@@ -284,7 +284,7 @@ const OwnerRegister = () => {
             ))}
           </div>
 
-          <h2 style={{ fontSize: 26, fontWeight: 900, color: '#fff', margin: '0 0 10px', fontFamily: "'Outfit',sans-serif", lineHeight: 1.2, transition: 'all 0.4s' }}>
+          <h2 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 10px', fontFamily: "'Outfit',sans-serif", lineHeight: 1.2, transition: 'all 0.4s' }}>
             {stage.imageCaption}
           </h2>
           <p style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
@@ -299,22 +299,22 @@ const OwnerRegister = () => {
               <div style={{
                 width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center',
                 justifyContent: 'center', fontSize: 10, fontWeight: 700, flexShrink: 0,
-                background: step >= s.step ? 'linear-gradient(135deg,#4f46e5,#06b6d4)' : 'rgba(255,255,255,0.1)',
-                color: step >= s.step ? '#fff' : '#6b7280',
+                background: step >= s.step ? 'linear-gradient(135deg,#4f46e5,#06b6d4)' : 'var(--border-hover)',
+                color: step >= s.step ? 'var(--text-primary)' : 'var(--text-tertiary)',
                 border: step === s.step ? '2px solid rgba(6,182,212,0.5)' : 'none',
                 boxShadow: step === s.step ? '0 0 12px rgba(79,70,229,0.6)' : 'none',
                 transition: 'all 0.4s'
               }}>
                 {step > s.step ? '✓' : s.step}
               </div>
-              <span style={{ fontSize: 12, color: step >= s.step ? '#e5e7eb' : '#4b5563', fontWeight: step === s.step ? 600 : 400, transition: 'all 0.4s' }}>
+              <span style={{ fontSize: 12, color: step >= s.step ? 'var(--text-primary)' : 'var(--text-tertiary)', fontWeight: step === s.step ? 600 : 400, transition: 'all 0.4s' }}>
                 {s.title}
               </span>
             </div>
           ))}
         </div>
 
-        <p style={{ position: 'absolute', bottom: 16, left: 40, fontSize: 11, color: '#374151', zIndex: 2 }}>
+        <p style={{ position: 'absolute', bottom: 16, left: 40, fontSize: 11, color: 'var(--border-hover)', zIndex: 2 }}>
           © {new Date().getFullYear()} QRMenu SaaS Platform
         </p>
       </div>
@@ -326,9 +326,9 @@ const OwnerRegister = () => {
 
         <div style={{ width: '100%', maxWidth: 440, position: 'relative' }}>
           {/* Back to home */}
-          <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#6b7280', textDecoration: 'none', marginBottom: 28 }}
+          <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-tertiary)', textDecoration: 'none', marginBottom: 28 }}
             onMouseEnter={e => e.currentTarget.style.color = '#67e8f9'}
-            onMouseLeave={e => e.currentTarget.style.color = '#6b7280'}>
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>
             <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"/></svg>
             Back to Home
           </Link>
@@ -339,14 +339,14 @@ const OwnerRegister = () => {
               <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, boxShadow: '0 8px 24px rgba(79,70,229,0.4)' }}>☕</div>
               <div>
                 <p style={{ fontSize: 11, fontWeight: 700, color: '#06b6d4', letterSpacing: 2, textTransform: 'uppercase', margin: 0 }}>Café Registration</p>
-                <h1 style={{ fontSize: 22, fontWeight: 900, color: '#fff', margin: 0, fontFamily: "'Outfit',sans-serif" }}>Register Your Café</h1>
+                <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', margin: 0, fontFamily: "'Outfit',sans-serif" }}>Register Your Café</h1>
               </div>
             </div>
             <ProgressBar />
           </div>
 
           {/* Form Card */}
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28 }}>
+          <div style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28 }}>
 
             {/* ══════════ STEP 1: Account ══════════ */}
             {step === 1 && (
@@ -365,7 +365,7 @@ const OwnerRegister = () => {
                   <div style={{ position: 'relative' }}>
                     <span style={icon}>📧</span>
                     <input type="email" value={form.email} onChange={handleEmailChange}
-                      placeholder="owner@mycafe.com" required style={{...input, borderColor: errors.email ? '#ef4444' : 'rgba(255,255,255,0.1)'}} onFocus={focus} onBlur={blur} />
+                      placeholder="owner@mycafe.com" required style={{...input, borderColor: errors.email ? '#ef4444' : 'var(--border-hover)'}} onFocus={focus} onBlur={blur} />
                   </div>
                   {errors.email && <span style={{ color: '#ef4444', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.email}</span>}
                 </div>
@@ -379,7 +379,7 @@ const OwnerRegister = () => {
                       placeholder="Min. 6 characters" required
                       style={{ ...input, paddingRight: 44 }} onFocus={focus} onBlur={blur} />
                     <button type="button" onClick={() => setShowPass(!showPass)}
-                      style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#6b7280', padding: 0 }}>
+                      style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-tertiary)', padding: 0 }}>
                       {showPass ? '🙈' : '👁️'}
                     </button>
                   </div>
@@ -395,7 +395,7 @@ const OwnerRegister = () => {
                   </div>
                 </div>
 
-                <button type="submit" style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: '#fff', background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', boxShadow: '0 8px 24px rgba(79,70,229,0.35)', marginTop: 4, transition: 'transform 0.2s, opacity 0.2s' }}
+                <button type="submit" style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', boxShadow: '0 8px 24px rgba(79,70,229,0.35)', marginTop: 4, transition: 'transform 0.2s, opacity 0.2s' }}
                   onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
                   onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
                   Continue to Café Details →
@@ -411,7 +411,7 @@ const OwnerRegister = () => {
                   <div style={{ position: 'relative' }}>
                     <span style={icon}>📞</span>
                     <input type="tel" value={form.phone} onChange={handlePhoneChange}
-                      placeholder="9876543210" required style={{...input, borderColor: errors.phone ? '#ef4444' : 'rgba(255,255,255,0.1)'}} onFocus={focus} onBlur={blur} />
+                      placeholder="9876543210" required style={{...input, borderColor: errors.phone ? '#ef4444' : 'var(--border-hover)'}} onFocus={focus} onBlur={blur} />
                   </div>
                   {errors.phone && <span style={{ color: '#ef4444', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.phone}</span>}
                 </div>
@@ -429,11 +429,11 @@ const OwnerRegister = () => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 4 }}>
                   <button type="button" onClick={() => setStep(1)}
-                    style={{ padding: '14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#9ca3af', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
+                    style={{ padding: '14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg-card-hover)', color: 'var(--text-secondary)', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
                     ← Back
                   </button>
                   <button type="submit"
-                    style={{ padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: '#fff', background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', boxShadow: '0 8px 24px rgba(79,70,229,0.35)', transition: 'transform 0.2s' }}
+                    style={{ padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', boxShadow: '0 8px 24px rgba(79,70,229,0.35)', transition: 'transform 0.2s' }}
                     onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
                     onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
                     Choose Plan →
@@ -450,35 +450,35 @@ const OwnerRegister = () => {
                     <div key={plan.id} onClick={() => set('plan_name', plan.id)}
                       style={{
                         borderRadius: 14, padding: '16px', cursor: 'pointer', transition: 'all 0.25s',
-                        background: form.plan_name === plan.id ? plan.gradient : 'rgba(255,255,255,0.02)',
-                        border: `1.5px solid ${form.plan_name === plan.id ? plan.border : 'rgba(255,255,255,0.07)'}`,
+                        background: form.plan_name === plan.id ? plan.gradient : 'var(--bg-card)',
+                        border: `1.5px solid ${form.plan_name === plan.id ? plan.border : 'var(--border-medium)'}`,
                         position: 'relative',
                         transform: form.plan_name === plan.id ? 'scale(1.01)' : 'scale(1)',
                         boxShadow: form.plan_name === plan.id ? `0 4px 20px ${plan.border}` : 'none',
                       }}>
                       {plan.badge && (
-                        <span style={{ position: 'absolute', top: -9, right: 14, background: plan.badgeBg, color: '#fff', fontSize: 9, fontWeight: 800, padding: '3px 10px', borderRadius: 20, letterSpacing: 1.5, textTransform: 'uppercase' }}>{plan.badge}</span>
+                        <span style={{ position: 'absolute', top: -9, right: 14, background: plan.badgeBg, color: 'var(--text-primary)', fontSize: 9, fontWeight: 800, padding: '3px 10px', borderRadius: 20, letterSpacing: 1.5, textTransform: 'uppercase' }}>{plan.badge}</span>
                       )}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 42, height: 42, borderRadius: 12, background: plan.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: plan.id === 'free' ? 22 : 18, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+                        <div style={{ width: 42, height: 42, borderRadius: 12, background: plan.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: plan.id === 'free' ? 22 : 18, fontWeight: 800, color: 'var(--text-primary)', flexShrink: 0 }}>
                           {plan.icon}
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: '#e5e7eb' }}>{plan.name}</span>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{plan.name}</span>
                             <span style={{ fontSize: plan.id === 'free' ? 14 : 18, fontWeight: 800, color: plan.color }}>
-                              {plan.priceLabel(trialDays)}<span style={{ fontSize: 10, color: '#6b7280', fontWeight: 400 }}>{plan.period}</span>
+                              {plan.priceLabel(trialDays)}<span style={{ fontSize: 10, color: 'var(--text-tertiary)', fontWeight: 400 }}>{plan.period}</span>
                             </span>
                           </div>
-                          <p style={{ fontSize: 11, color: plan.id === 'free' ? '#6ee7b7' : '#6b7280', margin: '2px 0 6px' }}>{plan.description}</p>
+                          <p style={{ fontSize: 11, color: plan.id === 'free' ? '#6ee7b7' : 'var(--text-tertiary)', margin: '2px 0 6px' }}>{plan.description}</p>
                           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                             {plan.features.map(f => (
-                              <span key={f} style={{ fontSize: 10, color: plan.id === 'free' && form.plan_name === 'free' ? '#6ee7b7' : '#9ca3af', background: 'rgba(255,255,255,0.05)', padding: '1px 7px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.06)' }}>✓ {f}</span>
+                              <span key={f} style={{ fontSize: 10, color: plan.id === 'free' && form.plan_name === 'free' ? '#6ee7b7' : 'var(--text-secondary)', background: 'var(--border-light)', padding: '1px 7px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.06)' }}>✓ {f}</span>
                             ))}
                           </div>
                         </div>
                         {/* Radio */}
-                        <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${form.plan_name === plan.id ? plan.color : 'rgba(255,255,255,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'border-color 0.2s' }}>
+                        <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${form.plan_name === plan.id ? plan.color : 'var(--border-hover)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'border-color 0.2s' }}>
                           {form.plan_name === plan.id && <div style={{ width: 9, height: 9, borderRadius: '50%', background: plan.color }} />}
                         </div>
                       </div>
@@ -503,16 +503,16 @@ const OwnerRegister = () => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <button type="button" onClick={() => setStep(2)}
-                    style={{ padding: '14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: '#9ca3af', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
+                    style={{ padding: '14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg-card-hover)', color: 'var(--text-secondary)', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
                     ← Back
                   </button>
                   <button type="submit" disabled={loading}
-                    style={{ padding: '14px', borderRadius: 12, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', fontSize: 15, fontWeight: 700, color: '#fff', background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', opacity: loading ? 0.7 : 1, boxShadow: '0 8px 24px rgba(79,70,229,0.35)', transition: 'transform 0.2s' }}
+                    style={{ padding: '14px', borderRadius: 12, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', opacity: loading ? 0.7 : 1, boxShadow: '0 8px 24px rgba(79,70,229,0.35)', transition: 'transform 0.2s' }}
                     onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = 'translateY(-1px)' }}
                     onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
                     {loading ? (
                       <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                        <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+                        <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'var(--text-primary)', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
                         Registering...
                       </span>
                     ) : 'Register Café 🎉'}
@@ -523,7 +523,7 @@ const OwnerRegister = () => {
 
           </div>
 
-          <p style={{ textAlign: 'center', marginTop: 24, fontSize: 13, color: '#4b5563' }}>
+          <p style={{ textAlign: 'center', marginTop: 24, fontSize: 13, color: 'var(--text-tertiary)' }}>
             Already registered?{' '}
             <Link to="/owner/login" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: 600 }}>Sign in →</Link>
           </p>
