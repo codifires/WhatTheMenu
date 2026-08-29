@@ -214,7 +214,7 @@ export default function LandingPage() {
   }, [billingCycle, rawPrices])
 
   return (
-    <div style={{ background: 'var(--bg-shell)', color: 'var(--text-primary)', fontFamily: "'Inter', system-ui, sans-serif", overflowX: 'hidden' }}>
+    <div style={{ background: '#0f151fff', color: 'var(--text-primary)', fontFamily: "'Inter', system-ui, sans-serif", overflowX: 'hidden' }}>
 
       {/* ═══════════════ NAVBAR ═══════════════ */}
       <header style={{
