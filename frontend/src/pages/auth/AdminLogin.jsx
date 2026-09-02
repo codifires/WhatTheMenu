@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import ThemeToggle from '../../components/ThemeToggle';
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
@@ -35,10 +36,10 @@ const AdminLogin = () => {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-shell)', display: 'flex', fontFamily: "'Inter', sans-serif" }}>
       {/* Left panel */}
-      <div style={{ display: 'none', flex: 1, background: 'linear-gradient(145deg, #1a0a3c 0%, #0f0a28 50%, #080c14 100%)', padding: 48, flexDirection: 'column', justifyContent: 'space-between', borderRight: '1px solid rgba(124,58,237,0.15)' }} className="admin-left-panel">
+      <div style={{ display: 'none', flex: 1, background: 'var(--bg-admin-gradient)', padding: 48, flexDirection: 'column', justifyContent: 'space-between', borderRight: '1px solid rgba(124,58,237,0.15)' }} className="admin-left-panel">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
           </div>
           <span style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', fontFamily: "'Outfit',sans-serif" }}>QRMenu <span style={{ color: '#a78bfa' }}>Admin</span></span>
         </div>
@@ -76,7 +77,7 @@ const AdminLogin = () => {
           <div style={{ marginBottom: 36 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(124,58,237,0.4)' }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
               </div>
               <div>
                 <p style={{ fontSize: 11, fontWeight: 700, color: '#7c3aed', letterSpacing: 2, textTransform: 'uppercase', margin: 0 }}>Super Admin</p>

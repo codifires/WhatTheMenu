@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import ThemeToggle from '../components/ThemeToggle';
 import { useState, useEffect, useRef } from 'react'
 import { publicAPI, SOCKET_URL } from '../services/api'
 import { io } from 'socket.io-client'
@@ -93,8 +94,6 @@ const DEFAULT_PLANS = [
     features: ['Digital QR Menu', 'Basic Analytics', 'Up to 50 Menu Items', 'Email Support'],
     cta: 'Select Starter',
     popular: false,
-    badge: 'Highly Recommended',
-    badgeBg: '#10b981',
     id: 'starter',
     titleColor: '#10b981',
     btnBg: '#3b82f6',
@@ -214,14 +213,14 @@ export default function LandingPage() {
   }, [billingCycle, rawPrices])
 
   return (
-    <div style={{ background: '#0f151fff', color: 'var(--text-primary)', fontFamily: "'Inter', system-ui, sans-serif", overflowX: 'hidden' }}>
+    <div style={{ background: 'var(--bg-shell)', color: 'var(--text-primary)', fontFamily: "'Inter', system-ui, sans-serif", overflowX: 'hidden' }}>
 
       {/* ═══════════════ NAVBAR ═══════════════ */}
       <header style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        background: scrolled ? 'rgba(8,12,20,0.92)' : 'transparent',
+        background: scrolled ? 'var(--bg-topbar)' : 'transparent',
         backdropFilter: scrolled ? 'blur(16px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
+        borderBottom: scrolled ? '1px solid var(--border-light)' : '1px solid transparent',
         transition: 'all 0.3s ease',
       }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -245,6 +244,7 @@ export default function LandingPage() {
 
           {/* CTA */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <ThemeToggle />
             <Link to="/owner/login" style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)', textDecoration: 'none', padding: '8px 4px' }}
               className="hidden-mobile">Owner Login</Link>
             <Link to="/owner/register" style={{
@@ -256,7 +256,7 @@ export default function LandingPage() {
             }}
             onMouseEnter={e => { e.currentTarget.style.transform='scale(1.04)'; e.currentTarget.style.boxShadow='0 8px 30px rgba(124,58,237,0.5)' }}
             onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 4px 20px rgba(124,58,237,0.4)' }}>
-              Get Started →
+              Start For Free →
             </Link>
           </div>
         </div>
@@ -372,7 +372,7 @@ export default function LandingPage() {
 
       {/* ═══════════════ STATS ═══════════════ */}
       {realCafeCount >= 20 && (
-        <section style={{ padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <section style={{ padding: '60px 24px', borderTop: '1px solid var(--border-light)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, textAlign: 'center' }}>
             {[
               { val: `${cafes}+`, label: 'Cafés Onboarded' },
@@ -418,7 +418,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ FEATURES ═══════════════ */}
-      <section id="features" style={{ padding: '100px 24px', background: 'rgba(255,255,255,0.01)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <section id="features" style={{ padding: '100px 24px', background: 'var(--bg-main)', borderTop: '1px solid var(--border-light)' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
             <p style={{ color: '#7c3aed', fontSize: 14, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 12 }}>Features</p>
@@ -430,6 +430,7 @@ export default function LandingPage() {
                 padding: '28px 28px', borderRadius: 18,
                 border: '1px solid rgba(255,255,255,0.07)',
                 background: 'var(--bg-card)',
+                display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
                 transition: 'transform 0.3s, border-color 0.3s, box-shadow 0.3s',
               }}
               onMouseEnter={e => { e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.borderColor=`${f.color}45`; e.currentTarget.style.boxShadow=`0 20px 60px ${f.color}12` }}
@@ -446,9 +447,9 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ PRICING ═══════════════ */}
-      <section id="pricing" style={{ padding: '100px 24px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <section id="pricing" style={{ padding: '100px 24px', borderTop: '1px solid var(--border-light)' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, marginBottom: 40 }}>
             <h2 style={{ fontSize: 'clamp(24px, 3vw, 32px)', fontWeight: 800, margin: 0, fontFamily: "'Outfit',sans-serif" }}>Available SaaS Plans</h2>
             <div style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--border-light)', borderRadius: 100, padding: 6 }}>
               <button
@@ -473,7 +474,7 @@ export default function LandingPage() {
                 background: p.popular ? 'linear-gradient(135deg, rgba(124,58,237,0.05), rgba(79,70,229,0.02))' : 'var(--bg-card)',
               }}>
                 {(p.badge || p.popular) && (
-                  <div style={{ position: 'absolute', top: -1, right: 28, transform: 'translateY(-50%)', padding: '5px 16px', borderRadius: 50, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', background: p.badgeBg || '#7c3aed' }}>
+                  <div style={{ position: 'absolute', top: -1, left: '50%', transform: 'translate(-50%, -50%)', padding: '5px 16px', borderRadius: 50, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', background: p.badgeBg || '#7c3aed' }}>
                     {p.badge || 'Most Popular'}
                   </div>
                 )}
@@ -486,7 +487,7 @@ export default function LandingPage() {
                 <ul style={{ listStyle: 'none', margin: '0 0 32px', padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {p.features.map(f => (
                     <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14, color: 'var(--text-secondary)' }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={p.tickColor || '#10b981'} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                         <polyline points="20 6 9 17 4 12"></polyline>
                       </svg>
                       {f}
@@ -511,7 +512,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ CTA BANNER ═══════════════ */}
-      <section style={{ padding: '100px 24px', borderTop: '1px solid rgba(255,255,255,0.06)', position: 'relative', overflow: 'hidden' }}>
+      <section style={{ padding: '100px 24px', borderTop: '1px solid var(--border-light)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 50%, rgba(124,58,237,0.18), transparent 70%)', pointerEvents: 'none' }} />
         <div style={{ maxWidth: 680, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
           <h2 style={{ fontSize: 'clamp(28px,4vw,50px)', fontWeight: 900, lineHeight: 1.2, marginBottom: 20, fontFamily: "'Outfit',sans-serif" }}>
@@ -540,12 +541,12 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════ FOOTER ═══════════════ */}
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '64px 24px 32px' }}>
+      <footer style={{ borderTop: '1px solid var(--border-light)', padding: '64px 24px 32px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 48 }}>
           
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 32 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 300 }}>
-              <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', marginBottom: 8 }}>
+              <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 14, textDecoration: 'none', marginBottom: 8, width: 'fit-content' }}>
                 <img src="/logo.png" alt="WTM Logo" style={{ height: 120, width: 120, objectFit: 'cover', borderRadius: '50%' }} />
                 {/* <span style={{ fontWeight: 900, fontSize: 32, fontFamily: "'Outfit',sans-serif", color: 'var(--text-primary)' }}>WTM</span> */}
               </Link>
@@ -569,8 +570,8 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 32, display: 'flex', justifyContent: 'center' }}>
-            <p style={{ fontSize: 14, color: 'var(--text-tertiary)', margin: 0 }}>© {new Date().getFullYear()} What on the Menu. All rights reserved.</p>
+          <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 32, display: 'flex', justifyContent: 'center' }}>
+            <p style={{ fontSize: 14, color: 'var(--text-tertiary)', margin: 0 }}>© 2024 What on the Menu. All rights reserved.</p>
           </div>
 
         </div>
@@ -585,7 +586,7 @@ export default function LandingPage() {
           .hidden-mobile { display: none !important; }
         }
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #080c14; }
+        ::-webkit-scrollbar-track { background: var(--bg-shell); }
         ::-webkit-scrollbar-thumb { background: #7c3aed; border-radius: 3px; }
       `}</style>
     </div>

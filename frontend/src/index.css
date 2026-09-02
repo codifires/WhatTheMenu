@@ -43,6 +43,8 @@
 :root {
   /* DARK MODE (DEFAULT) */
   --bg-shell: #0f172a;
+  --bg-panel-gradient: linear-gradient(145deg, #0a1a2c 0%, #080f1e 50%, #080c14 100%);
+  --bg-admin-gradient: linear-gradient(145deg, #1a0a3c 0%, #0f0a28 50%, #080c14 100%);
   --bg-sidebar: rgba(10,13,24,0.98);
   --bg-topbar: rgba(10,13,24,0.85);
   --bg-main: #0B0F19;
@@ -86,6 +88,8 @@
 [data-theme='light'] {
   /* LIGHT MODE */
   --bg-shell: #f8fafc;
+  --bg-panel-gradient: linear-gradient(145deg, #e0e7ff 0%, #f1f5f9 50%, #f8fafc 100%);
+  --bg-admin-gradient: linear-gradient(145deg, #f3e8ff 0%, #f1f5f9 50%, #f8fafc 100%);
   --bg-sidebar: #ffffff;
   --bg-topbar: rgba(255,255,255,0.95);
   --bg-main: #f1f5f9;

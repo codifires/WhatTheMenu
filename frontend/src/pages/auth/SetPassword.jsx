@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import ThemeToggle from '../../components/ThemeToggle';
 import { Utensils, Lock, ArrowRight, CheckCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../services/api'

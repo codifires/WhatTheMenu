@@ -80,7 +80,7 @@ const PaymentManagement = () => {
       {/* ── Header ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 28, animation: 'fadeIn 0.4s ease' }}>
         <div>
-          <h1 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 8px', fontFamily: "'Outfit',sans-serif", background: 'linear-gradient(135deg, #000, #000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <h1 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 8px', fontFamily: "'Outfit',sans-serif", color: 'var(--text-primary)' }}>
             Payment Management
           </h1>
           <p style={{ fontSize: 15, color: 'var(--text-secondary)', margin: 0 }}>Track revenue, verify UPI transactions, and collect cash.</p>

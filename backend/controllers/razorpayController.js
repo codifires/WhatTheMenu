@@ -683,11 +683,11 @@ const verifyOrderPayment = async (req, res, next) => {
         table_number: order.table_number,
         items: order.items.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
         total_amount: order.total_amount,
-        payment_method: 'razorpay',
-        payment_transaction_id: razorpay_payment_id,
-        payment_status: 'received',
-        order_created_at: order.created_at,
-        payment_confirmed_at: new Date()
+        payment_method: 'online',
+          payment_method_details: razorpay_payment_id,
+          payment_status: 'received',
+          order_created_at: order.created_at,
+          payment_date: new Date()
       });
     } catch (revErr) {
       console.warn('Revenue audit note:', revErr.message);
@@ -822,11 +822,11 @@ const handleOrderWebhook = async (req, res, next) => {
             table_number: order.table_number,
             items: order.items.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
             total_amount: order.total_amount,
-            payment_method: 'razorpay',
-            payment_transaction_id: paymentEntity.id,
-            payment_status: 'received',
-            order_created_at: order.created_at,
-            payment_confirmed_at: new Date()
+            payment_method: 'online',
+              payment_method_details: paymentEntity.id,
+              payment_status: 'received',
+              order_created_at: order.created_at,
+              payment_date: new Date()
           });
         } catch (revErr) {
           console.warn('Revenue audit (webhook):', revErr.message);
