@@ -196,6 +196,10 @@ const OwnerLayout = ({ children }) => {
 
   const pageTitle = NAV_LINKS.find(l => l.end ? location.pathname === l.to : location.pathname.startsWith(l.to))?.label || 'Dashboard'
 
+  const isRestricted = user?.subscription_status === 'suspended' 
+    && location.pathname !== '/owner/subscription' 
+    && location.pathname !== '/owner/support';
+
   return (
     <div style={S.shell}>
       {sidebarOpen && <div style={S.overlay} onClick={() => setSidebarOpen(false)} />}
@@ -224,7 +228,14 @@ const OwnerLayout = ({ children }) => {
           </div>
 
           <div id="topbar-alert-portal" className="owner-topbar-alert" style={{ flex: 1, margin: '0 24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-            {daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 3 && (
+            {user?.subscription_status === 'expired' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', padding: '6px 12px', borderRadius: 8, color: 'var(--danger-text)', fontSize: 13, fontWeight: 600 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  Your plan has expired! Your QR Menu is currently unavailable to customers.
+                  <Link to="/owner/subscription" style={{ color: 'var(--text-primary)', marginLeft: 8, textDecoration: 'underline' }}>Renew Now</Link>
+                </div>
+              )}
+              {daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 3 && user?.subscription_status !== 'expired' && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--warning-light)', border: '1px solid rgba(245,158,11,0.3)', padding: '6px 12px', borderRadius: 8, color: '#fbbf24', fontSize: 13, fontWeight: 600 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 {daysRemaining === 0 ? 'Your plan expires today!' : `Your plan expires in ${daysRemaining} day${daysRemaining > 1 ? 's' : ''}!`}
@@ -234,7 +245,7 @@ const OwnerLayout = ({ children }) => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Link to={`/menu/${user?.id}`} target="_blank" title="Preview Store"
+            <Link to={`/${user?.id}/menu`} target="_blank" title="Preview Store"
               style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--bg-card-hover)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-secondary)', textDecoration: 'none', transition: 'all 0.2s' }}
               onMouseEnter={e => { e.currentTarget.style.background = 'var(--success-light)'; e.currentTarget.style.color = '#10b981' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card-hover)'; e.currentTarget.style.color = 'var(--text-secondary)' }}>
@@ -263,7 +274,27 @@ const OwnerLayout = ({ children }) => {
         </header>
 
         <main style={S.content} className="owner-content">
-          {children}
+          {isRestricted ? (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '40px 20px', minHeight: '60vh', animation: 'fadeIn 0.5s ease' }}>
+              <div style={{ fontSize: 80, marginBottom: 24, filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.2))' }}>🔒</div>
+              <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 900, color: 'var(--danger-text)', margin: '0 0 16px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>Access Restricted</h2>
+              <p style={{ fontSize: 16, color: 'var(--text-secondary)', maxWidth: 500, lineHeight: 1.6, marginBottom: 40 }}>
+                Your portal access is currently restricted because your account has been suspended. 
+                <br/><br/>
+                Please renew your subscription to restore full access to your menu, orders, and features.
+              </p>
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <Link to="/owner/subscription" style={{ padding: '14px 32px', borderRadius: 12, background: 'linear-gradient(135deg, #ef4444, #f97316)', color: 'white', textDecoration: 'none', fontSize: 15, fontWeight: 700, transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 8px 20px rgba(239,68,68,0.3)' }} onMouseEnter={e => { e.currentTarget.style.transform='scale(1.05)'; e.currentTarget.style.boxShadow='0 10px 25px rgba(239,68,68,0.4)' }} onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 8px 20px rgba(239,68,68,0.3)' }}>
+                  View Plans & Renew →
+                </Link>
+                <Link to="/owner/support" style={{ padding: '14px 32px', borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border-medium)', color: 'var(--text-primary)', textDecoration: 'none', fontSize: 15, fontWeight: 700, transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background='var(--border-light)'} onMouseLeave={e => e.currentTarget.style.background='var(--bg-input)'}>
+                  Contact Support
+                </Link>
+              </div>
+            </div>
+          ) : (
+            children
+          )}
         </main>
       </div>
 

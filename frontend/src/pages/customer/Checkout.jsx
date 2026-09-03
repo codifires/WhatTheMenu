@@ -45,7 +45,7 @@ const Checkout = () => {
 
   useEffect(() => {
     if (items.length === 0) {
-      navigate(`/menu/${cafeId}/cart`)
+      navigate(`/${cafeId}/menu/cart`)
       return
     }
     customerAPI.getCafeMenu(cafeId).then(res => setCafe(res.data.data.cafe)).catch(() => {})
@@ -113,7 +113,7 @@ const Checkout = () => {
 
                 toast.success('⚡ Payment Successful! Placing your order... 🎉', { duration: 4000 })
                 clearCart()
-                navigate(`/menu/${cafeId}/orders?track=${verifyRes.data.data.order_number}`)
+                navigate(`/${cafeId}/menu/orders?track=${verifyRes.data.data.order_number}`)
               } else {
                 toast.error('Payment verification failed.')
               }

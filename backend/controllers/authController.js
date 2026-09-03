@@ -132,12 +132,12 @@ const login = async (req, res, next) => {
     }
 
     // Check if cafe is suspended
-    if (role === 'owner' && !user.is_active) {
-      return res.status(403).json({
-        success: false,
-        message: 'Your account has been suspended. Contact support.'
-      });
-    }
+    // if (role === 'owner' && !user.is_active) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: 'Your account has been suspended. Contact support.'
+    //   });
+    // }
 
     // Check maintenance mode for owners
     if (role === 'owner') {

@@ -123,6 +123,7 @@ export default function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [plans, setPlans] = useState(DEFAULT_PLANS)
   const [billingCycle, setBillingCycle] = useState('monthly')
+  const [contactEmail, setContactEmail] = useState('support@whatthemenu.com')
   const [rawPrices, setRawPrices] = useState({
     basic_price: 199, starter_price: 299, pro_price: 499,
     yearly_discount_percentage: 20
@@ -137,6 +138,7 @@ export default function LandingPage() {
       const d = res.data?.data;
       if (d) {
         setRealCafeCount(d.cafe_count || 0)
+        setContactEmail(d.contact_email || 'support@whatthemenu.com')
         setRawPrices({
           basic_price: d.basic_price || 199,
           starter_price: d.starter_price || 299,
@@ -235,11 +237,17 @@ export default function LandingPage() {
           {/* Desktop links */}
           <nav style={{ display: 'flex', gap: 32, alignItems: 'center' }} className="hidden-mobile">
             {['Features','How it works','Pricing'].map(l => (
-              <a key={l} href={`#${l.toLowerCase().replace(/ /g,'-')}`}
+              <a key={l} href={`/#${l.toLowerCase().replace(/ /g,'-')}`}
                 style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color 0.2s' }}
                 onMouseEnter={e => e.target.style.color='var(--text-primary)'}
                 onMouseLeave={e => e.target.style.color='var(--text-secondary)'}>{l}</a>
             ))}
+            <Link to="/contact-us"
+              style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseEnter={e => e.target.style.color='var(--text-primary)'}
+              onMouseLeave={e => e.target.style.color='var(--text-secondary)'}>
+              Contact Us
+            </Link>
           </nav>
 
           {/* CTA */}

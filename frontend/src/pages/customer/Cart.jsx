@@ -29,7 +29,7 @@ const Cart = () => {
           <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '0 0 32px' }}>Looks like you haven't added anything yet.</p>
           
           <button
-            onClick={() => navigate(`/menu/${cafeId}`)}
+            onClick={() => navigate(`/${cafeId}/menu`)}
             style={{ padding: '14px 28px', borderRadius: 16, border: 'none', background: 'linear-gradient(135deg, #f59e0b, #ea580c)', color: 'var(--text-primary)', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 25px rgba(245,158,11,0.3)', transition: 'transform 0.2s' }}
             onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
             onMouseLeave={e => e.currentTarget.style.transform='translateY(0)'}
@@ -113,7 +113,7 @@ const Cart = () => {
       {/* ── Sticky Checkout Button ── */}
       <div style={{ position: 'fixed', bottom: 100, left: 16, right: 16, zIndex: 90 }}>
         <button
-          onClick={() => navigate(`/menu/${cafeId}/checkout`)}
+          onClick={() => navigate(`/${cafeId}/menu/checkout`)}
           style={{ width: '100%', maxWidth: 440, margin: '0 auto', padding: '16px', borderRadius: 20, border: 'none', background: 'linear-gradient(135deg, #f59e0b, #ea580c)', color: 'var(--text-primary)', fontSize: 16, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 10px 30px rgba(245,158,11,0.4)', transition: 'transform 0.2s' }}
           onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
           onMouseLeave={e => e.currentTarget.style.transform='translateY(0)'}

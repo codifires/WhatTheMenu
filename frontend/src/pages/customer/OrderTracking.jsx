@@ -58,7 +58,7 @@ const OrderTracking = () => {
           localStorage.setItem('myOrders', JSON.stringify(updated))
 
           toast.success('Your order is complete! Please leave a review.')
-          setTimeout(() => navigate(`/menu/${cafeId}/feedback`), 2000)
+          setTimeout(() => navigate(`/${cafeId}/menu/feedback`), 2000)
         }
       }
     })
@@ -77,7 +77,7 @@ const OrderTracking = () => {
         localStorage.setItem('myOrders', JSON.stringify(updated))
 
         toast.success('Your order is complete! Please leave a review.')
-        setTimeout(() => navigate(`/menu/${cafeId}/feedback`), 2000)
+        setTimeout(() => navigate(`/${cafeId}/menu/feedback`), 2000)
       }
     } catch (error) {
       toast.error('Order not found')
@@ -87,7 +87,10 @@ const OrderTracking = () => {
     }
   }
 
-  const getStepIndex = (status) => STATUS_STEPS.findIndex(s => s.key === status)
+  const getStepIndex = (status) => {
+    if (status === 'preparing' || status === 'ready') return 1;
+    return STATUS_STEPS.findIndex(s => s.key === status);
+  }
 
   return (
     <div style={{ padding: '20px 16px', animation: 'fadeIn 0.4s ease' }}>

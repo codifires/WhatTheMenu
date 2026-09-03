@@ -4,12 +4,24 @@ const Cafe = require('../models/Cafe');
 const Order = require('../models/Order');
 const OrderRevenue = require('../models/OrderRevenue');
 const Feedback = require('../models/Feedback');
+const resolveCafeIdHelper = async (identifier) => {
+  const mongoose = require('mongoose');
+  if (mongoose.isValidObjectId(identifier)) return identifier;
+  const cafe = await Cafe.findOne({ slug: identifier }).select('_id').lean();
+  return cafe ? cafe._id : null;
+};
+
 
 // @desc    Get café info and full menu (Optimized with parallel queries + lean)
 // @route   GET /api/menu/:cafeId
 const getCafeMenu = async (req, res, next) => {
   try {
-    const cafe = await Cafe.findById(req.params.cafeId)
+          const identifier = req.params.cafeId;
+      const mongoose = require('mongoose');
+      const query = mongoose.isValidObjectId(identifier) 
+        ? { _id: identifier } 
+        : { slug: identifier };
+      const cafe = await Cafe.findOne(query)
       .select('name logo address phone tax_percentage subscription_status razorpay_key_id')
       .lean();
 

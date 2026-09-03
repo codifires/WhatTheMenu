@@ -634,10 +634,11 @@ const getQRCode = async (req, res, next) => {
     const cafeId = req.user._id;
     let qrData = await QRCodeModel.findOne({ cafe_id: cafeId });
     const baseFe = resolveFrontendUrl(req);
-    const expectedMenuUrl = `${baseFe}/menu/${cafeId}`;
+    const cafeIdentifier = req.user.slug || cafeId;
+      const expectedMenuUrl = `${baseFe}/${cafeIdentifier}/menu`;
 
     // Auto-heal any invalid legacy URLs (e.g. starting with '*' or missing http)
-    if (!qrData || !qrData.menu_url || qrData.menu_url.startsWith('*') || !qrData.menu_url.startsWith('http')) {
+    if (!qrData || !qrData.menu_url || qrData.menu_url.startsWith('*') || !qrData.menu_url.startsWith('http') || qrData.menu_url !== expectedMenuUrl) {
       const qrImage = await generateQRCode(expectedMenuUrl);
 
       qrData = await QRCodeModel.findOneAndUpdate(
@@ -659,7 +660,8 @@ const regenerateQRCode = async (req, res, next) => {
   try {
     const cafeId = req.user._id;
     const baseFe = resolveFrontendUrl(req);
-    const menuUrl = `${baseFe}/menu/${cafeId}`;
+    const cafeIdentifier = req.user.slug || cafeId;
+      const menuUrl = `${baseFe}/${cafeIdentifier}/menu`;
     const qrImage = await generateQRCode(menuUrl);
 
     const qrData = await QRCodeModel.findOneAndUpdate(
@@ -696,11 +698,21 @@ const getFeedback = async (req, res, next) => {
 // @route   PUT /api/owner/settings
 const updateSettings = async (req, res, next) => {
   try {
-    const { name, phone, address, tax_percentage, razorpay_key_id, razorpay_key_secret, razorpay_webhook_secret, billing_settings } = req.body;
+    const { name, phone, address, tax_percentage, razorpay_key_id, razorpay_key_secret, razorpay_webhook_secret, billing_settings, slug } = req.body;
       const updateData = {};
 
       if (billing_settings !== undefined) updateData.billing_settings = billing_settings;
 
+    if (slug !== undefined) {
+      if (!/^[a-z0-9-]+$/.test(slug)) {
+        return res.status(400).json({ success: false, message: 'Custom URL can only contain lowercase letters, numbers, and hyphens' });
+      }
+      const existingSlug = await Cafe.findOne({ slug, _id: { $ne: req.user._id } });
+      if (existingSlug) {
+        return res.status(400).json({ success: false, message: 'This Custom URL is already taken' });
+      }
+      updateData.slug = slug;
+    }
     if (name !== undefined) updateData.name = name;
     if (phone !== undefined) updateData.phone = phone;
     if (address !== undefined) updateData.address = address;

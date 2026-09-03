@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 import { io } from 'socket.io-client'
 
-const STATUS_FLOW = ['new', 'accepted', 'preparing', 'ready', 'completed']
+const STATUS_FLOW = ['new', 'accepted', 'completed']
 const STATUS_COLORS = {
   new: { bg: 'rgba(59,130,246,0.12)', color: '#60a5fa', border: 'rgba(59,130,246,0.25)' },
   accepted: { bg: 'rgba(139,92,246,0.12)', color: '#a78bfa', border: 'rgba(139,92,246,0.25)' },

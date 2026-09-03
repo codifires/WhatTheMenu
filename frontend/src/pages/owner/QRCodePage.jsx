@@ -15,7 +15,7 @@ const QRCodePage = () => {
   const cafeId = user?.id || user?._id || qrData?.cafe_id
   const liveMenuUrl = qrData?.menu_url && !qrData.menu_url.startsWith('*') && qrData.menu_url.startsWith('http')
     ? qrData.menu_url
-    : (cafeId ? `${window.location.origin}/menu/${cafeId}` : window.location.origin)
+    : (cafeId ? `${window.location.origin}/${cafeId}/menu` : window.location.origin)
 
   useEffect(() => {
     fetchQR()

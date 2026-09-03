@@ -30,6 +30,7 @@ const OwnerSettings = () => {
   const [activeTab, setActiveTab] = useState('profile')
   const [form, setForm] = useState({
     name: user?.name || '',
+    slug: user?.slug || '',
     phone: user?.phone || '',
     address: user?.address || '',
     tax_percentage: user?.tax_percentage || 0,
@@ -43,6 +44,7 @@ const OwnerSettings = () => {
   const [hardwareAlerts, setHardwareAlerts] = useState(loadAlertSettings())
   const [editingRazorpay, setEditingRazorpay] = useState(false)
   const [razorpayForm, setRazorpayForm] = useState({ key_id: '', key_secret: '' })
+  const [showUrlWarningModal, setShowUrlWarningModal] = useState(false)
 
   const handleHardwareChange = (field, value) => {
     const newSettings = { ...hardwareAlerts, [field]: value }
@@ -54,7 +56,14 @@ const OwnerSettings = () => {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    if (e && e.preventDefault) e.preventDefault()
+
+    // If slug changed, show warning modal first
+    if (form.slug !== (user?.slug || '') && !showUrlWarningModal) {
+      setShowUrlWarningModal(true)
+      return
+    }
+    setShowUrlWarningModal(false)
     
     if (user?.email === 'cafe@demo.com') {
       toast.error('⚠️ Demo Template: Modifying settings is disabled.', { style: { background: 'var(--text-primary)', color: 'var(--bg-main)', fontWeight: 'bold' } })
@@ -65,6 +74,7 @@ const OwnerSettings = () => {
     try {
       const formData = new FormData()
       formData.append('name', form.name)
+      if (form.slug) formData.append('slug', form.slug)
       formData.append('phone', form.phone)
       formData.append('address', form.address)
       formData.append('tax_percentage', form.tax_percentage)
@@ -158,6 +168,12 @@ const OwnerSettings = () => {
                   <InputField label="Contact Phone" type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} required />
                 </div>
                 <InputField label="Full Address" as="textarea" value={form.address} onChange={e => setForm({...form, address: e.target.value})} required helperText="This address appears on customer receipts." />
+                <div style={{ marginTop: 8 }}>
+                  <InputField label="Custom Menu URL" value={form.slug} onChange={e => setForm({...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})} helperText="Only lowercase letters, numbers, and hyphens allowed." />
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: -8 }}>
+                    Live Preview: <span style={{ color: '#06b6d4' }}>{window.location.origin}/{form.slug || user?.slug}/menu</span>
+                  </p>
+                </div>
               </div>
             )}
 
@@ -436,6 +452,43 @@ const OwnerSettings = () => {
           </form>
         </div>
       </div>
+
+      {/* URL Warning Modal */}
+      {showUrlWarningModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', padding: 20 }}>
+          <div style={{ background: 'var(--bg-card)', width: '100%', maxWidth: 440, borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border-medium)', boxShadow: '0 24px 48px rgba(0,0,0,0.5)', animation: 'fadeIn 0.3s ease' }}>
+            <div style={{ padding: '24px 24px 20px', borderBottom: '1px solid var(--border-light)' }}>
+              <h3 style={{ fontSize: 20, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 12, color: '#ef4444' }}>
+                <span style={{ fontSize: 24 }}>⚠️</span> Warning: URL Change
+              </h3>
+            </div>
+            <div style={{ padding: 24 }}>
+              <p style={{ fontSize: 16, color: '#ef4444', margin: '0 0 16px', lineHeight: 1.5, fontWeight: 600 }}>
+                Changing your URL will instantly break your current physical printed QR codes.
+              </p>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                If you proceed, any customer who scans your old physical QR code will see an error. You MUST reprint your QR codes to reflect this new link.
+              </p>
+            </div>
+            <div style={{ padding: '16px 24px', background: 'var(--bg-input)', display: 'flex', justifyContent: 'flex-end', gap: 12, borderTop: '1px solid var(--border-light)' }}>
+              <button
+                type="button"
+                onClick={() => setShowUrlWarningModal(false)}
+                style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid var(--border-medium)', background: 'transparent', color: 'var(--text-primary)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+              >
+                No, Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowUrlWarningModal(false); setTimeout(() => handleSubmit(null), 100) }}
+                style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+              >
+                Yes, I Understand
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }

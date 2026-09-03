@@ -20,6 +20,7 @@ import LandingPage from './pages/LandingPage'
 import TermsAndConditions from './pages/TermsAndConditions'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import RefundPolicy from './pages/RefundPolicy'
+import ContactUs from './pages/ContactUs'
 
 
 // Lazy loaded Admin Pages
@@ -237,22 +238,22 @@ function App() {
         } />
 
         {/* Customer Routes (Public - No Auth) */}
-        <Route path="/menu/:cafeId" element={
+        <Route path="/:cafeId/menu" element={
           <CustomerLayout><CustomerMenu /></CustomerLayout>
         } />
-        <Route path="/menu/:cafeId/search" element={
+        <Route path="/:cafeId/menu/search" element={
           <CustomerLayout><CustomerSearch /></CustomerLayout>
         } />
-        <Route path="/menu/:cafeId/cart" element={
+        <Route path="/:cafeId/menu/cart" element={
           <CustomerLayout><Cart /></CustomerLayout>
         } />
-        <Route path="/menu/:cafeId/checkout" element={
+        <Route path="/:cafeId/menu/checkout" element={
           <CustomerLayout><Checkout /></CustomerLayout>
         } />
-        <Route path="/menu/:cafeId/orders" element={
+        <Route path="/:cafeId/menu/orders" element={
           <CustomerLayout><OrderTracking /></CustomerLayout>
         } />
-        <Route path="/menu/:cafeId/feedback" element={
+        <Route path="/:cafeId/menu/feedback" element={
           <CustomerLayout><CustomerFeedback /></CustomerLayout>
         } />
 
@@ -261,6 +262,7 @@ function App() {
         <Route path="/terms" element={<TermsAndConditions />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/contact-us" element={<ContactUs />} />
         <Route path="*" element={
           <div className="min-h-screen bg-dark-950 flex items-center justify-center">
             <div className="text-center">

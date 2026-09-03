@@ -303,7 +303,7 @@ const OwnerSubscription = () => {
                   {isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
-              <p style={{ fontSize: 15, color: 'rgb(31 33 36)', margin: '0 0 8px' }}>Billing period ends on <strong>{endDate}</strong>.</p>
+              <p style={{ fontSize: 15, color: 'var(--text-secondary)', margin: '0 0 8px' }}>Billing period ends on <strong>{endDate}</strong>.</p>
               <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>Renews at {displayPrice} with 0% platform transaction fees.</p>
             </div>
 

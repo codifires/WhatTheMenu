@@ -70,6 +70,7 @@ const { publicLimiter } = require('./middleware/rateLimiter');
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/settings', require('./routes/settingsRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/owner', require('./routes/ownerRoutes'));
 app.use('/api/support', require('./routes/supportRoutes'));
