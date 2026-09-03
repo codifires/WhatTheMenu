@@ -48,8 +48,8 @@ const getDashboard = async (req, res, next) => {
       activeSub,
       topItems
     ] = await Promise.all([
-      Order.countDocuments({ cafe_id: cafeId, created_at: { $gte: today } }),
-      Order.countDocuments({ cafe_id: cafeId, order_status: { $in: ['new', 'accepted', 'preparing'] }, created_at: { $gte: today } }),
+      Order.countDocuments({ cafe_id: cafeId, created_at: { $gte: today }, $or: [{ payment_method: { $ne: 'razorpay' } }, { payment_status: { $in: ['received', 'completed'] } }] }),
+      Order.countDocuments({ cafe_id: cafeId, order_status: { $in: ['new', 'accepted', 'preparing'] }, created_at: { $gte: today }, $or: [{ payment_method: { $ne: 'razorpay' } }, { payment_status: { $in: ['received', 'completed'] } }] }),
       Order.countDocuments({ cafe_id: cafeId, order_status: 'completed', created_at: { $gte: today } }),
       Order.aggregate([
         { $match: { cafe_id: cafeId, created_at: { $gte: today }, payment_status: { $in: ['received', 'completed'] } } },
@@ -67,7 +67,7 @@ const getDashboard = async (req, res, next) => {
         { $group: { _id: { year: { $year: "$created_at" }, month: { $month: "$created_at" }, day: { $dayOfMonth: "$created_at" } }, total: { $sum: "$total_amount" } } },
         { $sort: { "_id.year": -1, "_id.month": -1, "_id.day": -1 } }
       ]),
-      Order.find({ cafe_id: cafeId }).sort({ created_at: -1 }).limit(5).lean(),
+      Order.find({ cafe_id: cafeId, $or: [{ payment_method: { $ne: 'razorpay' } }, { payment_status: { $in: ['received', 'completed'] } }] }).sort({ created_at: -1 }).limit(5).lean(),
       Feedback.aggregate([
         { $match: { cafe_id: cafeId } },
         { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } }
@@ -421,6 +421,13 @@ const getOrders = async (req, res, next) => {
         query.created_at = { $gte: startOfDay, $lte: endOfDay };
       }
 
+    
+    // Exclude abandoned online orders from the general order list
+    query.$or = [
+      { payment_method: { $ne: 'razorpay' } },
+      { payment_status: { $in: ['received', 'completed'] } }
+    ];
+    
     const total = await Order.countDocuments(query);
     const orders = await Order.find(query)
       .sort({ created_at: -1 })
