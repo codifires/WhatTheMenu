@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { ownerAPI } from '../../services/api'
 import toast from 'react-hot-toast'
@@ -26,6 +27,7 @@ function InputField({ label, helperText, ...props }) {
 }
 
 const OwnerSettings = () => {
+  const navigate = useNavigate();
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('profile')
   const [form, setForm] = useState({
@@ -40,6 +42,45 @@ const OwnerSettings = () => {
     billing_settings: user?.billing_settings || { format: 'standard', tax_number: '', thank_you_message: 'Thank you for your visit!' }
   })
   const [logoFile, setLogoFile] = useState(null)
+  const [themeSettings, setThemeSettings] = useState(user?.theme_settings || { active_theme: 'classic', unlocked_themes: ['classic'] })
+  const planName = user?.subscription?.plan_name || 'starter'
+  let maxThemes = 1;
+  if (planName === 'pro') maxThemes = 3;
+  if (planName === 'pro_plus') maxThemes = 5;
+  const THEME_OPTIONS = [
+    { id: 'classic', name: 'Classic Minimal', color: '#ffffff', desc: 'Clean white with warm accents' },
+    { id: 'midnight', name: 'Midnight Amber', color: '#1a1f2e', desc: 'Deep dark with golden glow' },
+    { id: 'forest', name: 'Forest Sage', color: '#0d1f15', desc: 'Dark forest green with coral red' },
+    { id: 'rose', name: 'Rose Noir', color: '#1a0a10', desc: 'Elegant dark rose with blush tones' },
+    { id: 'blackgold', name: 'Black & Gold', color: '#191919', desc: 'Luxury black with champagne gold' }
+  ];
+  
+  const handleThemeChange = async (themeId) => {
+    if (themeSettings.active_theme === themeId) return;
+    try {
+      const res = await ownerAPI.updateTheme({ active_theme: themeId });
+      setThemeSettings(res.data.data);
+      let u = JSON.parse(localStorage.getItem('user'));
+      u.theme_settings = res.data.data;
+      localStorage.setItem('user', JSON.stringify(u));
+      toast.success('Theme activated!');
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to activate theme');
+    }
+  };
+
+  const handleUnlockTheme = async (themeId) => {
+    try {
+      const res = await ownerAPI.updateTheme({ unlock_theme: themeId });
+      setThemeSettings(res.data.data);
+      let u = JSON.parse(localStorage.getItem('user'));
+      u.theme_settings = res.data.data;
+      localStorage.setItem('user', JSON.stringify(u));
+      toast.success('Theme unlocked successfully!');
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Failed to unlock theme');
+    }
+  };
   const [saving, setSaving] = useState(false)
   const [hardwareAlerts, setHardwareAlerts] = useState(loadAlertSettings())
   const [editingRazorpay, setEditingRazorpay] = useState(false)
@@ -107,6 +148,7 @@ const OwnerSettings = () => {
   const TABS = [
     { id: 'profile', label: 'Café Profile', icon: '🏪' },
     { id: 'branding', label: 'Branding', icon: '🎨' },
+    { id: 'themes', label: 'Menu Themes', icon: '✨' },
     { id: 'payments', label: 'Payment & Billing', icon: '💳' },
     { id: 'billing', label: 'Billing & Invoice', icon: '🧾' },
     { id: 'hours', label: 'Business Hours', icon: '🕒' },
@@ -177,6 +219,65 @@ const OwnerSettings = () => {
               </div>
             )}
 
+            
+            {activeTab === 'themes' && (
+              <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+                  <div>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>Customer Menu Themes</h2>
+                    <p style={{ fontSize: 14, color: 'var(--text-tertiary)', margin: 0 }}>Customize the visual appearance of your digital menu.</p>
+                  </div>
+                  <div style={{ background: 'var(--bg-input)', padding: '6px 12px', borderRadius: 20, border: '1px solid var(--border-medium)', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    Themes Unlocked: <span style={{ color: '#06b6d4' }}>{themeSettings.unlocked_themes.length}</span> / {maxThemes}
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+                  {THEME_OPTIONS.map(theme => {
+                    const isUnlocked = themeSettings.unlocked_themes.includes(theme.id);
+                    const isActive = themeSettings.active_theme === theme.id;
+                    const canUnlock = !isUnlocked && themeSettings.unlocked_themes.length < maxThemes;
+                    
+                    return (
+                      <div key={theme.id} style={{
+                        padding: 20, borderRadius: 16, border: isActive ? '2px solid #06b6d4' : '1px solid var(--border-medium)',
+                        background: 'var(--bg-card)', position: 'relative', overflow: 'hidden',
+                        transition: 'all 0.2s', boxShadow: isActive ? '0 8px 24px rgba(6,182,212,0.15)' : 'none'
+                      }}>
+                        <div style={{ width: '100%', height: 120, background: theme.color, borderRadius: 8, marginBottom: 16, border: '1px solid rgba(0,0,0,0.1)' }} />
+                        
+                        <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 4px', color: 'var(--text-primary)' }}>{theme.name}</h3>
+                        <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: '0 0 16px' }}>{theme.desc}</p>
+                        
+                        {isActive ? (
+                          <div style={{ width: '100%', padding: '10px', borderRadius: 8, background: 'rgba(16,185,129,0.1)', color: 'var(--success-text)', textAlign: 'center', fontSize: 13, fontWeight: 700 }}>
+                            Active Theme
+                          </div>
+                        ) : isUnlocked ? (
+                          <button type="button" onClick={() => handleThemeChange(theme.id)} style={{ width: '100%', padding: '10px', borderRadius: 8, background: 'var(--bg-input)', border: '1px solid var(--border-medium)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                            Activate
+                          </button>
+                        ) : canUnlock ? (
+                          <button type="button" onClick={() => handleUnlockTheme(theme.id)} style={{ width: '100%', padding: '10px', borderRadius: 8, background: 'linear-gradient(135deg,#06b6d4,#4f46e5)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                            Unlock Theme
+                          </button>
+                        ) : (
+                          <button type="button" onClick={() => navigate('/owner/subscription')} style={{ width: '100%', padding: '10px', borderRadius: 8, background: 'var(--bg-input)', border: '1px dashed var(--border-medium)', color: 'var(--text-tertiary)', textAlign: 'center', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }} onMouseOver={e => {e.target.style.background='var(--border-hover)'; e.target.style.color='var(--text-secondary)'}} onMouseOut={e => {e.target.style.background='var(--bg-input)'; e.target.style.color='var(--text-tertiary)'}}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path>
+                                </svg>
+                                <span>Upgrade Plan to Unlock</span>
+                              </div>
+                            </button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+            
             {activeTab === 'branding' && (
               <div style={{ animation: 'fadeIn 0.3s ease' }}>
                 <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>Brand Assets</h2>

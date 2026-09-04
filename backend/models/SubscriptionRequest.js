@@ -31,7 +31,7 @@ const subscriptionRequestSchema = new mongoose.Schema({
   },
   plan_name: {
     type: String,
-    default: 'pro'
+    default: 'pro_plus'
   },
   notes: {
     type: String,

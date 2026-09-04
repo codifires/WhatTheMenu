@@ -30,7 +30,7 @@ const Cart = () => {
           
           <button
             onClick={() => navigate(`/${cafeId}/menu`)}
-            style={{ padding: '14px 28px', borderRadius: 16, border: 'none', background: 'linear-gradient(135deg, #f59e0b, #ea580c)', color: 'var(--text-primary)', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 25px rgba(245,158,11,0.3)', transition: 'transform 0.2s' }}
+            style={{ padding: '14px 28px', borderRadius: 16, border: 'none', background: 'var(--accent-gradient)', color: 'var(--accent-text)', fontSize: 15, fontWeight: 800, cursor: 'pointer', boxShadow: 'var(--accent-shadow)', transition: 'transform 0.2s' }}
             onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
             onMouseLeave={e => e.currentTarget.style.transform='translateY(0)'}
           >
@@ -71,7 +71,7 @@ const Cart = () => {
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</h3>
-                <p style={{ fontSize: 15, fontWeight: 900, color: '#f59e0b', margin: 0 }}>₹{item.price}</p>
+                <p style={{ fontSize: 15, fontWeight: 900, color: 'var(--accent-primary)', margin: 0 }}>₹{item.price}</p>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
@@ -82,7 +82,7 @@ const Cart = () => {
                     ) : '-'}
                   </button>
                   <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', width: 20, textAlign: 'center' }}>{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item._id, item.quantity + 1)} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #f59e0b, #ea580c)', color: 'var(--text-primary)', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
+                  <button onClick={() => updateQuantity(item._id, item.quantity + 1)} style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'var(--accent-gradient)', color: 'var(--accent-text)', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
                 </div>
               </div>
             </div>
@@ -114,7 +114,7 @@ const Cart = () => {
       <div style={{ position: 'fixed', bottom: 100, left: 16, right: 16, zIndex: 90 }}>
         <button
           onClick={() => navigate(`/${cafeId}/menu/checkout`)}
-          style={{ width: '100%', maxWidth: 440, margin: '0 auto', padding: '16px', borderRadius: 20, border: 'none', background: 'linear-gradient(135deg, #f59e0b, #ea580c)', color: 'var(--text-primary)', fontSize: 16, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 10px 30px rgba(245,158,11,0.4)', transition: 'transform 0.2s' }}
+          style={{ width: '100%', maxWidth: 440, margin: '0 auto', padding: '16px', borderRadius: 20, border: 'none', background: 'var(--accent-gradient)', color: 'var(--accent-text)', fontSize: 16, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: 'var(--accent-shadow)', transition: 'transform 0.2s' }}
           onMouseEnter={e => e.currentTarget.style.transform='translateY(-2px)'}
           onMouseLeave={e => e.currentTarget.style.transform='translateY(0)'}
         >

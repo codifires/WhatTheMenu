@@ -136,12 +136,12 @@ const OrderTracking = () => {
 
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 }}>
             <div>
-              <p style={{ fontSize: 32, fontWeight: 900, color: '#f59e0b', margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>Order #{order.token_number || order.order_number.slice(-4)}</p>
+              <p style={{ fontSize: 32, fontWeight: 900, color: 'var(--accent-primary)', margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>Order #{order.token_number || order.order_number.slice(-4)}</p>
               <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 2px', opacity: 0.5 }}>Transaction: {order.order_number}</p>
               <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: 0 }}>{new Date(order.created_at).toLocaleString()}</p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 8, background: order.payment_status === 'received' ? 'var(--success-light)' : 'var(--warning-light)', color: order.payment_status === 'received' ? 'var(--success-text)' : '#fbbf24', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 8, background: order.payment_status === 'received' ? 'var(--success-light)' : 'var(--warning-light)', color: order.payment_status === 'received' ? 'var(--success-text)' : 'var(--accent-primary)', textTransform: 'uppercase' }}>
                 {order.payment_method} - {order.payment_status}
               </span>
             </div>
@@ -173,7 +173,7 @@ const OrderTracking = () => {
               {/* ── Status Stepper ── */}
               <div style={{ position: 'relative', marginBottom: 40, padding: '0 10px' }}>
                 <div style={{ position: 'absolute', top: 20, left: 24, right: 24, height: 2, background: 'var(--border-hover)', borderRadius: 2 }} />
-                <div style={{ position: 'absolute', top: 20, left: 24, height: 2, background: 'linear-gradient(90deg, #f59e0b, #ea580c)', borderRadius: 2, transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)', width: `calc(${(getStepIndex(order.order_status) / (STATUS_STEPS.length - 1)) * 100}% - 48px)` }} />
+                <div style={{ position: 'absolute', top: 20, left: 24, height: 2, background: 'var(--accent-gradient)', borderRadius: 2, transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)', width: `calc(${(getStepIndex(order.order_status) / (STATUS_STEPS.length - 1)) * 100}% - 48px)` }} />
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
                   {STATUS_STEPS.map((step, i) => {
@@ -184,7 +184,7 @@ const OrderTracking = () => {
                       <div key={step.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 48 }}>
                         <div style={{
                           width: 40, height: 40, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, zIndex: 2, transition: 'all 0.4s',
-                          background: isCompleted ? 'linear-gradient(135deg, #f59e0b, #ea580c)' : '#141823',
+                          background: isCompleted ? 'var(--accent-gradient)' : 'var(--border-medium)',
                           border: isCompleted ? 'none' : '2px solid rgba(255,255,255,0.1)',
                           color: isCompleted ? 'var(--text-primary)' : 'var(--text-tertiary)',
                           boxShadow: isCurrent ? '0 0 0 4px rgba(245,158,11,0.2), 0 10px 20px rgba(245,158,11,0.3)' : 'none',
@@ -205,7 +205,7 @@ const OrderTracking = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
                   {order.items?.map((item, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}><span style={{ color: '#f59e0b', fontWeight: 700, marginRight: 8 }}>{item.quantity}x</span>{item.name}</span>
+                      <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}><span style={{ color: 'var(--accent-primary)', fontWeight: 700, marginRight: 8 }}>{item.quantity}x</span>{item.name}</span>
                       <span style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600 }}>₹{item.price * item.quantity}</span>
                     </div>
                   ))}
@@ -215,7 +215,7 @@ const OrderTracking = () => {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Total Paid</span>
-                  <span style={{ fontSize: 24, fontWeight: 900, color: '#f59e0b', fontFamily: "'Outfit',sans-serif" }}>₹{order.total_amount}</span>
+                  <span style={{ fontSize: 24, fontWeight: 900, color: 'var(--accent-primary)', fontFamily: "'Outfit',sans-serif" }}>₹{order.total_amount}</span>
                 </div>
               </div>
             </>

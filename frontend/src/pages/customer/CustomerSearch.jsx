@@ -50,7 +50,7 @@ const CustomerSearch = () => {
     <div style={{ padding: '20px 16px', animation: 'fadeIn 0.4s ease' }}>
       
       {/* ── Header & Search Input ── */}
-      <div style={{ marginBottom: 24, position: 'sticky', top: 0, paddingTop: 10, paddingBottom: 10, background: '#0a0d14', zIndex: 10 }}>
+      <div style={{ marginBottom: 24, position: 'sticky', top: 0, paddingTop: 10, paddingBottom: 10, background: 'var(--bg-main)', zIndex: 10 }}>
         <h2 style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 16px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>Find craving</h2>
         
         <div style={{ position: 'relative' }}>
@@ -111,12 +111,12 @@ const CustomerSearch = () => {
                   </span>
                 ) : qty > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'var(--border-light)', borderRadius: 12, padding: 4 }}>
-                    <button onClick={() => updateQuantity(item._id, qty + 1)} style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #f59e0b, #ea580c)', color: 'var(--text-primary)', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
+                    <button onClick={() => updateQuantity(item._id, qty + 1)} style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: 'var(--accent-gradient)', color: 'var(--accent-text)', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
                     <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', textAlign: 'center' }}>{qty}</span>
                     <button onClick={() => qty === 1 ? removeItem(item._id) : updateQuantity(item._id, qty - 1)} style={{ width: 26, height: 26, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-secondary)', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
                   </div>
                 ) : (
-                  <button onClick={() => addItem(item, cafeId)} style={{ width: 40, height: 40, borderRadius: 12, border: 'none', background: 'var(--warning-light)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s' }}>
+                  <button onClick={() => addItem(item, cafeId)} style={{ width: 40, height: 40, borderRadius: 12, border: 'none', background: 'var(--warning-light)', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s' }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   </button>
                 )}

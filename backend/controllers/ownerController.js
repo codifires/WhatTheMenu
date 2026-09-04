@@ -762,6 +762,53 @@ const getGlobalMedia = async (req, res, next) => {
   }
 };
 
+
+
+const updateThemeSettings = async (req, res) => {
+  try {
+    const { active_theme, unlock_theme } = req.body;
+    const Cafe = require('../models/Cafe'); // ensure Cafe is required if not globally
+    const cafe = await Cafe.findById(req.user.id);
+    if (!cafe) {
+      return res.status(404).json({ success: false, message: 'Cafe not found' });
+    }
+
+    const plan = cafe.subscription?.plan_name || 'starter';
+    let maxThemes = 1;
+    if (plan === 'pro') maxThemes = 3;
+    if (plan === 'pro_plus') maxThemes = 5;
+
+    if (!cafe.theme_settings) {
+      cafe.theme_settings = { active_theme: 'classic', unlocked_themes: ['classic'] };
+    }
+    
+    // Safety fallback
+    if (!cafe.theme_settings.unlocked_themes || cafe.theme_settings.unlocked_themes.length === 0) {
+      cafe.theme_settings.unlocked_themes = ['classic'];
+    }
+
+    if (unlock_theme && !cafe.theme_settings.unlocked_themes.includes(unlock_theme)) {
+      if (cafe.theme_settings.unlocked_themes.length >= maxThemes) {
+        return res.status(403).json({ success: false, message: `Your ${plan} plan only allows ${maxThemes} theme(s). Please upgrade to unlock more.` });
+      }
+      cafe.theme_settings.unlocked_themes.push(unlock_theme);
+    }
+
+    if (active_theme) {
+      if (!cafe.theme_settings.unlocked_themes.includes(active_theme)) {
+         return res.status(403).json({ success: false, message: 'Theme is locked. Unlock it first.' });
+      }
+      cafe.theme_settings.active_theme = active_theme;
+    }
+
+    await cafe.save();
+    res.status(200).json({ success: true, data: cafe.theme_settings });
+  } catch (error) {
+    console.error('Update Theme Settings Error:', error);
+    res.status(500).json({ success: false, message: 'Server error updating theme settings' });
+  }
+};
+
 module.exports = {
   getDashboard,
   getCategories,
@@ -782,5 +829,6 @@ module.exports = {
   regenerateQRCode,
   getFeedback,
   updateSettings,
-  getGlobalMedia
+  getGlobalMedia,
+  updateThemeSettings
 };

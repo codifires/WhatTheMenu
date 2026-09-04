@@ -5,9 +5,9 @@ import toast from 'react-hot-toast';
 const PlanServicesManagement = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [basicFeatures, setBasicFeatures] = useState([]);
   const [starterFeatures, setStarterFeatures] = useState([]);
   const [proFeatures, setProFeatures] = useState([]);
+  const [proPlusFeatures, setProPlusFeatures] = useState([]);
 
   useEffect(() => {
     fetchSettings();
@@ -18,7 +18,7 @@ const PlanServicesManagement = () => {
       setLoading(true);
       const res = await api.get('/admin/settings');
       if (res.data.success) {
-        setBasicFeatures(res.data.data.basic_features || []);
+        setStarterFeatures(res.data.data.starter_features || []);
           setStarterFeatures(res.data.data.starter_features || []);
         setProFeatures(res.data.data.pro_features || []);
       }
@@ -33,9 +33,9 @@ const PlanServicesManagement = () => {
     try {
       setSaving(true);
       const res = await api.put('/admin/settings', {
-        basic_features: basicFeatures,
-          starter_features: starterFeatures,
-        pro_features: proFeatures
+        starter_features: starterFeatures,
+          pro_features: proFeatures,
+          pro_plus_features: proPlusFeatures
       });
       if (res.data.success) {
         toast.success('Plan services updated successfully!');
@@ -48,34 +48,34 @@ const PlanServicesManagement = () => {
   };
 
   const addFeature = (plan) => {
-    if (plan === 'basic') setBasicFeatures([...basicFeatures, '']);
-    else if (plan === 'starter') setStarterFeatures([...starterFeatures, '']);
-    else setProFeatures([...proFeatures, '']);
+    if (plan === 'starter') setStarterFeatures([...starterFeatures, '']);
+    else if (plan === 'pro') setProFeatures([...proFeatures, '']);
+    else setProPlusFeatures([...proPlusFeatures, '']);
   };
 
   const updateFeature = (plan, index, value) => {
-    if (plan === 'basic') {
-      const newFeatures = [...basicFeatures];
-      newFeatures[index] = value;
-      setBasicFeatures(newFeatures);
-    } else if (plan === 'basic') {
-      setBasicFeatures(basicFeatures.filter((_, i) => i !== index));
-    } else if (plan === 'starter') {
+    if (plan === 'starter') {
       const newFeatures = [...starterFeatures];
       newFeatures[index] = value;
       setStarterFeatures(newFeatures);
-    } else {
+    } else if (plan === 'pro') {
       const newFeatures = [...proFeatures];
       newFeatures[index] = value;
       setProFeatures(newFeatures);
+    } else {
+      const newFeatures = [...proPlusFeatures];
+      newFeatures[index] = value;
+      setProPlusFeatures(newFeatures);
     }
   };
 
   const removeFeature = (plan, index) => {
     if (plan === 'starter') {
       setStarterFeatures(starterFeatures.filter((_, i) => i !== index));
-    } else {
+    } else if (plan === 'pro') {
       setProFeatures(proFeatures.filter((_, i) => i !== index));
+    } else {
+      setProPlusFeatures(proPlusFeatures.filter((_, i) => i !== index));
     }
   };
 
@@ -89,23 +89,23 @@ const PlanServicesManagement = () => {
 
   const FeatureList = ({ title, features, plan }) => (
     <div style={{
-      background: plan === 'pro' 
+      background: plan === 'pro_plus' 
         ? 'linear-gradient(180deg, rgba(6,182,212,0.05) 0%, rgba(255,255,255,0.01) 100%)' 
         : 'var(--bg-card)',
-      border: plan === 'pro'
+      border: plan === 'pro_plus'
         ? '1px solid rgba(6,182,212,0.2)'
         : '1px solid rgba(255,255,255,0.05)',
       borderRadius: '24px',
       padding: '32px',
       position: 'relative'
     }}>
-      {plan === 'pro' && (
+      {plan === 'pro_plus' && (
         <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(90deg, #06b6d4, #4f46e5)', padding: '4px 14px', borderRadius: 20, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-primary)', boxShadow: '0 4px 12px rgba(6,182,212,0.3)' }}>Premium</div>
       )}
       
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h2 className="text-2xl font-bold font-display" style={{ color: plan === 'pro' ? '#06b6d4' : 'var(--text-primary)' }}>
+          <h2 className="text-2xl font-bold font-display" style={{ color: plan === 'pro_plus' ? '#06b6d4' : 'var(--text-primary)' }}>
             {title}
           </h2>
           <p className="text-sm text-dark-400 mt-1">Configure {plan} tier perks</p>
@@ -115,9 +115,9 @@ const PlanServicesManagement = () => {
           style={{
             padding: '10px 18px',
             borderRadius: '12px',
-            border: plan === 'pro' ? 'none' : '1px solid rgba(255,255,255,0.1)',
-            background: plan === 'pro' ? '#06b6d4' : 'var(--border-light)',
-            color: plan === 'pro' ? 'var(--bg-shell)' : 'var(--text-primary)',
+            border: plan === 'pro_plus' ? 'none' : '1px solid rgba(255,255,255,0.1)',
+            background: plan === 'pro_plus' ? '#06b6d4' : 'var(--border-light)',
+            color: plan === 'pro_plus' ? 'var(--bg-shell)' : 'var(--text-primary)',
             fontSize: '14px',
             fontWeight: 700,
             cursor: 'pointer',
@@ -127,11 +127,11 @@ const PlanServicesManagement = () => {
             gap: '8px'
           }}
           onMouseEnter={e => {
-            if (plan === 'pro') e.currentTarget.style.transform = 'translateY(-2px)'
+            if (plan === 'pro_plus') e.currentTarget.style.transform = 'translateY(-2px)'
             else e.currentTarget.style.background = 'var(--border-hover)'
           }}
           onMouseLeave={e => {
-            if (plan === 'pro') e.currentTarget.style.transform = 'translateY(0)'
+            if (plan === 'pro_plus') e.currentTarget.style.transform = 'translateY(0)'
             else e.currentTarget.style.background = 'var(--border-light)'
           }}
         >
@@ -147,10 +147,10 @@ const PlanServicesManagement = () => {
           <div key={index} className="flex gap-3 items-center group relative">
             <div style={{
               width: '32px', height: '32px', borderRadius: '10px',
-              background: plan === 'pro' ? 'var(--cyan-bg-light)' : 'var(--border-light)',
+              background: plan === 'pro_plus' ? 'var(--cyan-bg-light)' : 'var(--border-light)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
             }}>
-              <span style={{ color: plan === 'pro' ? '#06b6d4' : 'var(--text-secondary)', fontSize: '14px', fontWeight: 600 }}>{index + 1}</span>
+              <span style={{ color: plan === 'pro_plus' ? '#06b6d4' : 'var(--text-secondary)', fontSize: '14px', fontWeight: 600 }}>{index + 1}</span>
             </div>
             <div className="flex-1 relative">
               <input
@@ -170,8 +170,8 @@ const PlanServicesManagement = () => {
                   transition: 'border-color 0.2s, box-shadow 0.2s'
                 }}
                 onFocus={e => {
-                  e.target.style.borderColor = plan === 'pro' ? 'rgba(6,182,212,0.5)' : 'rgba(124,58,237,0.5)'
-                  e.target.style.boxShadow = plan === 'pro' ? '0 0 0 3px rgba(6,182,212,0.1)' : '0 0 0 3px rgba(124,58,237,0.1)'
+                  e.target.style.borderColor = plan === 'pro_plus' ? 'rgba(6,182,212,0.5)' : 'rgba(124,58,237,0.5)'
+                  e.target.style.boxShadow = plan === 'pro_plus' ? '0 0 0 3px rgba(6,182,212,0.1)' : '0 0 0 3px rgba(124,58,237,0.1)'
                 }}
                 onBlur={e => {
                   e.target.style.borderColor = 'var(--border-light)'
@@ -269,11 +269,7 @@ const PlanServicesManagement = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8" style={{ marginTop: '80px' }}>
         <FeatureList 
-          title="Basic Plan Features" 
-          features={basicFeatures} 
-          plan="basic" 
-        />
-        <FeatureList title="Starter Plan Features" 
+          title="Starter Plan Features" 
           features={starterFeatures} 
           plan="starter" 
         />
@@ -281,6 +277,11 @@ const PlanServicesManagement = () => {
           title="Pro Plan Features" 
           features={proFeatures} 
           plan="pro" 
+        />
+        <FeatureList 
+          title="Pro Plus Plan Features" 
+          features={proPlusFeatures} 
+          plan="pro_plus" 
         />
       </div>
     </div>

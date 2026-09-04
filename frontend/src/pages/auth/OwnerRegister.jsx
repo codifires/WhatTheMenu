@@ -39,7 +39,7 @@ const STAGES = [
 const OwnerRegister = () => {
   const [form, setForm] = useState({
     name: '', email: '', password: '', confirmPassword: '',
-    phone: '', address: '', plan_name: 'free'
+    phone: '', address: '', plan_name: 'starter'
   })
   const [errors, setErrors] = useState({ email: '', phone: '' })
   const [showPass, setShowPass] = useState(false)
@@ -70,12 +70,12 @@ const OwnerRegister = () => {
 
   const PLANS = [
     {
-      id: 'free',
+      id: 'starter',
       name: 'Free Trial',
       priceLabel: (days) => `${days} Days Free`,
       period: '',
       description: 'Full Pro features, no credit card required',
-      features: ['Everything in Pro Plan', 'Advanced Analytics', 'Custom Branding', 'Multiple QR Codes', 'Priority Support'],
+      features: ['Everything in Pro Plus Plan', 'Advanced Analytics', 'Custom Branding', 'Multiple QR Codes', 'Priority Support'],
       color: 'var(--success-text)',
       gradient: 'linear-gradient(135deg, rgba(52,211,153,0.18), rgba(16,185,129,0.05))',
       border: 'rgba(52,211,153,0.5)',
@@ -85,8 +85,8 @@ const OwnerRegister = () => {
       badgeBg: 'linear-gradient(135deg, #059669, #10b981)',
     },
     {
-      id: 'starter',
-      name: 'Starter Plan',
+      id: 'pro',
+      name: 'Temp Pro Plus Plan',
       priceLabel: () => `₹${starterPrice}`,
       period: '/month',
       description: 'Basic features',
@@ -98,8 +98,8 @@ const OwnerRegister = () => {
       iconBg: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
     },
     {
-      id: 'pro',
-      name: 'Pro Plan',
+      id: 'pro_plus',
+      name: 'Pro Plus Plan',
       priceLabel: () => `₹${proPrice}`,
       period: '/month',
       description: 'All features included',
@@ -461,20 +461,20 @@ const OwnerRegister = () => {
                         <span style={{ position: 'absolute', top: -9, right: 14, background: plan.badgeBg, color: 'var(--text-primary)', fontSize: 9, fontWeight: 800, padding: '3px 10px', borderRadius: 20, letterSpacing: 1.5, textTransform: 'uppercase' }}>{plan.badge}</span>
                       )}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 42, height: 42, borderRadius: 12, background: plan.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: plan.id === 'free' ? 22 : 18, fontWeight: 800, color: 'var(--text-primary)', flexShrink: 0 }}>
+                        <div style={{ width: 42, height: 42, borderRadius: 12, background: plan.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: plan.id === 'starter' ? 22 : 18, fontWeight: 800, color: 'var(--text-primary)', flexShrink: 0 }}>
                           {plan.icon}
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{plan.name}</span>
-                            <span style={{ fontSize: plan.id === 'free' ? 14 : 18, fontWeight: 800, color: plan.color }}>
+                            <span style={{ fontSize: plan.id === 'starter' ? 14 : 18, fontWeight: 800, color: plan.color }}>
                               {plan.priceLabel(trialDays)}<span style={{ fontSize: 10, color: 'var(--text-tertiary)', fontWeight: 400 }}>{plan.period}</span>
                             </span>
                           </div>
-                          <p style={{ fontSize: 11, color: plan.id === 'free' ? '#6ee7b7' : 'var(--text-tertiary)', margin: '2px 0 6px' }}>{plan.description}</p>
+                          <p style={{ fontSize: 11, color: plan.id === 'starter' ? '#6ee7b7' : 'var(--text-tertiary)', margin: '2px 0 6px' }}>{plan.description}</p>
                           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                             {plan.features.map(f => (
-                              <span key={f} style={{ fontSize: 10, color: plan.id === 'free' && form.plan_name === 'free' ? '#6ee7b7' : 'var(--text-secondary)', background: 'var(--border-light)', padding: '1px 7px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.06)' }}>✓ {f}</span>
+                              <span key={f} style={{ fontSize: 10, color: plan.id === 'starter' && form.plan_name === 'starter' ? '#6ee7b7' : 'var(--text-secondary)', background: 'var(--border-light)', padding: '1px 7px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.06)' }}>✓ {f}</span>
                             ))}
                           </div>
                         </div>
@@ -488,7 +488,7 @@ const OwnerRegister = () => {
                 </div>
 
                 {/* Note changes based on selected plan */}
-                {form.plan_name === 'free' ? (
+                {form.plan_name === 'starter' ? (
                   <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)' }}>
                     <p style={{ fontSize: 11, color: '#6ee7b7', margin: 0 }}>
                       🎁 You get <strong>full Pro features</strong> free for <strong>{trialDays} days</strong>. After trial ends, choose a plan to continue.

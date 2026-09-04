@@ -93,7 +93,7 @@ const startSubscriptionCron = () => {
             { cafe_id: cafe._id },
             {
               plan_name: cafe.subscription.plan_name,
-              price: cafe.subscription.plan_name === 'pro' ? (settings?.pro_price || 499) : (cafe.subscription.plan_name === 'starter' ? (settings?.starter_price || 299) : (settings?.basic_price || 199)),
+              price: cafe.subscription.plan_name === 'pro_plus' ? (settings?.pro_price || 499) : (cafe.subscription.plan_name === 'pro' ? (settings?.starter_price || 299) : (settings?.basic_price || 199)),
               start_date: new Date(),
               end_date: newEndDate,
               status: 'active'
@@ -105,7 +105,7 @@ const startSubscriptionCron = () => {
           await SubscriptionHistory.create({
             cafe_id: cafe._id,
             plan_name: cafe.subscription.plan_name,
-            price: cafe.subscription.plan_name === 'pro' ? (settings?.pro_price || 499) : (cafe.subscription.plan_name === 'starter' ? (settings?.starter_price || 299) : (settings?.basic_price || 199)),
+            price: cafe.subscription.plan_name === 'pro_plus' ? (settings?.pro_price || 499) : (cafe.subscription.plan_name === 'pro' ? (settings?.starter_price || 299) : (settings?.basic_price || 199)),
             start_date: new Date(),
             end_date: newEndDate,
             status: 'active'

@@ -153,7 +153,7 @@ const SubscriptionManagement = () => {
             </p>
           </div>
 
-          {/* Starter Plan */}
+          {/* Temp Pro Plus Plan */}
         <div
           style={{ padding: '24px', borderRadius: 20, background: 'linear-gradient(145deg, rgba(124,58,237,0.1) 0%, rgba(255,255,255,0.02) 100%)', border: '1px solid rgba(124,58,237,0.2)', boxShadow: '0 8px 30px rgba(124,58,237,0.05)', transition: 'transform 0.2s', animation: 'slideUp 0.4s ease 0s both' }}
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)' }}
@@ -164,7 +164,7 @@ const SubscriptionManagement = () => {
               S
             </div>
             <div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Starter Plan</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Temp Pro Plus Plan</h3>
               <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>Basic features</p>
             </div>
           </div>
@@ -173,7 +173,7 @@ const SubscriptionManagement = () => {
           </p>
         </div>
 
-        {/* Pro Plan */}
+        {/* Pro Plus Plan */}
         <div
           style={{ padding: '24px', borderRadius: 20, background: 'linear-gradient(145deg, rgba(245,158,11,0.1) 0%, rgba(255,255,255,0.02) 100%)', border: '1px solid rgba(245,158,11,0.2)', boxShadow: '0 8px 30px rgba(245,158,11,0.05)', transition: 'transform 0.2s', animation: 'slideUp 0.4s ease 0.1s both' }}
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)' }}
@@ -184,7 +184,7 @@ const SubscriptionManagement = () => {
               P
             </div>
             <div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Pro Plan</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Pro Plus Plan</h3>
               <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>All features included</p>
             </div>
           </div>
@@ -278,7 +278,7 @@ const SubscriptionManagement = () => {
               ) : subscriptions.length > 0 ? (
                 subscriptions.map(sub => {
                   const sc = STATUS_COLORS[sub.status] || STATUS_COLORS.pending
-                  const isPro = sub.plan_name === 'pro'
+                  const isPro = sub.plan_name === 'pro_plus'
                   return (
                     <tr key={sub._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.15s' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card)'}
@@ -396,7 +396,7 @@ const SubscriptionManagement = () => {
                     <div key={record._id} style={{ padding: 20, borderRadius: 16, background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: record.plan_name === 'pro' ? '#f59e0b' : '#a78bfa', textTransform: 'capitalize' }}>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: record.plan_name === 'pro_plus' ? '#f59e0b' : '#a78bfa', textTransform: 'capitalize' }}>
                             {record.plan_name} Plan
                           </span>
                           <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 12, background: 'var(--border-hover)', color: 'var(--text-secondary)' }}>

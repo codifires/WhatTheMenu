@@ -365,7 +365,7 @@ const AdminSettings = () => {
     stripeLiveMode: false,
     currency: 'INR',
     taxRate: '18',
-    basicPrice: '199',
+    starterPrice: '199',
     starterPrice: '299',
     proPrice: '499',
     yearlyDiscountPercentage: '20',
@@ -390,7 +390,7 @@ const AdminSettings = () => {
           stripeLiveMode: s.payment_live_mode || false,
           currency: s.currency || 'INR',
           taxRate: String(s.tax_rate ?? 18),
-          basicPrice: String(s.basic_price ?? 199),
+          starterPrice: String(s.starter_price ?? 199),
           starterPrice: String(s.starter_price ?? 299),
           proPrice: String(s.pro_price ?? 499),
           yearlyDiscountPercentage: String(s.yearly_discount_percentage ?? 20),
@@ -412,7 +412,7 @@ const AdminSettings = () => {
         payment_live_mode: form.stripeLiveMode,
         currency: form.currency,
         tax_rate: Number(form.taxRate),
-          basic_price: Number(form.basicPrice),
+          starter_price: Number(form.starterPrice),
         starter_price: Number(form.starterPrice),
         pro_price: Number(form.proPrice),
         yearly_discount_percentage: Number(form.yearlyDiscountPercentage),
@@ -534,9 +534,9 @@ const AdminSettings = () => {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginTop: 20 }}>
-                 <InputField label="Basic Plan Price (Monthly)" type="number" prefix="₹" value={form.basicPrice} onChange={e => set('basicPrice', e.target.value)} helperText="Monthly price for the Basic plan." />
-                  <InputField label="Starter Plan Price (Monthly)" type="number" prefix="₹" value={form.starterPrice} onChange={e => set('starterPrice', e.target.value)} helperText="Monthly price for the Starter plan." />
-                 <InputField label="Pro Plan Price (Monthly)" type="number" prefix="₹" value={form.proPrice} onChange={e => set('proPrice', e.target.value)} helperText="Monthly price for the Pro plan." />
+                 <InputField label="Starter Plan Price (Monthly)" type="number" prefix="₹" value={form.starterPrice} onChange={e => set('starterPrice', e.target.value)} helperText="Monthly price for the Basic plan." />
+                  <InputField label="Pro Plan Price (Monthly)" type="number" prefix="₹" value={form.starterPrice} onChange={e => set('starterPrice', e.target.value)} helperText="Monthly price for the Starter plan." />
+                 <InputField label="Pro Plus Plan Price (Monthly)" type="number" prefix="₹" value={form.proPrice} onChange={e => set('proPrice', e.target.value)} helperText="Monthly price for the Pro plan." />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginTop: 10 }}>

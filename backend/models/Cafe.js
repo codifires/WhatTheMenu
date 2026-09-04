@@ -72,19 +72,30 @@ const cafeSchema = new mongoose.Schema({
     tax_number: { type: String, default: '' },
     thank_you_message: { type: String, default: 'Thank you for your visit!' }
   },
+  theme_settings: {
+    active_theme: { 
+      type: String, 
+      enum: ['classic', 'midnight', 'blackgold', 'forest', 'rose'], 
+      default: 'classic' 
+    },
+    unlocked_themes: {
+      type: [String],
+      default: ['classic']
+    }
+  },
   subscription_status: {
     type: String,
     enum: ['active', 'expired', 'suspended'],
     default: 'active'
   },
   subscription: {
-    plan_name: { type: String, enum: ['free', 'starter', 'pro'], default: 'free' },
+    plan_name: { type: String, enum: ['starter', 'pro', 'pro_plus'], default: 'starter' },
     start_date: { type: Date, default: Date.now },
     end_date: { type: Date },
     status: { type: String, enum: ['active', 'expired', 'suspended'], default: 'active' }
   },
   upcoming_subscription: {
-    plan_name: { type: String, enum: ['starter', 'pro'] },
+    plan_name: { type: String, enum: ['pro', 'pro_plus'] },
     duration_days: { type: Number, default: 30 }
   },
   role: {

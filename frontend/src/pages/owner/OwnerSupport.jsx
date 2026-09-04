@@ -24,7 +24,7 @@ const DEFAULT_FAQS = [
     a: 'Modern browsers block automatic audio until you interact with the page. Ensure your browser tab is unmuted, click anywhere on the Live Orders screen once after logging in, and keep the tab open.'
   },
   {
-    q: 'How does upgrading to the Pro Plan work?',
+    q: 'How does upgrading to the Pro Plus Plan work?',
     a: 'Go to Subscription in your sidebar and select "Upgrade to Pro". A dynamic UPI payment QR will appear. Scan and pay via GPay, PhonePe, or Paytm, and your Pro features will activate immediately within seconds.'
   },
   {
@@ -382,7 +382,7 @@ export default function OwnerSupport() {
             Open a Support Request
           </h2>
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 24px' }}>
-            Fill out the details below. Pro Plan tickets receive instant high-priority routing.
+            Fill out the details below. Pro Plus Plan tickets receive instant high-priority routing.
           </p>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>

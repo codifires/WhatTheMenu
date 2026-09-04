@@ -8,7 +8,7 @@ const subscriptionSchema = new mongoose.Schema({
   },
   plan_name: {
     type: String,
-    enum: ['free', 'starter', 'pro'],
+    enum: ['starter', 'pro', 'pro_plus'],
     required: [true, 'Plan name is required']
   },
   price: {
@@ -25,7 +25,7 @@ const subscriptionSchema = new mongoose.Schema({
     required: true
   },
   trial_end_date: {
-    type: Date // Only set for 'free' trial plan
+    type: Date // Only set for 'starter' trial plan
   },
   status: {
     type: String,

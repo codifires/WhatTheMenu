@@ -23,19 +23,19 @@ async function runTests() {
         address: '123 Main Avenue, Bangalore',
         subscription_status: 'active',
         subscription: {
-          plan_name: 'pro',
+          plan_name: 'pro_plus',
           status: 'active'
         }
       });
       console.log('✅ Created test Pro Cafe:', testCafe.name);
     } else {
-      testCafe.subscription = { plan_name: 'pro', status: 'active' };
+      testCafe.subscription = { plan_name: 'pro_plus', status: 'active' };
       testCafe.subscription_status = 'active';
       await testCafe.save();
     }
 
     // 2. Test ticket creation for Pro Cafe (Should auto-tag 'urgent')
-    const isPro = testCafe.subscription?.plan_name === 'pro' || testCafe.subscription_status === 'pro';
+    const isPro = testCafe.subscription?.plan_name === 'pro_plus' || testCafe.subscription_status === 'pro_plus';
     const priority = isPro ? 'urgent' : 'normal';
 
     const ticketNumber = `TCK-${Date.now().toString().slice(-6)}`;
@@ -51,7 +51,7 @@ async function runTests() {
 
     console.log(`✅ Ticket Created: #${ticket.ticket_number} | Priority: ${ticket.priority} | Status: ${ticket.status}`);
     if (ticket.priority !== 'urgent') {
-      throw new Error(`Expected priority 'urgent' for Pro Plan, got '${ticket.priority}'`);
+      throw new Error(`Expected priority 'urgent' for Pro Plus Plan, got '${ticket.priority}'`);
     }
 
     // 3. Test Owner retrieving their tickets

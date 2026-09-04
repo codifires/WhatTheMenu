@@ -9,7 +9,7 @@ const subscriptionHistorySchema = new mongoose.Schema({
   plan_name: {
     type: String,
     required: true,
-    enum: ['free', 'starter', 'pro']
+    enum: ['starter', 'pro', 'pro_plus']
   },
   price: {
     type: Number,

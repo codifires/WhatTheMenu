@@ -116,7 +116,7 @@ const CustomerFeedback = () => {
                   onClick={() => setRating(star)}
                   style={{ cursor: 'pointer', padding: 4, transition: 'transform 0.2s', transform: active ? 'scale(1.1)' : 'scale(1)' }}
                 >
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill={active ? '#f59e0b' : 'none'} stroke={active ? '#f59e0b' : 'var(--text-tertiary)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'all 0.2s', filter: active ? 'drop-shadow(0 0 10px rgba(245,158,11,0.5))' : 'none' }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill={active ? 'var(--accent-primary)' : 'none'} stroke={active ? 'var(--accent-primary)' : 'var(--text-tertiary)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'all 0.2s', filter: active ? 'drop-shadow(0 0 10px var(--accent-primary))' : 'none' }}>
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                   </svg>
                 </div>
@@ -130,7 +130,7 @@ const CustomerFeedback = () => {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          style={{ width: '100%', padding: '16px', borderRadius: 16, border: 'none', background: 'linear-gradient(135deg, #f59e0b, #ea580c)', color: 'var(--text-primary)', fontSize: 16, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 10px 30px rgba(245,158,11,0.4)', transition: 'transform 0.2s', opacity: loading ? 0.7 : 1, marginTop: 8 }}
+          style={{ width: '100%', padding: '16px', borderRadius: 16, border: 'none', background: 'var(--accent-gradient)', color: 'var(--accent-text)', fontSize: 16, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', boxShadow: 'var(--accent-shadow)', transition: 'transform 0.2s', opacity: loading ? 0.7 : 1, marginTop: 8 }}
           onMouseEnter={e => { if(!loading) e.currentTarget.style.transform='translateY(-2px)' }}
           onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)' }}
         >

@@ -40,14 +40,14 @@ const orderStatusValidator = [
 const subscriptionRequestValidator = [
   checkExact([
     body('amount').isNumeric().withMessage('Amount must be numeric'),
-    body('plan_name').isIn(['free', 'starter', 'pro']).withMessage('Invalid plan name')
+    body('plan_name').isIn(['starter', 'pro', 'pro_plus']).withMessage('Invalid plan name')
   ]),
   validate
 ];
 
 const initiateSubscriptionSessionValidator = [
   checkExact([
-    body('plan_name').isIn(['starter', 'pro']).withMessage('Plan name must be starter or pro')
+    body('plan_name').isIn(['pro', 'pro_plus']).withMessage('Plan name must be starter or pro')
   ]),
   validate
 ];

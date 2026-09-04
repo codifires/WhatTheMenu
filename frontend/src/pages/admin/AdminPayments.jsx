@@ -68,7 +68,7 @@ const AdminPayments = () => {
               ) : payments.length > 0 ? (
                 payments.map(payment => {
                   const sc = STATUS_COLORS[payment.status] || STATUS_COLORS.expired
-                  const isPro = payment.plan_name === 'pro'
+                  const isPro = payment.plan_name === 'pro_plus'
                   return (
                     <tr key={payment._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.15s' }}
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card)'}
@@ -90,7 +90,7 @@ const AdminPayments = () => {
                       {/* Plan Type */}
                       <td style={{ padding: '16px 20px' }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: isPro ? '#f59e0b' : '#a78bfa', padding: '4px 10px', borderRadius: 6, background: isPro ? 'var(--warning-light)' : 'rgba(124,58,237,0.1)', textTransform: 'capitalize' }}>
-                          {isPro ? 'Pro Plan' : payment.plan_name === 'free' ? 'Free Plan' : 'Starter Plan'}
+                          {isPro ? 'Pro Plus Plan' : payment.plan_name === 'starter' ? 'Temp Pro Plus Plan' : 'Temp Pro Plus Plan'}
                         </span>
                       </td>
 

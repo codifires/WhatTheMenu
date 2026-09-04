@@ -49,8 +49,8 @@ async function runTest() {
         name: 'Automated Test Café',
         email: `testcafe_${Date.now()}@example.com`,
         password: 'password123',
-        subscription_status: 'free',
-        subscription: { plan_name: 'free', start_date: new Date(), end_date: new Date() }
+        subscription_status: 'starter',
+        subscription: { plan_name: 'starter', start_date: new Date(), end_date: new Date() }
       });
     }
     console.log(`☕ Test Cafe: "${cafe.name}" (ID: ${cafe._id})`);
@@ -70,7 +70,7 @@ async function runTest() {
     console.log('\n1️⃣ [TESTING POST /api/owner/subscription/initiate-session]...');
     const initRes = await axios.post(
       `${API_BASE}/owner/subscription/initiate-session`,
-      { plan_name: 'pro' },
+      { plan_name: 'pro_plus' },
       authHeaders
     );
 
@@ -125,17 +125,17 @@ async function runTest() {
     console.log(`   Cafe plan_name: ${updatedCafe.subscription?.plan_name} (Expected: pro)`);
     console.log(`   Cafe is_active: ${updatedCafe.is_active} (Expected: true)`);
     if (updatedCafe.subscription_status !== 'active') throw new Error('Cafe subscription_status is not active');
-    if (updatedCafe.subscription?.plan_name !== 'pro') throw new Error('Cafe plan_name is not pro');
+    if (updatedCafe.subscription?.plan_name !== 'pro_plus') throw new Error('Cafe plan_name is not pro');
 
     const subDoc = await Subscription.findOne({ cafe_id: cafe._id });
     console.log(`   Subscription collection sync: plan=${subDoc?.plan_name}, status=${subDoc?.status}`);
-    if (!subDoc || subDoc.plan_name !== 'pro' || subDoc.status !== 'active') {
+    if (!subDoc || subDoc.plan_name !== 'pro_plus' || subDoc.status !== 'active') {
       throw new Error('Subscription collection not synced correctly');
     }
 
     const historyDoc = await SubscriptionHistory.findOne({ cafe_id: cafe._id }).sort({ created_at: -1 });
     console.log(`   SubscriptionHistory ledger latest record: plan=${historyDoc?.plan_name}, price=₹${historyDoc?.price}`);
-    if (!historyDoc || historyDoc.plan_name !== 'pro') {
+    if (!historyDoc || historyDoc.plan_name !== 'pro_plus') {
       throw new Error('SubscriptionHistory record was not created');
     }
     console.log('   ✅ Database, Collections & History Ledger completely verified!');
@@ -144,7 +144,7 @@ async function runTest() {
     console.log('\n6️⃣ [TESTING POST /api/owner/subscription/cancel-session/:sessionId]...');
     const initRes2 = await axios.post(
       `${API_BASE}/owner/subscription/initiate-session`,
-      { plan_name: 'starter' },
+      { plan_name: 'pro' },
       authHeaders
     );
     const session2Id = initRes2.data.data.session_id;

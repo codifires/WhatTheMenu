@@ -19,14 +19,14 @@ function InputField({ label, as, ...props }) {
       {as === 'textarea' ? (
         <textarea
           style={{ ...INPUT, resize: 'vertical', minHeight: 74 }}
-          onFocus={e => {e.target.style.borderColor = '#f59e0b'; e.target.style.background = 'rgba(245,158,11,0.04)'; e.target.style.boxShadow = '0 0 12px rgba(245,158,11,0.15)'}}
+          onFocus={e => {e.target.style.borderColor = 'var(--accent-primary)'; e.target.style.background = 'var(--accent-bg-subtle)'; e.target.style.boxShadow = 'var(--accent-shadow)'}}
           onBlur={e => {e.target.style.borderColor = 'var(--border-medium)'; e.target.style.background = 'var(--bg-input)'; e.target.style.boxShadow = 'none'}}
           {...props}
         />
       ) : (
         <input
           style={INPUT}
-          onFocus={e => {e.target.style.borderColor = '#f59e0b'; e.target.style.background = 'rgba(245,158,11,0.04)'; e.target.style.boxShadow = '0 0 12px rgba(245,158,11,0.15)'}}
+          onFocus={e => {e.target.style.borderColor = 'var(--accent-primary)'; e.target.style.background = 'var(--accent-bg-subtle)'; e.target.style.boxShadow = 'var(--accent-shadow)'}}
           onBlur={e => {e.target.style.borderColor = 'var(--border-medium)'; e.target.style.background = 'var(--bg-input)'; e.target.style.boxShadow = 'none'}}
           {...props}
         />
@@ -126,7 +126,7 @@ const Checkout = () => {
             contact: ''
           },
           theme: {
-            color: '#f59e0b'
+            color: 'var(--accent-primary)'
           },
           modal: {
             ondismiss: function() {
@@ -197,7 +197,7 @@ const Checkout = () => {
             <div
               style={{
                 padding: '16px', borderRadius: 18, marginBottom: 12, cursor: 'default',
-                border: '2px solid #f59e0b',
+                border: '2px solid var(--accent-primary)',
                 background: 'linear-gradient(180deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.03) 100%)',
                 boxShadow: '0 0 20px rgba(245,158,11,0.18)',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
@@ -217,7 +217,7 @@ const Checkout = () => {
                 </div>
               </div>
 
-              <div style={{ width: 22, height: 22, borderRadius: 50, background: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontSize: 12, fontWeight: 900 }}>
+              <div style={{ width: 22, height: 22, borderRadius: 50, background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-text)', fontSize: 12, fontWeight: 900 }}>
                 ✓
               </div>
             </div>
@@ -236,7 +236,7 @@ const Checkout = () => {
           </div>
           {items.map(item => (
             <div key={item._id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-              <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}><span style={{ color: '#f59e0b', fontWeight: 700, marginRight: 8 }}>{item.quantity}x</span>{item.name}</span>
+              <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}><span style={{ color: 'var(--accent-primary)', fontWeight: 700, marginRight: 8 }}>{item.quantity}x</span>{item.name}</span>
               <span style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600 }}>₹{item.price * item.quantity}</span>
             </div>
           ))}
@@ -249,7 +249,7 @@ const Checkout = () => {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>Total Payable</span>
-            <span style={{ fontSize: 24, fontWeight: 900, color: '#f59e0b', fontFamily: "'Outfit',sans-serif" }}>₹{grandTotal.toFixed(2)}</span>
+            <span style={{ fontSize: 24, fontWeight: 900, color: 'var(--accent-primary)', fontFamily: "'Outfit',sans-serif" }}>₹{grandTotal.toFixed(2)}</span>
           </div>
         </div>
 
@@ -279,7 +279,7 @@ const Checkout = () => {
             disabled={loading}
             style={{
               flex: 1, height: 52, borderRadius: 16, border: 'none',
-              background: 'linear-gradient(135deg, #f59e0b, #ea580c)',
+              background: 'var(--accent-gradient)',
               color: 'var(--text-primary)', fontSize: 15, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               boxShadow: '0 6px 20px rgba(245,158,11,0.45)',

@@ -55,7 +55,7 @@ const CafeManagement = () => {
   const [showModal, setShowModal] = useState(false)
   const [editingCafe, setEditingCafe] = useState(null)
   const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', address: '', plan_name: 'free' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', address: '', plan_name: 'starter' })
 
   useEffect(() => { fetchCafes() }, [search])
 
@@ -110,13 +110,13 @@ const CafeManagement = () => {
 
   const openEdit = (cafe) => {
     setEditingCafe(cafe)
-    setForm({ name: cafe.name, email: cafe.email, password: '', phone: cafe.phone, address: cafe.address, plan_name: cafe.subscription?.plan_name || 'free' })
+    setForm({ name: cafe.name, email: cafe.email, password: '', phone: cafe.phone, address: cafe.address, plan_name: cafe.subscription?.plan_name || 'starter' })
     setShowModal(true)
   }
 
   const resetForm = () => {
     setEditingCafe(null)
-    setForm({ name: '', email: '', password: '', phone: '', address: '', plan_name: 'free' })
+    setForm({ name: '', email: '', password: '', phone: '', address: '', plan_name: 'starter' })
   }
 
   const filteredCafes = cafes // server-side filtered
@@ -316,22 +316,20 @@ const CafeManagement = () => {
               <InputField label="Email Address *" type="email" placeholder="owner@cafe.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
               <InputField label="Phone Number *" type="tel" placeholder="9876543210" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} required />
               <InputField label="Address *" placeholder="123 MG Road, Bangalore" value={form.address} onChange={e => setForm({...form, address: e.target.value})} required />
-              {!editingCafe && (
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6, letterSpacing: 0.5 }}>Subscription Plan *</label>
-                  <select
-                    value={form.plan_name}
-                    onChange={e => setForm({...form, plan_name: e.target.value})}
-                    style={{ ...INPUT, cursor: 'pointer' }}
-                    onFocus={e => e.target.style.borderColor = 'rgba(124,58,237,0.6)'}
-                    onBlur={e => e.target.style.borderColor = 'var(--border-hover)'}
-                  >
-                    <option value="free">Free Trial</option>
-                    <option value="starter">Starter — ₹299/month</option>
-                    <option value="pro">Pro — ₹499/month</option>
-                  </select>
-                </div>
-              )}
+              <div>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6, letterSpacing: 0.5 }}>Subscription Plan *</label>
+                    <select
+                      value={form.plan_name}
+                      onChange={e => setForm({...form, plan_name: e.target.value})}
+                      style={{ ...INPUT, cursor: 'pointer' }}
+                      onFocus={e => e.target.style.borderColor = 'rgba(124,58,237,0.6)'}
+                      onBlur={e => e.target.style.borderColor = 'var(--border-hover)'}
+                    >
+                      <option value="starter">Starter Plan</option>
+                      <option value="pro">Pro Plan</option>
+                      <option value="pro_plus">Pro Plus Plan</option>
+                    </select>
+                  </div>
 
               <div style={{ display: 'flex', gap: 12, paddingTop: 8 }}>
                 <button type="button" onClick={() => setShowModal(false)}

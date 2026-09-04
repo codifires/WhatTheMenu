@@ -174,7 +174,7 @@ export default function SupportTicketManagement() {
           border: '1px solid rgba(239, 68, 68, 0.25)'
         }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--danger-text)', textTransform: 'uppercase', marginBottom: 6 }}>
-            ⚡ Urgent / Pro Plan
+            ⚡ Urgent / Pro Plus Plan
           </div>
           <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--danger-text)' }}>
             {counts.urgent}
@@ -267,7 +267,7 @@ export default function SupportTicketManagement() {
           }}
         >
           <option value="all">All Priorities</option>
-          <option value="urgent">⚡ Urgent (Pro Plan)</option>
+          <option value="urgent">⚡ Urgent (Pro Plus Plan)</option>
           <option value="normal">Standard Priority</option>
         </select>
 
@@ -329,7 +329,7 @@ export default function SupportTicketManagement() {
               <tbody>
                 {filteredTickets.map(t => {
                   const badge = getStatusBadge(t.status)
-                  const isPro = t.cafe_id?.subscription?.plan_name === 'pro' || t.cafe_id?.subscription_status === 'pro'
+                  const isPro = t.cafe_id?.subscription?.plan_name === 'pro_plus' || t.cafe_id?.subscription_status === 'pro_plus'
                   return (
                     <tr
                       key={t._id}

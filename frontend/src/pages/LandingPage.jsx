@@ -73,7 +73,7 @@ const STEPS = [
 
 const DEFAULT_PLANS = [
   {
-    name: 'Basic',
+    name: 'Starter',
     price: '₹199',
     period: '/mo',
     desc: '',
@@ -87,21 +87,21 @@ const DEFAULT_PLANS = [
     tickColor: '#10b981'
   },
   {
-    name: 'Starter',
+    name: 'Pro',
     price: '₹299',
     period: '/mo',
     desc: '',
     features: ['Digital QR Menu', 'Basic Analytics', 'Up to 50 Menu Items', 'Email Support'],
     cta: 'Select Starter',
     popular: false,
-    id: 'starter',
+    id: 'pro',
     titleColor: '#10b981',
     btnBg: '#3b82f6',
     borderColor: 'rgba(16,185,129,0.3)',
     tickColor: '#10b981'
   },
   {
-    name: 'Pro',
+    name: 'Pro Plus',
     price: '₹499',
     period: '/mo',
     desc: '',
@@ -110,7 +110,7 @@ const DEFAULT_PLANS = [
     popular: true,
     badge: 'Most Popular',
     badgeBg: '#7c3aed',
-    id: 'pro',
+    id: 'pro_plus',
     titleColor: '#a78bfa',
     btnBg: '#06b6d4',
     borderColor: 'rgba(124,58,237,0.4)',
@@ -125,7 +125,7 @@ export default function LandingPage() {
   const [billingCycle, setBillingCycle] = useState('monthly')
   const [contactEmail, setContactEmail] = useState('support@whatthemenu.com')
   const [rawPrices, setRawPrices] = useState({
-    basic_price: 199, starter_price: 299, pro_price: 499,
+    starter_price: 199, starter_price: 299, pro_price: 499,
     yearly_discount_percentage: 20
   })
   const [realCafeCount, setRealCafeCount] = useState(0)
@@ -140,7 +140,7 @@ export default function LandingPage() {
         setRealCafeCount(d.cafe_count || 0)
         setContactEmail(d.contact_email || 'support@whatthemenu.com')
         setRawPrices({
-          basic_price: d.basic_price || 199,
+          starter_price: d.starter_price || 199,
           starter_price: d.starter_price || 299,
           pro_price: d.pro_price || 499,
           yearly_discount_percentage: d.yearly_discount_percentage || 20
@@ -148,16 +148,16 @@ export default function LandingPage() {
         
         const isYearly = billingCycle === 'yearly';
         const discount = d.yearly_discount_percentage || 20;
-        const basicYearly = Math.round((d.basic_price || 199) * 12 * (1 - discount / 100));
+        const basicYearly = Math.round((d.starter_price || 199) * 12 * (1 - discount / 100));
         const starterYearly = Math.round((d.starter_price || 299) * 12 * (1 - discount / 100));
         const proYearly = Math.round((d.pro_price || 499) * 12 * (1 - discount / 100));
 
                 setPlans([
           {
             ...DEFAULT_PLANS[0],
-            price: `₹${isYearly ? basicYearly : (d.basic_price || 199)}`,
+            price: `₹${isYearly ? basicYearly : (d.starter_price || 199)}`,
             period: isYearly ? '/year' : '/month',
-            features: d.basic_features?.length > 0 ? d.basic_features : DEFAULT_PLANS[0].features
+            features: d.starter_features?.length > 0 ? d.starter_features : DEFAULT_PLANS[0].features
           },
           {
             ...DEFAULT_PLANS[1],
@@ -196,18 +196,18 @@ export default function LandingPage() {
   useEffect(() => {
     const isYearly = billingCycle === 'yearly';
     const discount = rawPrices.yearly_discount_percentage;
-    const basicYearly = Math.round(rawPrices.basic_price * 12 * (1 - discount / 100));
+    const basicYearly = Math.round(rawPrices.starter_price * 12 * (1 - discount / 100));
     const starterYearly = Math.round(rawPrices.starter_price * 12 * (1 - discount / 100));
     const proYearly = Math.round(rawPrices.pro_price * 12 * (1 - discount / 100));
 
     setPlans(prevPlans => prevPlans.map(p => {
       if (p.id === 'basic') {
-        return { ...p, price: `₹${isYearly ? basicYearly : rawPrices.basic_price}`, period: isYearly ? '/yr' : '/mo' }
-      }
-      if (p.id === 'starter') {
-        return { ...p, price: `₹${isYearly ? starterYearly : rawPrices.starter_price}`, period: isYearly ? '/yr' : '/mo' }
+        return { ...p, price: `₹${isYearly ? basicYearly : rawPrices.starter_price}`, period: isYearly ? '/yr' : '/mo' }
       }
       if (p.id === 'pro') {
+        return { ...p, price: `₹${isYearly ? starterYearly : rawPrices.starter_price}`, period: isYearly ? '/yr' : '/mo' }
+      }
+      if (p.id === 'pro_plus') {
         return { ...p, price: `₹${isYearly ? proYearly : rawPrices.pro_price}`, period: isYearly ? '/yr' : '/mo' }
       }
       return p;

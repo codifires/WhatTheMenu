@@ -101,21 +101,70 @@ const CustomerMenu = () => {
   }
 
   return (
-    <div style={{ animation: 'fadeIn 0.4s ease' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-main)', paddingBottom: 40 }}>
+      <div style={{ animation: 'fadeIn 0.4s ease' }}>
       
       {/* ── Café Header ── */}
-      <div style={{ position: 'relative', padding: '30px 20px', overflow: 'hidden', borderBottomLeftRadius: 32, borderBottomRightRadius: 32, boxShadow: '0 10px 40px rgba(0,0,0,0.3)', marginBottom: 20 }}>
-        <div style={{ position: 'absolute', inset: 0, background: cafe.logo ? `url(${cafe.logo}) center/cover` : 'linear-gradient(135deg, #f59e0b, #ea580c)', filter: 'blur(20px) brightness(0.4)', transform: 'scale(1.2)' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0a0d14, transparent)' }} />
+      <div style={{ 
+        position: 'relative', 
+        padding: '40px 24px 30px', 
+        overflow: 'hidden', 
+        borderBottomLeftRadius: 36, 
+        borderBottomRightRadius: 36, 
+        boxShadow: 'var(--accent-shadow)', 
+        marginBottom: 24,
+        background: 'var(--header-bg)'
+      }}>
+        {/* Background Image (only if cafe has a logo) */}
+        {cafe.logo && (
+          <div style={{ position: 'absolute', inset: 0, background: `url(${cafe.logo}) center/cover`, filter: 'blur(15px) brightness(0.3)', transform: 'scale(1.2)' }} />
+        )}
         
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 64, height: 64, borderRadius: 20, background: 'var(--border-hover)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, overflow: 'hidden', flexShrink: 0, boxShadow: '0 8px 20px rgba(0,0,0,0.4)' }}>
+        {/* Subtle overlay gradient to ensure text readability */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.4) 100%)' }} />
+        
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 20 }}>
+          {/* Logo Container */}
+          <div style={{ 
+            width: 72, 
+            height: 72, 
+            borderRadius: 24, 
+            background: 'var(--bg-card)', 
+            border: '2px solid rgba(255,255,255,0.1)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            fontSize: 32, 
+            overflow: 'hidden', 
+            flexShrink: 0, 
+            boxShadow: '0 8px 24px rgba(0,0,0,0.3)' 
+          }}>
             {cafe.logo ? <img src={cafe.logo} alt={cafe.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '☕'}
           </div>
+          
+          {/* Cafe Info */}
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 900, margin: '0 0 4px', color: 'var(--text-primary)', fontFamily: "'Outfit',sans-serif", textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{cafe.name}</h1>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0, display: 'flex', alignItems: 'center', gap: 4, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <h1 style={{ 
+              fontSize: 26, 
+              fontWeight: 900, 
+              margin: '0 0 6px', 
+              color: '#ffffff', 
+              fontFamily: "'Outfit',sans-serif", 
+              textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+              letterSpacing: '-0.5px'
+            }}>
+              {cafe.name}
+            </h1>
+            <p style={{ 
+              fontSize: 14, 
+              color: 'rgba(255,255,255,0.85)', 
+              margin: 0, 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 6, 
+              textShadow: '0 1px 4px rgba(0,0,0,0.5)' 
+            }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
               {cafe.address}
             </p>
           </div>
@@ -129,9 +178,9 @@ const CustomerMenu = () => {
             onClick={() => setActiveCategory('all')}
             style={{
               padding: '10px 20px', borderRadius: 50, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap',
-              background: activeCategory === 'all' ? 'linear-gradient(135deg, #f59e0b, #ea580c)' : 'var(--bg-card-hover)',
-              color: activeCategory === 'all' ? 'var(--text-primary)' : 'var(--text-secondary)',
-              boxShadow: activeCategory === 'all' ? '0 4px 15px rgba(245,158,11,0.4)' : 'none'
+              background: activeCategory === 'all' ? 'var(--accent-gradient)' : 'var(--bg-card-hover)',
+              color: activeCategory === 'all' ? 'var(--accent-text)' : 'var(--text-secondary)',
+              boxShadow: activeCategory === 'all' ? 'var(--accent-shadow)' : 'none'
             }}
           >
             All Items
@@ -142,9 +191,9 @@ const CustomerMenu = () => {
               onClick={() => setActiveCategory(cat._id)}
               style={{
                 padding: '10px 20px', borderRadius: 50, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap',
-                background: activeCategory === cat._id ? 'linear-gradient(135deg, #f59e0b, #ea580c)' : 'var(--bg-card-hover)',
-                color: activeCategory === cat._id ? 'var(--text-primary)' : 'var(--text-secondary)',
-                boxShadow: activeCategory === cat._id ? '0 4px 15px rgba(245,158,11,0.4)' : 'none'
+                background: activeCategory === cat._id ? 'var(--accent-gradient)' : 'var(--bg-card-hover)',
+                color: activeCategory === cat._id ? 'var(--accent-text)' : 'var(--text-secondary)',
+                boxShadow: activeCategory === cat._id ? 'var(--accent-shadow)' : 'none'
               }}
             >
               {cat.name}
@@ -182,7 +231,7 @@ const CustomerMenu = () => {
                   <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '0 0 12px', flex: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.description}</p>
                   
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-                    <span style={{ fontSize: 16, fontWeight: 800, color: item.availability === false ? 'var(--text-tertiary)' : '#f59e0b' }}>₹{item.price}</span>
+                    <span style={{ fontSize: 16, fontWeight: 800, color: item.availability === false ? 'var(--text-tertiary)' : 'var(--accent-primary)' }}>₹{item.price}</span>
                     
                     {item.availability === false ? (
                       <span style={{ padding: '6px 12px', borderRadius: 12, background: 'var(--border-light)', color: 'var(--text-secondary)', fontSize: 11, fontWeight: 700 }}>
@@ -192,10 +241,10 @@ const CustomerMenu = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--border-light)', borderRadius: 12, padding: 4 }}>
                         <button onClick={() => qty === 1 ? removeItem(item._id) : updateQuantity(item._id, qty - 1)} style={{ width: 24, height: 24, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-secondary)', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
                         <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', width: 12, textAlign: 'center' }}>{qty}</span>
-                        <button onClick={() => updateQuantity(item._id, qty + 1)} style={{ width: 24, height: 24, borderRadius: 8, border: 'none', background: 'linear-gradient(135deg, #f59e0b, #ea580c)', color: 'var(--text-primary)', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
+                        <button onClick={() => updateQuantity(item._id, qty + 1)} style={{ width: 24, height: 24, borderRadius: 8, border: 'none', background: 'var(--accent-gradient)', color: 'var(--accent-text)', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
                       </div>
                     ) : (
-                      <button onClick={() => addItem(item, cafeId)} style={{ padding: '6px 14px', borderRadius: 12, border: 'none', background: 'var(--warning-light)', color: '#f59e0b', fontSize: 12, fontWeight: 800, cursor: 'pointer', transition: 'background 0.2s' }}>
+                      <button onClick={() => addItem(item, cafeId)} style={{ padding: '6px 14px', borderRadius: 12, border: 'none', background: 'var(--accent-bg-subtle)', color: 'var(--accent-primary)', fontSize: 12, fontWeight: 800, cursor: 'pointer', transition: 'background 0.2s' }}>
                         + ADD
                       </button>
                     )}
@@ -217,7 +266,8 @@ const CustomerMenu = () => {
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
+      `}      </style>
+      </div>
     </div>
   )
 }

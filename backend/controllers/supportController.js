@@ -18,7 +18,7 @@ const DEFAULT_FAQS = [
     a: 'Modern browsers block automatic audio until you interact with the page. Ensure your browser tab is unmuted, click anywhere on the Live Orders screen once after logging in, and keep the tab open.'
   },
   {
-    q: 'How does upgrading to the Pro Plan work?',
+    q: 'How does upgrading to the Pro Plus Plan work?',
     a: 'Go to Subscription in your sidebar and select "Upgrade to Pro". A dynamic UPI payment QR will appear. Scan and pay via GPay, PhonePe, or Paytm, and your Pro features will activate immediately within seconds.'
   },
   {
@@ -40,7 +40,7 @@ const createTicket = async (req, res, next) => {
     }
 
     // Auto-detect priority: Pro plan gets urgent fast-track
-    const isPro = cafe.subscription?.plan_name === 'pro' || cafe.subscription_status === 'pro';
+    const isPro = cafe.subscription?.plan_name === 'pro_plus' || cafe.subscription_status === 'pro_plus';
     const priority = isPro ? 'urgent' : 'normal';
 
     // Generate unique sequential ticket number
@@ -68,7 +68,7 @@ const createTicket = async (req, res, next) => {
             <div style="font-family: sans-serif; max-width: 600px; padding: 20px; background: #0f172a; color: #f8fafc; border-radius: 12px;">
               <h2 style="color: #38bdf8; margin-top: 0;">New Support Ticket Created</h2>
               <p><strong>Café:</strong> ${cafe.name} (${cafe.email})</p>
-              <p><strong>Plan:</strong> ${isPro ? '💎 Pro Plan (Priority SLA)' : 'Starter / Free'}</p>
+              <p><strong>Plan:</strong> ${isPro ? '💎 Pro Plus Plan (Priority SLA)' : 'Starter / Free'}</p>
               <p><strong>Ticket ID:</strong> ${ticketNumber}</p>
               <p><strong>Category:</strong> ${category}</p>
               <p><strong>Subject:</strong> ${subject}</p>
@@ -132,7 +132,7 @@ const getSupportInfo = async (req, res, next) => {
   try {
     const settings = await Settings.getSettings();
     const cafe = await Cafe.findById(req.user._id).select('name email phone subscription subscription_status');
-    const isPro = cafe?.subscription?.plan_name === 'pro' || cafe?.subscription_status === 'pro';
+    const isPro = cafe?.subscription?.plan_name === 'pro_plus' || cafe?.subscription_status === 'pro_plus';
 
     res.status(200).json({
       success: true,

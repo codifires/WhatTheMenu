@@ -22,7 +22,7 @@ const getCafeMenu = async (req, res, next) => {
         ? { _id: identifier } 
         : { slug: identifier };
       const cafe = await Cafe.findOne(query)
-      .select('name logo address phone tax_percentage subscription_status razorpay_key_id')
+      .select('name logo address phone tax_percentage subscription_status razorpay_key_id theme_settings')
       .lean();
 
     if (!cafe) {
@@ -67,8 +67,9 @@ const getCafeMenu = async (req, res, next) => {
           address: cafe.address,
           phone: cafe.phone,
           tax_percentage: cafe.tax_percentage || 0,
-          razorpay_key_id: cafe.razorpay_key_id || ''
-        },
+          razorpay_key_id: cafe.razorpay_key_id || '',
+            theme_settings: cafe.theme_settings
+          },
         categories: menuByCategory,
         allItems: menuItems
       }

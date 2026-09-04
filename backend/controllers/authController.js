@@ -301,14 +301,14 @@ const register = async (req, res, next) => {
     const settings = await Settings.getSettings();
     let subscriptionData;
 
-    if (plan_name === 'free' || !plan_name) {
+    if (plan_name === 'starter' || !plan_name) {
       // Free trial — gets Pro plan features for trial_days
       const trialDays = settings.trial_days || 14;
       const trialEnd = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000);
 
       subscriptionData = {
         cafe_id: cafe._id,
-        plan_name: 'free',
+        plan_name: 'starter',
         price: 0,
         status: 'active',
         start_date: Date.now(),
@@ -317,7 +317,7 @@ const register = async (req, res, next) => {
       };
     } else {
       // Starter or Pro paid plan
-      const planPrice = plan_name === 'pro' ? (settings.pro_price || 499) : (settings.starter_price || 299);
+      const planPrice = plan_name === 'pro_plus' ? (settings.pro_price || 499) : (settings.starter_price || 299);
       subscriptionData = {
         cafe_id: cafe._id,
         plan_name: plan_name,
@@ -347,7 +347,7 @@ const register = async (req, res, next) => {
           id: cafe._id,
           name: cafe.name,
           email: cafe.email,
-          plan: plan_name || 'free',
+          plan: plan_name || 'starter',
           created_at: cafe.createdAt
         });
       }

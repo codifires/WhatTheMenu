@@ -9,7 +9,7 @@ const OwnerSubscription = () => {
   const { user, refreshUser } = useAuth()
   const [loading, setLoading] = useState(false)
   const [paymentIncomplete, setPaymentIncomplete] = useState(false)
-  const [lastAttemptedPlan, setLastAttemptedPlan] = useState('pro')
+  const [lastAttemptedPlan, setLastAttemptedPlan] = useState('pro_plus')
   
   const [basicPrice, setBasicPrice] = useState(199)
   const [starterPrice, setStarterPrice] = useState(299)
@@ -61,20 +61,20 @@ const OwnerSubscription = () => {
   const subscription = user?.subscription
   const pendingRequest = user?.pending_request
   
-  const planName = subscription?.plan_name || 'free'
+  const planName = subscription?.plan_name || 'starter'
   const endDate = subscription?.end_date ? new Date(subscription.end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'
   
-  const displayPlanName = planName === 'free' ? 'Free Trial' : planName === 'basic' ? 'Basic Plan' : planName === 'starter' ? 'Starter Plan' : 'Pro Plan'
+  const displayPlanName = planName === 'starter' ? 'Starter Plan' : planName === 'starter' ? 'Starter Plan' : planName === 'pro' ? 'Pro Plan' : 'Pro Plus Plan'
   const isCurrentPlanYearly = subscription?.billing_cycle === 'yearly'
   const basicPriceYearly = Math.round(basicPrice * 12 * (1 - yearlyDiscountPercentage / 100))
   const starterPriceYearly = Math.round(starterPrice * 12 * (1 - yearlyDiscountPercentage / 100))
   const proPriceYearly = Math.round(proPrice * 12 * (1 - yearlyDiscountPercentage / 100))
-  const currentPrice = planName === 'free' ? 0 : planName === 'basic' ? (isCurrentPlanYearly ? basicPriceYearly : basicPrice) : planName === 'starter' ? (isCurrentPlanYearly ? starterPriceYearly : starterPrice) : (isCurrentPlanYearly ? proPriceYearly : proPrice)
-  const displayPrice = planName === 'free' ? '₹0/month' : `₹${currentPrice}/${isCurrentPlanYearly ? 'year' : 'month'}`
+  const currentPrice = planName === 'starter' ? 0 : planName === 'starter' ? (isCurrentPlanYearly ? basicPriceYearly : basicPrice) : planName === 'pro' ? (isCurrentPlanYearly ? starterPriceYearly : starterPrice) : (isCurrentPlanYearly ? proPriceYearly : proPrice)
+  const displayPrice = planName === 'starter' ? '₹0/month' : `₹${currentPrice}/${isCurrentPlanYearly ? 'year' : 'month'}`
 
   const upcoming = user?.upcoming_subscription
   const hasUpcoming = upcoming && upcoming.plan_name
-  const upcomingPlanName = hasUpcoming ? (upcoming.plan_name === 'starter' ? 'Starter Plan' : 'Pro Plan') : null
+  const upcomingPlanName = hasUpcoming ? (upcoming.plan_name === 'pro' ? 'Pro Plan' : 'Pro Plus Plan') : null
 
   const isPending = !!pendingRequest
   // 1. Handle Confirmed Subscription Payment
@@ -82,7 +82,7 @@ const OwnerSubscription = () => {
     if (isConfirmedRef.current) return
     isConfirmedRef.current = true
 
-    toast.success(`🎉 Payment Successful! Your ${data?.plan_name === 'pro' ? 'Pro Plan' : 'Starter Plan'} is now ACTIVE!`, {
+    toast.success(`🎉 Payment Successful! Your ${data?.plan_name === 'pro_plus' ? 'Pro Plus Plan' : 'Pro Plan'} is now ACTIVE!`, {
       duration: 5000,
       icon: '⚡'
     })
@@ -116,7 +116,7 @@ const OwnerSubscription = () => {
           key: razorpay_key_id,
           subscription_id: subscription_id,
           name: platformName,
-          description: `Upgrade to ${plan_name === 'pro' ? 'Pro' : 'Starter'} Plan`,
+          description: `Upgrade to ${plan_name === 'pro_plus' ? 'Pro' : 'Starter'} Plan`,
           image: '/logo.png', // Or platform logo
           handler: async function (response) {
             try {
@@ -237,7 +237,7 @@ const OwnerSubscription = () => {
                 Payment Incomplete
               </div>
               <div style={{ fontSize: 13, color: 'var(--danger-text)' }}>
-                Your {lastAttemptedPlan === 'pro' ? 'Pro Plan' : 'Starter Plan'} upgrade was not completed.
+                Your {lastAttemptedPlan === 'pro_plus' ? 'Pro Plus Plan' : 'Pro Plan'} upgrade was not completed.
               </div>
             </div>
           </div>
@@ -270,7 +270,7 @@ const OwnerSubscription = () => {
           <div style={{ background: 'var(--warning-light)', width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>⏳</div>
           <div>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: '#fbbf24', margin: '0 0 4px' }}>Approval Pending</h3>
-            <p style={{ fontSize: 14, color: '#d97706', margin: 0 }}>Your request to upgrade to the <strong>{pendingRequest.plan_name === 'pro' ? 'Pro Plan' : 'Starter Plan'}</strong> is currently under review by Admin. Your plan will activate once verified.</p>
+            <p style={{ fontSize: 14, color: '#d97706', margin: 0 }}>Your request to upgrade to the <strong>{pendingRequest.plan_name === 'pro_plus' ? 'Pro Plus Plan' : 'Pro Plan'}</strong> is currently under review by Admin. Your plan will activate once verified.</p>
           </div>
         </div>
       )}
@@ -309,7 +309,7 @@ const OwnerSubscription = () => {
 
             <div style={{ display: 'flex', gap: 16 }}>
               <button
-                onClick={() => handleStartUpgrade(planName === 'starter' ? 'pro' : 'starter')}
+                onClick={() => handleStartUpgrade(planName === 'pro' ? 'pro_plus' : 'pro')}
                 disabled={loading}
                 style={{ 
                   padding: '12px 24px', borderRadius: 12, border: 'none', 
@@ -378,9 +378,9 @@ const OwnerSubscription = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
         
         
-          {/* Basic Plan */}
+          {/* Starter Plan */}
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-medium)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column' }}>
-            <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: 'var(--text-secondary)' }}>Basic</h4>
+            <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: 'var(--text-secondary)' }}>Starter</h4>
             <div style={{ fontSize: 36, fontWeight: 800, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>
               ₹{billingCycle === 'yearly' ? basicPriceYearly : basicPrice}
               <span style={{ fontSize: 16, color: 'var(--text-tertiary)', fontWeight: 500 }}>/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
@@ -392,7 +392,7 @@ const OwnerSubscription = () => {
                 </li>
               ))}
             </ul>
-            {planName === 'basic' ? (
+            {planName === 'starter' ? (
               <button style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1px solid var(--border-medium)', background: 'transparent', color: 'var(--text-primary)', fontSize: 14, fontWeight: 600 }}>Current Plan</button>
             ) : (
                <button
@@ -400,20 +400,20 @@ const OwnerSubscription = () => {
                 disabled={loading}
                 style={{
                   width: '100%', padding: '12px', borderRadius: 12, border: 'none',
-                  background: planName === 'starter' || planName === 'pro' ? 'var(--border-hover)' : '#3b82f6',
+                  background: planName === 'pro' || planName === 'pro_plus' ? 'var(--border-hover)' : '#3b82f6',
                   color: 'var(--text-primary)', fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
                   opacity: loading ? 0.7 : 1, transition: 'all 0.2s'
                 }}
               >
-                {planName === 'starter' || planName === 'pro' ? 'Downgrade to Basic' : 'Select Basic'}
+                {planName === 'pro' || planName === 'pro_plus' ? 'Downgrade to Pro' : 'Select Starter'}
               </button>
             )}
           </div>
 
-          {/* Starter Plan */}
+          {/* Pro Plan */}
           <div style={{ background: 'var(--success-light)', border: '1px solid var(--success-border)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', position: 'relative' }}>
             <div style={{ position: 'absolute', top: -1, right: 24, transform: 'translateY(-50%)', padding: '4px 12px', borderRadius: 50, fontSize: 11, fontWeight: 800, color: 'var(--text-primary)', background: 'linear-gradient(135deg,#10b981,#059669)' }}>Highly Recommended</div>
-            <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#10b981' }}>Starter</h4>
+            <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#10b981' }}>Pro</h4>
           <div style={{ fontSize: 36, fontWeight: 800, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>
             ₹{billingCycle === 'yearly' ? starterPriceYearly : starterPrice}
             <span style={{ fontSize: 16, color: 'var(--text-tertiary)', fontWeight: 500 }}>/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
@@ -425,11 +425,11 @@ const OwnerSubscription = () => {
               </li>
             ))}
           </ul>
-          {planName === 'starter' ? (
+          {planName === 'pro' ? (
             <button style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1px solid var(--border-medium)', background: 'transparent', color: 'var(--text-primary)', fontSize: 14, fontWeight: 600 }}>Current Plan</button>
           ) : (
              <button
-              onClick={() => handleStartUpgrade('starter')}
+              onClick={() => handleStartUpgrade('pro')}
               disabled={loading}
               style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: '#3b82f6', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'transform 0.2s', opacity: loading ? 0.7 : 1 }}
               onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
@@ -440,10 +440,10 @@ const OwnerSubscription = () => {
           )}
         </div>
 
-        {/* Pro Plan */}
+        {/* Pro Plus Plan */}
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--purple-text)', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', position: 'relative' }}>
           <div style={{ position: 'absolute', top: -1, right: 24, transform: 'translateY(-50%)', padding: '4px 12px', borderRadius: 50, fontSize: 11, fontWeight: 800, color: 'var(--text-primary)', background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>Most Popular</div>
-          <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#c4b5fd' }}>Pro</h4>
+          <h4 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 8px', color: '#c4b5fd' }}>Pro Plus</h4>
           <div style={{ fontSize: 36, fontWeight: 800, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>
             ₹{billingCycle === 'yearly' ? proPriceYearly : proPrice}
             <span style={{ fontSize: 16, color: 'var(--text-tertiary)', fontWeight: 500 }}>/{billingCycle === 'yearly' ? 'yr' : 'mo'}</span>
@@ -455,11 +455,11 @@ const OwnerSubscription = () => {
               </li>
             ))}
           </ul>
-          {planName === 'pro' ? (
+          {planName === 'pro_plus' ? (
             <button style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: '#06b6d4', color: 'var(--bg-shell)', fontSize: 14, fontWeight: 700, cursor: 'not-allowed' }} disabled>Current Plan</button>
           ) : (
             <button
-              onClick={() => handleStartUpgrade('pro')}
+              onClick={() => handleStartUpgrade('pro_plus')}
               disabled={loading}
               style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: '#06b6d4', color: 'var(--bg-shell)', fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'transform 0.2s', opacity: loading ? 0.7 : 1 }}
               onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}

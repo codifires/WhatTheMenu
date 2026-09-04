@@ -105,6 +105,7 @@ export const publicAPI = {
 // ============ OWNER ============
 export const ownerAPI = {
   getDashboard: (params) => api.get('/owner/dashboard', { params }),
+    updateTheme: (data) => api.put('/owner/settings/theme', data),
   // Categories
   getCategories: () => api.get('/owner/categories'),
   createCategory: (data) => api.post('/owner/categories', data),

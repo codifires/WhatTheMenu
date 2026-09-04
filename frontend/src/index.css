@@ -140,3 +140,137 @@ body {
 * {
   border-color: var(--border-medium);
 }
+
+/* Theme Variables */
+
+
+/* ============================
+   CUSTOMER MENU THEMES
+   ============================ */
+
+/* Base fallback */
+.customer-theme {
+  --accent-primary: #f59e0b;
+  --accent-gradient: linear-gradient(135deg, #f59e0b, #ea580c);
+  --accent-bg-subtle: rgba(245,158,11,0.12);
+  --accent-shadow: 0 4px 15px rgba(245,158,11,0.35);
+  --accent-text: #ffffff;
+  --header-bg: linear-gradient(135deg, #1a1f2e, #2e3850);
+  --nav-bg: rgba(26,31,46,0.95);
+  --nav-border: rgba(255,255,255,0.12);
+  --nav-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+/* ── 1. Classic Minimal ── */
+.customer-theme.theme-classic {
+  --bg-main: #f8f8f8;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f0f0f0;
+  --text-primary: #1a1a1a;
+  --text-secondary: #555555;
+  --text-tertiary: #888888;
+  --border-light: #e8e8e8;
+  --border-medium: #d0d0d0;
+  --accent-primary: #f59e0b;
+  --accent-gradient: linear-gradient(135deg, #f59e0b, #ea580c);
+  --accent-bg-subtle: rgba(245,158,11,0.10);
+  --accent-shadow: 0 4px 15px rgba(245,158,11,0.30);
+  --accent-text: #ffffff;
+  --header-bg: linear-gradient(135deg, #f59e0b, #ea580c);
+  --nav-bg: rgba(255,255,255,0.97);
+  --nav-border: rgba(0,0,0,0.08);
+  --nav-shadow: 0 -4px 20px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.10);
+}
+
+/* ── 2. Midnight Amber ── */
+.customer-theme.theme-midnight {
+  --bg-main: #1a1f2e;
+  --bg-card: #242b3d;
+  --bg-card-hover: #2e3850;
+  --text-primary: #f5f0e8;
+  --text-secondary: #b8ad9a;
+  --text-tertiary: #7d7568;
+  --border-light: #2e3850;
+  --border-medium: #3a4460;
+  --accent-primary: #f5c842;
+  --accent-gradient: linear-gradient(135deg, #f5c842, #e8a020);
+  --accent-bg-subtle: rgba(245,200,66,0.12);
+  --accent-shadow: 0 4px 18px rgba(245,200,66,0.30);
+  --accent-text: #1a1f2e;
+  --header-bg: linear-gradient(135deg, #1a1f2e, #f5c842 150%);
+  --nav-bg: rgba(26,31,46,0.97);
+  --nav-border: rgba(245,200,66,0.18);
+  --nav-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,200,66,0.08);
+}
+
+
+
+/* ── 3. Black & Gold ── */
+.customer-theme.theme-blackgold {
+  --bg-main: #191919;
+  --bg-card: #242424;
+  --bg-card-hover: #303030;
+  --text-primary: #FDF5A6;
+  --text-secondary: #B88746;
+  --text-tertiary: #8a6633;
+  --border-light: #303030;
+  --border-medium: #3d3d3d;
+  --accent-primary: #B88746;
+  --accent-gradient: linear-gradient(135deg, #FDF5A6, #B88746);
+  --accent-bg-subtle: rgba(184,135,70,0.15);
+  --accent-shadow: 0 4px 18px rgba(184,135,70,0.40);
+  --accent-text: #191919;
+  --header-bg: linear-gradient(135deg, #191919, #B88746 180%);
+  --nav-bg: rgba(25,25,25,0.97);
+  --nav-border: rgba(184,135,70,0.35);
+  --nav-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px rgba(253,245,166,0.10);
+}
+
+/* ── 4. Forest Sage ── */
+.customer-theme.theme-forest {
+  --bg-main: #0d1f15;
+  --bg-card: #152b1e;
+  --bg-card-hover: #1e3a29;
+  --text-primary: #eef7ef;
+  --text-secondary: #a8d4ae;
+  --text-tertiary: #6a9e72;
+  --border-light: #1e3a29;
+  --border-medium: #264d33;
+  --accent-primary: #ff6b5b;
+  --accent-gradient: linear-gradient(135deg, #ff6b5b, #e84545);
+  --accent-bg-subtle: rgba(255,107,91,0.12);
+  --accent-shadow: 0 4px 18px rgba(255,107,91,0.32);
+  --accent-text: #ffffff;
+  --header-bg: linear-gradient(135deg, #0a3d20, #1a6b38);
+  --nav-bg: rgba(13,31,21,0.97);
+  --nav-border: rgba(168,212,174,0.18);
+  --nav-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(168,212,174,0.08);
+}
+
+/* ── 5. Rose Noir ── */
+.customer-theme.theme-rose {
+  --bg-main: #1a0a10;
+  --bg-card: #250f18;
+  --bg-card-hover: #321524;
+  --text-primary: #fdf0f4;
+  --text-secondary: #e0aabb;
+  --text-tertiary: #a87080;
+  --border-light: #321524;
+  --border-medium: #40203088;
+  --accent-primary: #f4a0b8;
+  --accent-gradient: linear-gradient(135deg, #f4a0b8, #e06080);
+  --accent-bg-subtle: rgba(244,160,184,0.12);
+  --accent-shadow: 0 4px 18px rgba(244,160,184,0.30);
+  --accent-text: #1a0a10;
+  --header-bg: linear-gradient(135deg, #1a0a10, #7b2040);
+  --nav-bg: rgba(26,10,16,0.97);
+  --nav-border: rgba(244,160,184,0.22);
+  --nav-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(244,160,184,0.10);
+}
+
+
+/* Apply theme background to body when customer-theme is active */
+body.customer-theme {
+  background-color: var(--bg-main) !important;
+  color: var(--text-primary) !important;
+}

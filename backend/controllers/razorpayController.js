@@ -28,7 +28,7 @@ const createSubscription = async (req, res, next) => {
     const { plan_name, billing_cycle = 'monthly' } = req.body;
     const cafeId = req.user._id;
 
-    if (!['starter', 'pro'].includes(plan_name)) {
+    if (!['pro', 'pro_plus'].includes(plan_name)) {
       return res.status(400).json({ success: false, message: 'Invalid plan name. Choose starter or pro.' });
     }
     
@@ -41,11 +41,11 @@ const createSubscription = async (req, res, next) => {
     // Determine plan ID from env
     let planId;
     if (billing_cycle === 'yearly') {
-      planId = plan_name === 'pro'
+      planId = plan_name === 'pro_plus'
         ? process.env.RAZORPAY_PLAN_ID_PRO_YEARLY
         : process.env.RAZORPAY_PLAN_ID_STARTER_YEARLY;
     } else {
-      planId = plan_name === 'pro'
+      planId = plan_name === 'pro_plus'
         ? process.env.RAZORPAY_PLAN_ID_PRO_MONTHLY
         : process.env.RAZORPAY_PLAN_ID_STARTER_MONTHLY;
     }
@@ -146,17 +146,17 @@ const verifySubscriptionPayment = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Café not found' });
     }
 
-    const planName = rzpSub.notes?.plan_name || 'pro';
+    const planName = rzpSub.notes?.plan_name || 'pro_plus';
     const billingCycle = rzpSub.notes?.billing_cycle || 'monthly';
     const settings = await Settings.getSettings();
     
     let price;
     if (billingCycle === 'yearly') {
-      const monthlyPrice = planName === 'pro' ? (settings.pro_price || 499) : (planName === 'starter' ? (settings.starter_price || 299) : (settings.basic_price || 199));
+      const monthlyPrice = planName === 'pro_plus' ? (settings.pro_price || 499) : (planName === 'pro' ? (settings.starter_price || 299) : (settings.basic_price || 199));
       const discount = settings.yearly_discount_percentage || 20;
       price = Math.round(monthlyPrice * 12 * (1 - discount / 100));
     } else {
-      price = planName === 'pro' ? (settings.pro_price || 499) : (planName === 'starter' ? (settings.starter_price || 299) : (settings.basic_price || 199));
+      price = planName === 'pro_plus' ? (settings.pro_price || 499) : (planName === 'pro' ? (settings.starter_price || 299) : (settings.basic_price || 199));
     }
 
     // Calculate end date
@@ -352,7 +352,7 @@ const handleSubscriptionWebhook = async (req, res, next) => {
     }
 
     const cafeId = subscriptionEntity.notes?.cafe_id;
-    const planName = subscriptionEntity.notes?.plan_name || 'pro';
+    const planName = subscriptionEntity.notes?.plan_name || 'pro_plus';
     const io = req.app?.get?.('io');
 
     switch (eventType) {
@@ -364,7 +364,7 @@ const handleSubscriptionWebhook = async (req, res, next) => {
         if (!cafe) break;
 
         const settings = await Settings.getSettings();
-        const price = planName === 'pro' ? (settings.pro_price || 499) : (planName === 'starter' ? (settings.starter_price || 299) : (settings.basic_price || 199));
+        const price = planName === 'pro_plus' ? (settings.pro_price || 499) : (planName === 'pro' ? (settings.starter_price || 299) : (settings.basic_price || 199));
         const now = new Date();
         const endDate = new Date();
         endDate.setDate(endDate.getDate() + 30);

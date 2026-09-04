@@ -18,7 +18,7 @@ const settingsSchema = new mongoose.Schema({
     default: 'INR'
   },
 
-  basic_price: {
+  starter_price: {
     type: Number,
     default: 199
   },
@@ -66,7 +66,7 @@ const settingsSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  basic_features: {
+  starter_features: {
     type: [String],
     default: [
       'Digital QR Menu',

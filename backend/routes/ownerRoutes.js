@@ -20,6 +20,7 @@ const {
   regenerateQRCode,
   getFeedback,
   updateSettings,
+  updateThemeSettings,
   submitSubscriptionRequest,
   initiateSubscriptionSession,
   handleSubscriptionWebhook,
@@ -86,6 +87,7 @@ router.get('/feedback', getFeedback);
 
 // Settings
 router.put('/settings', upload.single('logo'), settingsValidator, updateSettings);
+router.put('/settings/theme', updateThemeSettings);
 
 
 
