@@ -499,7 +499,8 @@ const createOrderPayment = async (req, res, next) => {
     } = req.body;
 
     // Validate café
-    const cafe = await Cafe.findById(cafe_id)
+    let query = mongoose.Types.ObjectId.isValid(cafe_id) ? { _id: cafe_id } : { slug: cafe_id };
+    const cafe = await Cafe.findOne(query)
       .select('+razorpay_key_secret subscription_status razorpay_key_id name tax_percentage upi_id')
       .lean();
 
@@ -558,7 +559,7 @@ const createOrderPayment = async (req, res, next) => {
       currency: 'INR',
       receipt: `ORD_${Date.now()}`,
       notes: {
-        cafe_id: cafe_id,
+        cafe_id: cafe._id.toString(),
         customer_name: customer_name || 'Guest',
         table_number: table_number || ''
       }
@@ -566,8 +567,8 @@ const createOrderPayment = async (req, res, next) => {
 
     // Create pending order in DB
     const order = await Order.create({
-      cafe_id,
-      customer_name: customer_name || 'Guest',
+      cafe_id: cafe._id,
+        customer_name: customer_name || 'Guest',
       customer_phone: customer_phone || '',
       table_number: table_number || '',
       items: orderItems,
