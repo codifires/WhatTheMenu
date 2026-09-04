@@ -138,7 +138,7 @@ const MenuManagement = () => {
 
   const resetForm = () => {
     setEditingItem(null)
-    setForm({ name: '', description: '', price: '', category_id: categories[0]?._id || '', is_veg: true, image_url: '' })
+    setForm({ name: '', description: '', price: '', category_id: '', is_veg: true, image_url: '' })
     setImageFile(null)
   }
 
@@ -186,10 +186,11 @@ const MenuManagement = () => {
   const handleSelectGlobalMedia = async (m) => {
     let newForm = { ...form, image_url: m.image_url }
     
-    // Auto-fill name if empty
-    if (!newForm.name && m.file_name) {
-      newForm.name = m.file_name
-    }
+    // Auto-fill name if empty or if it currently matches another platform image
+      const isAutoFilled = !newForm.name || globalMedia.some(g => g.file_name === newForm.name);
+      if (isAutoFilled && m.file_name) {
+        newForm.name = m.file_name
+      }
     
     // Try to auto-select or AUTO-CREATE matching category
     if (m.category && m.category !== 'General') {

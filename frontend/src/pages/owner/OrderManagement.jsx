@@ -265,7 +265,17 @@ const OrderManagement = () => {
                 </div>
               )}
 
-              <div style={{ marginBottom: 24 }}>
+              
+                {selectedOrder.notes && (
+                  <div style={{ marginBottom: 24, padding: '16px', background: 'rgba(245,158,11,0.05)', borderRadius: 16, border: '1px dashed rgba(245,158,11,0.3)' }}>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 6px' }}>
+                      Special Instructions
+                    </p>
+                    <p style={{ fontSize: 14, color: 'var(--text-primary)', margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{selectedOrder.notes}</p>
+                  </div>
+                )}
+                
+                <div style={{ marginBottom: 24 }}>
                 <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 12px', borderBottom: '1px solid var(--border-medium)', paddingBottom: 8 }}>Order Items</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {selectedOrder.items?.map((item, i) => (

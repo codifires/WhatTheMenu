@@ -13,7 +13,7 @@ const CustomerMenu = () => {
   const [activeCategory, setActiveCategory] = useState('all')
   const [loading, setLoading] = useState(true)
   const [isUnavailable, setIsUnavailable] = useState(false)
-  const { addItem, items: cartItems, updateQuantity, removeItem } = useCart()
+  const { addItem, items: cartItems, updateQuantity, removeItem, syncCartPrices } = useCart()
 
   useEffect(() => {
     fetchMenu()

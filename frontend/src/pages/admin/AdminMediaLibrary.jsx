@@ -7,7 +7,7 @@ const AdminMediaLibrary = () => {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
-  const [uploadForm, setUploadForm] = useState({ file: null, fileName: '', category: 'General' })
+  const [uploadForm, setUploadForm] = useState({ file: null, fileName: '', category: '' })
 
   useEffect(() => {
     fetchMedia()
@@ -46,7 +46,7 @@ const AdminMediaLibrary = () => {
     } finally {
       setUploading(false)
       setShowUploadModal(false)
-      setUploadForm({ file: null, fileName: '', category: 'General' })
+      setUploadForm({ file: null, fileName: '', category: '' })
     }
   }
 
@@ -123,13 +123,19 @@ const AdminMediaLibrary = () => {
 
             <div style={{ marginBottom: 24 }}>
               <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8, fontWeight: 600 }}>Category</label>
-              <select value={uploadForm.category} onChange={e => setUploadForm({...uploadForm, category: e.target.value})} style={{ width: '100%', padding: '10px', background: 'var(--border-light)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: 14, outline: 'none' }}>
-                <option value="General" style={{ background: 'var(--bg-shell)', color: 'var(--text-primary)' }}>General</option>
-                <option value="Burgers" style={{ background: 'var(--bg-shell)', color: 'var(--text-primary)' }}>Burgers</option>
-                <option value="Pizza" style={{ background: 'var(--bg-shell)', color: 'var(--text-primary)' }}>Pizza</option>
-                <option value="Beverages" style={{ background: 'var(--bg-shell)', color: 'var(--text-primary)' }}>Beverages</option>
-                <option value="Desserts" style={{ background: 'var(--bg-shell)', color: 'var(--text-primary)' }}>Desserts</option>
-              </select>
+              <input 
+                  list="media-categories"
+                  value={uploadForm.category} 
+                  onChange={e => setUploadForm({...uploadForm, category: e.target.value})} 
+                  placeholder="Select or type a new category..."
+                  style={{ width: '100%', padding: '10px', background: 'var(--border-light)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', fontSize: 14, outline: 'none' }}
+                  required
+                />
+                <datalist id="media-categories">
+                  {[...new Set(['General', 'Burgers', 'Pizza', 'Beverages', 'Desserts', ...media.map(m => m.category).filter(Boolean)])].map(cat => (
+                    <option key={cat} value={cat} />
+                  ))}
+                </datalist>
             </div>
 
             <div style={{ display: 'flex', gap: 12 }}>

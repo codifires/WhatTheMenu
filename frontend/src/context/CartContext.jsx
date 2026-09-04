@@ -61,6 +61,14 @@ export const CartProvider = ({ children }) => {
     )
   }
 
+
+  const syncCartPrices = (latestMenu) => {
+    setItems(prev => prev.map(cartItem => {
+      const liveItem = latestMenu.find(i => i._id === cartItem._id);
+      return liveItem ? { ...cartItem, price: liveItem.price, name: liveItem.name } : cartItem;
+    }));
+  }
+
   const clearCart = () => {
     setItems([])
     setCafeId(null)

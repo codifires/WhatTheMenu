@@ -88,7 +88,15 @@ const Checkout = () => {
       const res = await customerAPI.createRazorpayOrder(payload)
       
       if (res.data?.success) {
-        const { order_id, razorpay_key_id, amount, cafe_name } = res.data.data
+        const { order_id, razorpay_key_id, amount, cafe_name, order_number } = res.data.data
+        
+        // CRITICAL FIX: Save order to local storage BEFORE opening Razorpay modal.
+        // This ensures the order isn't lost if the customer completes payment but closes the tab immediately.
+        const preSavedOrders = JSON.parse(localStorage.getItem('myOrders') || '[]')
+        if (!preSavedOrders.some(o => o.orderNumber === order_number)) {
+          preSavedOrders.unshift({ orderNumber: order_number, cafeId, createdAt: new Date().toISOString() })
+          localStorage.setItem('myOrders', JSON.stringify(preSavedOrders.slice(0, 20)))
+        }
         
         const options = {
           key: razorpay_key_id,

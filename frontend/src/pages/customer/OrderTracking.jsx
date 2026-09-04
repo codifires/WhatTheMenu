@@ -26,7 +26,7 @@ const OrderTracking = () => {
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('myOrders') || '[]')
-    const cafeOrders = saved.filter(o => o.cafeId === cafeId && o.status !== 'completed')
+    const cafeOrders = saved.filter(o => o.cafeId === cafeId)
     setMyOrders(cafeOrders)
 
     // Auto-track the most recent order if none in URL

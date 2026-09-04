@@ -11,7 +11,11 @@ const MediaLibraryModal = ({
   setForm,
   setImageFile
 }) => {
+  const [selectedCategory, setSelectedCategory] = React.useState('All');
   if (!isOpen) return null;
+
+  const categories = ['All', ...new Set(globalMedia.map(m => m.category || 'General'))];
+  const filteredMedia = selectedCategory === 'All' ? globalMedia : globalMedia.filter(m => (m.category || 'General') === selectedCategory);
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay-bg)', backdropFilter: 'blur(10px)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
