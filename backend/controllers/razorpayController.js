@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Cafe = require('../models/Cafe');
 const Order = require('../models/Order');
 const OrderRevenue = require('../models/OrderRevenue');

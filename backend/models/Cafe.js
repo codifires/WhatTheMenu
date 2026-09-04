@@ -108,7 +108,11 @@ const cafeSchema = new mongoose.Schema({
     default: true
   },
   resetPasswordToken: String,
-  resetPasswordExpire: Date
+  resetPasswordExpire: Date,
+  active_sessions: [{
+    token: String,
+    last_active: { type: Date, default: Date.now }
+  }]
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
   collection: 'cafes'
