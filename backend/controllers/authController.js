@@ -161,6 +161,68 @@ const login = async (req, res, next) => {
 
     const token = generateToken(user._id, role);
 
+    if (role === 'owner') {
+      const plan = user.subscription?.plan_name || 'starter';
+      let limit = 1;
+      if (plan === 'pro') limit = 2;
+      if (plan === 'pro_plus' || plan === 'pro-plus' || plan === 'pro plus') limit = 3;
+
+      if (!user.active_sessions) user.active_sessions = [];
+      
+      // Clean up expired sessions (older than 7 days)
+      const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+      user.active_sessions = user.active_sessions.filter(s => (Date.now() - new Date(s.last_active || Date.now()).getTime()) < SEVEN_DAYS);
+
+      if (req.body.forceLogout) {
+        // Only clear selected devices if provided, otherwise clear all
+        if (req.body.logoutSessionIds && Array.isArray(req.body.logoutSessionIds)) {
+          user.active_sessions = user.active_sessions.filter(s => !req.body.logoutSessionIds.includes(s._id.toString()));
+          
+          // Re-check limit after selective deletion
+          if (user.active_sessions.length >= limit) {
+             return res.status(403).json({
+                success: false,
+                errorType: 'DEVICE_LIMIT_REACHED',
+                limit,
+                sessions: user.active_sessions,
+                message: `Device limit reached. Please select more devices to log out.`
+             });
+          }
+        } else {
+          user.active_sessions = []; // Fallback legacy clear all
+        }
+      } else if (user.active_sessions.length >= limit) {
+        // Send safe session data (remove token)
+        const safeSessions = user.active_sessions.map(s => ({
+          _id: s._id,
+          device_info: s.device_info,
+          last_active: s.last_active
+        }));
+        
+        return res.status(403).json({
+          success: false,
+          errorType: 'DEVICE_LIMIT_REACHED',
+          limit,
+          sessions: safeSessions,
+          message: `Device limit reached. Please logout from your old device to login here.`
+        });
+      }
+
+      // Parse a basic User-Agent string to something readable, or just save the raw string if parsing is too complex without a library.
+      // We will parse standard browser and OS names manually for simplicity.
+      const ua = req.headers['user-agent'] || 'Unknown Device';
+      let device_info = 'Unknown Device';
+      if (ua !== 'Unknown Device') {
+        const browser = /(chrome|safari|firefox|edge|opera)/i.exec(ua) ? /(chrome|safari|firefox|edge|opera)/i.exec(ua)[0] : 'Browser';
+        const os = /(windows|macintosh|android|iphone|ipad|linux)/i.exec(ua) ? /(windows|macintosh|android|iphone|ipad|linux)/i.exec(ua)[0] : 'OS';
+        device_info = `${browser.charAt(0).toUpperCase() + browser.slice(1)} on ${os === 'macintosh' ? 'Mac' : os.charAt(0).toUpperCase() + os.slice(1)}`;
+      }
+
+      user.active_sessions.push({ token, device_info, last_active: Date.now() });
+      user.markModified('active_sessions');
+      await user.save();
+    }
+
     res.json({
       success: true,
       data: {
@@ -238,10 +300,24 @@ const getMe = async (req, res, next) => {
 // @desc    Logout
 // @route   POST /api/auth/logout
 const logout = async (req, res, next) => {
-  res.json({
-    success: true,
-    message: 'Logged out successfully'
-  });
+  try {
+    if (req.user && req.user.role === 'owner') {
+      let token;
+      if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1];
+      }
+      if (token && req.user.active_sessions) {
+        req.user.active_sessions = req.user.active_sessions.filter(s => s.token !== token);
+        await req.user.save({ validateBeforeSave: false });
+      }
+    }
+    res.json({
+      success: true,
+      message: 'Logged out successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // @desc    Check email/phone availability
@@ -356,8 +432,12 @@ const register = async (req, res, next) => {
     }
 
     const token = generateToken(cafe._id, 'owner');
+  
+      if (!cafe.active_sessions) cafe.active_sessions = [];
+      cafe.active_sessions.push({ token, last_active: Date.now() });
+      await cafe.save({ validateBeforeSave: false });
 
-    res.status(201).json({
+      res.status(201).json({
       success: true,
       data: {
         token,

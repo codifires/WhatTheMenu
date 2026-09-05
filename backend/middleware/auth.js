@@ -35,6 +35,17 @@ const protect = async (req, res, next) => {
       });
     }
 
+    // Enforce Device Limit
+    if (decoded.role === 'owner') {
+      const isValid = req.user.active_sessions && req.user.active_sessions.some(s => s.token === token);
+      if (!isValid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Device limit reached. You have been logged out because a new device logged in.'
+        });
+      }
+    }
+
     next();
   } catch (error) {
     return res.status(401).json({

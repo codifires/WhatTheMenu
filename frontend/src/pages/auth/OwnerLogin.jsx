@@ -9,26 +9,62 @@ const OwnerLogin = () => {
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [limitReached, setLimitReached] = useState(false)
+  const [activeSessions, setActiveSessions] = useState([])
+    const [deviceLimit, setDeviceLimit] = useState(1)
+    const [selectedSessions, setSelectedSessions] = useState([])
+
+    const toggleSession = (id) => {
+      if (selectedSessions.includes(id)) {
+        setSelectedSessions(selectedSessions.filter(sId => sId !== id))
+      } else {
+        setSelectedSessions([...selectedSessions, id])
+      }
+    }
   const { login } = useAuth()
   const navigate = useNavigate()
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!email || !password) { toast.error('Please fill in all fields'); return }
-    setLoading(true)
-    try {
-      const user = await login(email, password)
-      if (user.role !== 'owner') {
-        toast.error('Access denied. This portal is for Café Owners only.')
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-        return
+  
+    const handleForceLogout = async () => {
+        setLoading(true)
+        try {
+          const user = await login(email, password, true, selectedSessions)
+          toast.success(`Welcome back, ${user.name}!`)
+          navigate('/owner')
+        } catch (error) {
+          if (error.response?.data?.errorType === 'DEVICE_LIMIT_REACHED') {
+            toast.error(error.response.data.message || 'Please select more devices to log out.')
+            setActiveSessions(error.response?.data?.sessions || [])
+          } else {
+            toast.error(error.response?.data?.message || 'Login failed')
+          }
+        } finally {
+        setLoading(false)
       }
-      toast.success(`Welcome back, ${user.name}!`)
-      navigate('/owner')
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed')
-    } finally {
+    }
+  
+  const handleSubmit = async (e) => {
+      e.preventDefault()
+      if (!email || !password) { toast.error('Please fill in all fields'); return }
+      setLoading(true)
+      try {
+        const user = await login(email, password)
+        if (user.role !== 'owner') {
+          toast.error('Access denied. This portal is for CafAc Owners only.')
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          return
+        }
+        toast.success(`Welcome back, ${user.name}!`)
+        navigate('/owner')
+      } catch (error) {
+        if (error.response?.data?.errorType === 'DEVICE_LIMIT_REACHED') {
+          setLimitReached(true)
+          setActiveSessions(error.response?.data?.sessions || [])
+        } else {
+          toast.error(error.response?.data?.message || 'Login failed')
+        }
+      } finally {
       setLoading(false)
     }
   }
@@ -86,8 +122,52 @@ const OwnerLogin = () => {
             <p style={{ fontSize: 14, color: 'var(--text-tertiary)', margin: 0 }}>Sign in to manage your café menu and orders.</p>
           </div>
 
-          {/* Form Card */}
-          <div style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 32 }}>
+                      {/* Form Card */}
+            {limitReached ? (
+              <div style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 32 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, color: '#f87171' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                  <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, fontFamily: "'Outfit',sans-serif" }}>Device Limit Reached</h3>
+                </div>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 24, lineHeight: 1.5 }}>
+                  Your plan allows <strong>{deviceLimit}</strong> active device(s). Please select at least <strong>{Math.max(1, activeSessions.length - deviceLimit + 1)}</strong> device(s) to log out.
+                </p>
+                
+                <div style={{ border: '1px solid var(--border-light)', borderRadius: 12, overflow: 'hidden', marginBottom: 24 }}>
+                  <div style={{ background: 'var(--bg-shell)', padding: '12px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Currently Logged In ({activeSessions.length})</span>
+                    <span>Selected: {selectedSessions.length}</span>
+                  </div>
+                  <div style={{ maxHeight: 240, overflowY: 'auto' }}>
+                    {activeSessions.map((session, i) => {
+                      const isSelected = selectedSessions.includes(session._id);
+                      return (
+                        <div key={session._id || i} onClick={() => toggleSession(session._id)} style={{ padding: '16px 20px', borderBottom: i === activeSessions.length - 1 ? 'none' : '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 16, background: isSelected ? 'rgba(248, 113, 113, 0.05)' : 'var(--bg-input)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                          <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${isSelected ? '#f87171' : 'var(--border-medium)'}`, background: isSelected ? '#f87171' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            {isSelected && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                          </div>
+                          <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--bg-shell)', border: `1px solid ${isSelected ? 'rgba(248,113,113,0.3)' : 'var(--border-light)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: isSelected ? '#f87171' : 'var(--text-tertiary)', flexShrink: 0 }}>
+                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                          </div>
+                          <div style={{ overflow: 'hidden' }}>
+                            <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{session.device_info || 'Unknown Device'}</p>
+                            <p style={{ margin: 0, fontSize: 12, color: 'var(--text-tertiary)' }}>Last active: {new Date(session.last_active).toLocaleString()}</p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+                
+                <button onClick={handleForceLogout} disabled={loading || selectedSessions.length < Math.max(1, activeSessions.length - deviceLimit + 1)} style={{ width: '100%', padding: '15px', borderRadius: 12, border: 'none', background: (selectedSessions.length >= Math.max(1, activeSessions.length - deviceLimit + 1)) ? 'linear-gradient(135deg,#f87171,#ef4444)' : 'var(--bg-shell)', color: (selectedSessions.length >= Math.max(1, activeSessions.length - deviceLimit + 1)) ? '#fff' : 'var(--text-tertiary)', fontSize: 15, fontWeight: 700, cursor: (loading || selectedSessions.length < Math.max(1, activeSessions.length - deviceLimit + 1)) ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, transition: 'all 0.2s', boxShadow: (selectedSessions.length >= Math.max(1, activeSessions.length - deviceLimit + 1)) ? '0 4px 20px rgba(239, 68, 68, 0.4)' : 'none' }}>
+                  {loading ? 'Logging out...' : `Log Out Selected (${selectedSessions.length}) & Continue`}
+                </button>
+                <button type="button" onClick={() => { setLimitReached(false); setSelectedSessions([]); }} disabled={loading} style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1px solid var(--border-medium)', background: 'transparent', color: 'var(--text-secondary)', fontSize: 15, fontWeight: 600, cursor: 'pointer', marginTop: 12, transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-shell)'} onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 32 }}>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div>
                 <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 8 }}>Email Address</label>
@@ -144,6 +224,7 @@ const OwnerLogin = () => {
               </button>
             </div>
           </div>
+            )}
 
           {/* Register & Admin links */}
           <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>

@@ -111,6 +111,7 @@ const cafeSchema = new mongoose.Schema({
   resetPasswordExpire: Date,
   active_sessions: [{
     token: String,
+    device_info: String,
     last_active: { type: Date, default: Date.now }
   }]
 }, {
