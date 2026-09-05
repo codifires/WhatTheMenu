@@ -708,7 +708,13 @@ const updateSettings = async (req, res, next) => {
     const { name, phone, address, tax_percentage, razorpay_key_id, razorpay_key_secret, razorpay_webhook_secret, billing_settings, slug } = req.body;
       const updateData = {};
 
-      if (billing_settings !== undefined) updateData.billing_settings = billing_settings;
+      if (billing_settings !== undefined) {
+        try {
+          updateData.billing_settings = typeof billing_settings === 'string' ? JSON.parse(billing_settings) : billing_settings;
+        } catch (e) {
+          updateData.billing_settings = billing_settings;
+        }
+      }
 
     if (slug !== undefined) {
       if (!/^[a-z0-9-]+$/.test(slug)) {

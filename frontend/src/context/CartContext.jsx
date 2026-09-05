@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
 
 const CartContext = createContext(null)
 
@@ -9,8 +10,21 @@ export const useCart = () => {
 }
 
 export const CartProvider = ({ children }) => {
+  const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
   const [items, setItems] = useState(() => {
     const saved = localStorage.getItem('cart')
+    const lastActive = localStorage.getItem('cart_last_active')
+    
+    // Check if expired on initial load
+    if (saved && lastActive) {
+      if (Date.now() - parseInt(lastActive) > IDLE_TIMEOUT) {
+        localStorage.removeItem('cart')
+        localStorage.removeItem('cartCafeId')
+        localStorage.removeItem('cart_last_active')
+        return []
+      }
+    }
     return saved ? JSON.parse(saved) : []
   })
   const [cafeId, setCafeId] = useState(() => {
@@ -19,7 +33,40 @@ export const CartProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(items))
+    if (items.length > 0) {
+      localStorage.setItem('cart_last_active', Date.now().toString())
+    }
   }, [items])
+
+  // Active Tab Idle Checker
+  useEffect(() => {
+    if (items.length === 0) return;
+    let lastActivity = Date.now();
+    
+    const resetTimer = () => {
+      lastActivity = Date.now();
+      localStorage.setItem('cart_last_active', lastActivity.toString());
+    };
+
+    const events = ['mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }));
+
+    const interval = setInterval(() => {
+      if (Date.now() - lastActivity > IDLE_TIMEOUT) {
+        setItems([]);
+        setCafeId(null);
+        localStorage.removeItem('cart');
+        localStorage.removeItem('cartCafeId');
+        localStorage.removeItem('cart_last_active');
+        toast.error('Cart cleared due to 5 minutes of inactivity.', { icon: '⏳', duration: 4000 });
+      }
+    }, 10000);
+
+    return () => {
+      clearInterval(interval);
+      events.forEach(e => window.removeEventListener(e, resetTimer));
+    };
+  }, [items.length])
 
   useEffect(() => {
     if (cafeId) localStorage.setItem('cartCafeId', cafeId)

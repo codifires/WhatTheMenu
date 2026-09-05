@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useReactToPrint } from 'react-to-print'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { customerAPI, SOCKET_URL } from '../../services/api'
 import { io } from 'socket.io-client'
@@ -15,6 +16,11 @@ const STATUS_STEPS = [
 ]
 
 const OrderTracking = () => {
+  const printRef = useRef();
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Receipt_${orderNumber}`
+  });
   const { cafeId } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -69,6 +75,9 @@ const OrderTracking = () => {
     setLoading(true)
     try {
       const res = await customerAPI.trackOrder(num)
+        if (!cafeDetails) {
+          customerAPI.getCafeMenu(cafeId).then(cRes => setCafeDetails(cRes.data.data.cafe)).catch(()=>{})
+        }
       setOrder(res.data.data)
 
       if (res.data.data.order_status === 'completed') {
