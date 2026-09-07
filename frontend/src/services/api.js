@@ -159,6 +159,7 @@ export const customerAPI = {
   placeOrder: (data) => api.post('/orders', data),
   trackOrder: (orderNumber) => api.get(`/orders/${orderNumber}/track`),
   submitFeedback: (data) => api.post('/feedback', data),
+  aiAssist: (data) => api.post('/feedback/ai-assist', data),
   // Razorpay Order Payment
   createRazorpayOrder: (data) => api.post('/orders/create-razorpay-order', data),
   verifyRazorpayPayment: (data) => api.post('/orders/verify-razorpay-payment', data),

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-  <head>
+  <head><script>window.onerror = function(msg, src, line, col, error) { console.error('GLOBAL ERROR:', msg, src, line, col, error?.stack); fetch('http://localhost:4005/log', {method:'POST',body:JSON.stringify({msg,src,line,col,stack:error?.stack}),headers:{'Content-Type':'application/json'}}).catch(e=>{}); };</script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />

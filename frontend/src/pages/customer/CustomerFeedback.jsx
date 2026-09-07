@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 
 const INPUT = {
   width: '100%', padding: '14px 16px', borderRadius: 16,
-  border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg-input)',
+  border: '1px solid var(--border-medium)', background: 'var(--bg-main)',
   color: 'var(--text-primary)', fontSize: 15, outline: 'none', boxSizing: 'border-box',
   fontFamily: 'inherit', transition: 'all 0.3s',
 }
@@ -15,13 +15,13 @@ function InputField({ label, as, children, ...props }) {
     <div style={{ marginBottom: 16 }}>
       <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 8, paddingLeft: 4 }}>{label}</label>
       {as === 'select' ? (
-        <select style={INPUT} onFocus={e => {e.target.style.borderColor = 'rgba(245,158,11,0.6)'; e.target.style.background = 'rgba(245,158,11,0.05)'}} onBlur={e => {e.target.style.borderColor = 'var(--border-hover)'; e.target.style.background = 'var(--bg-input)'}} {...props}>
+        <select style={INPUT} onFocus={e => {e.target.style.borderColor = 'rgba(245,158,11,0.6)'; e.target.style.background = 'rgba(245,158,11,0.05)'}} onBlur={e => {e.target.style.borderColor = 'var(--border-hover)'; e.target.style.background = 'var(--bg-main)'}} {...props}>
           {children}
         </select>
       ) : as === 'textarea' ? (
-        <textarea style={{ ...INPUT, resize: 'vertical', minHeight: 80 }} onFocus={e => {e.target.style.borderColor = 'rgba(245,158,11,0.6)'; e.target.style.background = 'rgba(245,158,11,0.05)'}} onBlur={e => {e.target.style.borderColor = 'var(--border-hover)'; e.target.style.background = 'var(--bg-input)'}} {...props} />
+        <textarea style={{ ...INPUT, resize: 'vertical', minHeight: 80 }} onFocus={e => {e.target.style.borderColor = 'rgba(245,158,11,0.6)'; e.target.style.background = 'rgba(245,158,11,0.05)'}} onBlur={e => {e.target.style.borderColor = 'var(--border-hover)'; e.target.style.background = 'var(--bg-main)'}} {...props} />
       ) : (
-        <input style={INPUT} onFocus={e => {e.target.style.borderColor = 'rgba(245,158,11,0.6)'; e.target.style.background = 'rgba(245,158,11,0.05)'}} onBlur={e => {e.target.style.borderColor = 'var(--border-hover)'; e.target.style.background = 'var(--bg-input)'}} {...props} />
+        <input style={INPUT} onFocus={e => {e.target.style.borderColor = 'rgba(245,158,11,0.6)'; e.target.style.background = 'rgba(245,158,11,0.05)'}} onBlur={e => {e.target.style.borderColor = 'var(--border-hover)'; e.target.style.background = 'var(--bg-main)'}} {...props} />
       )}
     </div>
   )
@@ -35,8 +35,41 @@ const CustomerFeedback = () => {
   const [review, setReview] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiGenerated, setAiGenerated] = useState(false)
 
   const myOrders = JSON.parse(localStorage.getItem('myOrders') || '[]').filter(o => o.cafeId === cafeId)
+
+  const handleStarClick = (star) => {
+    setRating(star)
+  }
+
+  const handleAiAssist = async () => {
+    if (aiGenerated) return
+
+    setAiLoading(true)
+    try {
+      if (rating > 0 && !review) {
+        const res = await customerAPI.aiAssist({ action: 'auto_write', rating })
+        if (res.data.success) {
+          setReview(res.data.text)
+          setAiGenerated(true)
+        }
+      } else if (review && rating === 0) {
+        const res = await customerAPI.aiAssist({ action: 'auto_rate', text: review })
+        if (res.data.success) {
+          setRating(res.data.rating)
+          setAiGenerated(true)
+        }
+      } else {
+        toast.info("Select stars to write a review, or write a review to auto-rate.")
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "AI Assist failed")
+    } finally {
+      setAiLoading(false)
+    }
+  }
 
   const handleSubmit = async () => {
     if (!orderId) return toast.error('Please select or enter an order')
@@ -73,7 +106,7 @@ const CustomerFeedback = () => {
         <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '0 0 32px' }}>Your feedback helps us improve and serve you better.</p>
         <button
           onClick={() => { setSubmitted(false); setRating(0); setReview(''); setOrderId('') }}
-          style={{ padding: '14px 28px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.1)', background: 'var(--border-light)', color: 'var(--text-primary)', fontSize: 15, fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s' }}
+          style={{ padding: '14px 28px', borderRadius: 16, border: '1px solid var(--border-medium)', background: 'var(--border-light)', color: 'var(--text-primary)', fontSize: 15, fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s' }}
           onMouseEnter={e => e.currentTarget.style.background='var(--border-hover)'}
           onMouseLeave={e => e.currentTarget.style.background='var(--border-light)'}
         >
@@ -86,13 +119,13 @@ const CustomerFeedback = () => {
   return (
     <div style={{ padding: '20px 16px', animation: 'fadeIn 0.4s ease', paddingBottom: 100 }}>
       
-      {/* ── Header ── */}
+      {/* 🌟 Header 🌟 */}
       <div style={{ marginBottom: 32 }}>
         <h2 style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>Leave Feedback</h2>
         <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>How was your experience today?</p>
       </div>
 
-      <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 28, padding: 24 }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: 28, padding: 24 }}>
         
         <InputField label="Select Order" as={myOrders.length > 0 ? 'select' : 'input'} placeholder="Enter Order ID" value={orderId} onChange={e => setOrderId(e.target.value)}>
           {myOrders.length > 0 && (
@@ -105,7 +138,7 @@ const CustomerFeedback = () => {
 
         <div style={{ marginBottom: 24 }}>
           <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 12, paddingLeft: 4 }}>Rating</label>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', background: 'var(--bg-card)', padding: 16, borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', background: 'var(--bg-card)', padding: 16, borderRadius: 20, border: '1px solid var(--border-light)' }}>
             {[1, 2, 3, 4, 5].map(star => {
               const active = star <= (hoverRating || rating)
               return (
@@ -113,7 +146,7 @@ const CustomerFeedback = () => {
                   key={star}
                   onMouseEnter={() => setHoverRating(star)}
                   onMouseLeave={() => setHoverRating(0)}
-                  onClick={() => setRating(star)}
+                  onClick={() => handleStarClick(star)}
                   style={{ cursor: 'pointer', padding: 4, transition: 'transform 0.2s', transform: active ? 'scale(1.1)' : 'scale(1)' }}
                 >
                   <svg width="40" height="40" viewBox="0 0 24 24" fill={active ? 'var(--accent-primary)' : 'none'} stroke={active ? 'var(--accent-primary)' : 'var(--text-tertiary)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'all 0.2s', filter: active ? 'drop-shadow(0 0 10px var(--accent-primary))' : 'none' }}>
@@ -123,9 +156,37 @@ const CustomerFeedback = () => {
               )
             })}
           </div>
+
         </div>
 
-        <InputField label="Review (optional)" as="textarea" placeholder="Tell us about the food, service, or ambiance..." value={review} onChange={e => setReview(e.target.value)} />
+        {aiLoading && <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--text-tertiary)', marginBottom: 16 }}>AI is thinking...</div>}
+
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', paddingLeft: 4, margin: 0 }}>Review (optional)</label>
+            <button 
+              onClick={handleAiAssist} 
+              disabled={aiGenerated || aiLoading}
+              style={{ 
+                background: aiGenerated ? 'var(--bg-main)' : 'linear-gradient(135deg, #8b5cf6, #ec4899)', 
+                border: aiGenerated ? '1px solid var(--border-medium)' : 'none', 
+                borderRadius: 8, padding: '6px 12px', color: aiGenerated ? 'var(--text-tertiary)' : '#fff', 
+                fontSize: 12, fontWeight: 700, cursor: (aiGenerated || aiLoading) ? 'not-allowed' : 'pointer',
+                opacity: aiLoading ? 0.7 : 1, transition: 'all 0.2s'
+              }}
+            >
+              {aiLoading ? '✨ Thinking...' : (aiGenerated ? '✨ AI Applied' : '✨ AI Magic')}
+            </button>
+          </div>
+          <textarea 
+            style={{ ...INPUT, resize: 'vertical', minHeight: 80, width: '100%', padding: '12px 16px', borderRadius: 16 }} 
+            placeholder="Tell us about the food, service, or ambiance..." 
+            value={review} 
+            onChange={e => { setReview(e.target.value); setAiGenerated(false); }} 
+            onFocus={e => {e.target.style.borderColor = 'rgba(245,158,11,0.6)'; e.target.style.background = 'rgba(245,158,11,0.05)'}} 
+            onBlur={e => {e.target.style.borderColor = 'var(--border-hover)'; e.target.style.background = 'var(--bg-main)'}} 
+          />
+        </div>
 
         <button
           onClick={handleSubmit}

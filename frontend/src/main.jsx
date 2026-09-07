@@ -22,7 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               toastOptions={{
                 duration: 3000,
                 style: {
-                  background: 'var(--bg-elevated)',
+                  background: 'var(--bg-card)',
                   color: 'var(--text-primary)',
                   border: '1px solid rgba(99, 102, 241, 0.2)',
                   borderRadius: '12px',

@@ -208,7 +208,7 @@ const QRCodePage = () => {
             ) : (
               <>
                 {/* QR Code Container */}
-                <div style={{ background: 'var(--text-primary)', padding: 18, borderRadius: 24, display: 'inline-block', marginBottom: 20, boxShadow: '0 12px 36px var(--overlay-bg)' }}>
+                <div style={{ background: '#ffffff', padding: 18, borderRadius: 24, display: 'inline-block', marginBottom: 20, boxShadow: '0 12px 36px var(--overlay-bg)' }}>
                   <QRCode
                     id="digital-menu-qr-code"
                     value={liveMenuUrl}

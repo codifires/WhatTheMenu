@@ -61,6 +61,7 @@ const OwnerLogin = () => {
         if (error.response?.data?.errorType === 'DEVICE_LIMIT_REACHED') {
           setLimitReached(true)
           setActiveSessions(error.response?.data?.sessions || [])
+          if (error.response?.data?.limit) setDeviceLimit(error.response.data.limit)
         } else {
           toast.error(error.response?.data?.message || 'Login failed')
         }

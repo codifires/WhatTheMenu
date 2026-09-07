@@ -125,7 +125,7 @@ export default function LandingPage() {
   const [billingCycle, setBillingCycle] = useState('monthly')
   const [contactEmail, setContactEmail] = useState('support@whatthemenu.com')
   const [rawPrices, setRawPrices] = useState({
-    starter_price: 199, starter_price: 299, pro_price: 499,
+    starter_price: 199, pro_price: 499,
     yearly_discount_percentage: 20
   })
   const [realCafeCount, setRealCafeCount] = useState(0)
@@ -141,7 +141,6 @@ export default function LandingPage() {
         setContactEmail(d.contact_email || 'support@whatthemenu.com')
         setRawPrices({
           starter_price: d.starter_price || 199,
-          starter_price: d.starter_price || 299,
           pro_price: d.pro_price || 499,
           yearly_discount_percentage: d.yearly_discount_percentage || 20
         })
