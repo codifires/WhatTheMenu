@@ -42,6 +42,7 @@ const Checkout = () => {
   const [form, setForm] = useState({ customer_name: '', table_number: '', notes: '' })
   const [loading, setLoading] = useState(false)
   const [cafe, setCafe] = useState(null)
+  const [paymentMethod, setPaymentMethod] = useState('gpay')
 
   useEffect(() => {
     if (items.length === 0) {
@@ -202,32 +203,47 @@ const Checkout = () => {
           
           {/* Razorpay Option */}
           {cafe?.razorpay_key_id ? (
-            <div
-              style={{
-                padding: '16px', borderRadius: 18, marginBottom: 12, cursor: 'default',
-                border: '2px solid var(--accent-primary)',
-                background: 'linear-gradient(180deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.03) 100%)',
-                boxShadow: '0 0 20px rgba(245,158,11,0.18)',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                transition: 'all 0.2s'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-                  💳
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <p style={{ fontSize: 15, fontWeight: 800, color: '#fbbf24', margin: 0 }}>Pay Online</p>
-                    <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(16,185,129,0.2)', color: 'var(--success-text)', padding: '2px 6px', borderRadius: 4 }}>Recommended</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                { id: 'gpay', label: 'Google Pay', icon: '📱', desc: 'Pay via GPay UPI' },
+                { id: 'phonepe', label: 'PhonePe', icon: '📞', desc: 'Pay via PhonePe UPI' },
+                { id: 'paytm', label: 'Paytm', icon: '🛡️', desc: 'Pay via Paytm UPI or Wallet' },
+                { id: 'card', label: 'Cards & Others', icon: '💳', desc: 'Credit, Debit, Netbanking (via Razorpay)' }
+              ].map(method => {
+                const isSelected = paymentMethod === method.id;
+                return (
+                  <div
+                    key={method.id}
+                    onClick={() => setPaymentMethod(method.id)}
+                    style={{
+                      padding: '12px 16px', borderRadius: 16, cursor: 'pointer',
+                      border: isSelected ? '2px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.08)',
+                      background: isSelected ? 'linear-gradient(180deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.03) 100%)' : 'var(--bg-card)',
+                      boxShadow: isSelected ? '0 0 20px rgba(245,158,11,0.18)' : 'none',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 12, background: isSelected ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
+                        {method.icon}
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: isSelected ? '#fbbf24' : 'var(--text-primary)', margin: 0 }}>{method.label}</p>
+                          {method.id === 'gpay' && <span style={{ fontSize: 9, fontWeight: 800, background: 'rgba(16,185,129,0.2)', color: 'var(--success-text)', padding: '2px 6px', borderRadius: 4 }}>Popular</span>}
+                        </div>
+                        <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: '2px 0 0' }}>{method.desc}</p>
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <div style={{ width: 22, height: 22, borderRadius: 50, background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-text)', fontSize: 12, fontWeight: 900 }}>
+                        ✓
+                      </div>
+                    )}
                   </div>
-                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0' }}>Cards, UPI, Wallets (via Razorpay)</p>
-                </div>
-              </div>
-
-              <div style={{ width: 22, height: 22, borderRadius: 50, background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-text)', fontSize: 12, fontWeight: 900 }}>
-                ✓
-              </div>
+                )
+              })}
             </div>
           ) : (
             <div style={{ padding: '16px', borderRadius: 18, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: 'var(--danger-text)', fontSize: 13, textAlign: 'center' }}>

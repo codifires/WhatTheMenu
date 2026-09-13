@@ -217,18 +217,18 @@ export default function LandingPage() {
     <div style={{ background: 'var(--bg-shell)', color: 'var(--text-primary)', fontFamily: "'Inter', system-ui, sans-serif", overflowX: 'hidden' }}>
 
       {/* ═══════════════ NAVBAR ═══════════════ */}
-      <header style={{
+      <header className="mobile-header" style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
         background: scrolled ? 'var(--bg-topbar)' : 'transparent',
         backdropFilter: scrolled ? 'blur(16px)' : 'none',
         borderBottom: scrolled ? '1px solid var(--border-light)' : '1px solid transparent',
         transition: 'all 0.3s ease',
       }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="mobile-header-inner" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Logo */}
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-            <img src="/logo.png" alt="WTM Logo" style={{ height: 70, width: 70, objectFit: 'cover', borderRadius: '50%' }} />
-            <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.5px', fontFamily: "'Outfit',sans-serif", color: 'var(--text-primary)' }}>
+          <Link to="/" className="mobile-logo-link" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
+            <img src="/logo.png" alt="WTM Logo" className="mobile-logo" style={{ height: 70, width: 70, objectFit: 'cover', borderRadius: '50%' }} />
+            <span className="mobile-logo-text" style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.5px', fontFamily: "'Outfit',sans-serif", color: 'var(--text-primary)' }}>
               WTM
             </span>
           </Link>
@@ -250,11 +250,11 @@ export default function LandingPage() {
           </nav>
 
           {/* CTA */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="mobile-cta-container" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <ThemeToggle />
             <Link to="/owner/login" style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)', textDecoration: 'none', padding: '8px 4px' }}
               className="hidden-mobile">Owner Login</Link>
-            <Link to="/owner/register" style={{
+            <Link to="/owner/register" className="mobile-header-btn" style={{
               fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', textDecoration: 'none',
               padding: '10px 22px', borderRadius: 12,
               background: 'linear-gradient(135deg,#7c3aed,#4f46e5)',
@@ -265,12 +265,41 @@ export default function LandingPage() {
             onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='0 4px 20px rgba(124,58,237,0.4)' }}>
               Start For Free →
             </Link>
+            
+            <button className="mobile-menu-btn" onClick={() => setMobileOpen(!mobileOpen)} style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', padding: '8px 4px', display: 'flex', alignItems: 'center' }}>
+              {mobileOpen ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+              )}
+            </button>
           </div>
         </div>
       </header>
 
+      {/* ═══════════════ MOBILE OVERLAY MENU ═══════════════ */}
+      {mobileOpen && (
+        <div style={{
+          position: 'fixed', top: 68, left: 0, right: 0, bottom: 0, zIndex: 99,
+          background: 'var(--bg-main)', padding: '32px 24px',
+          display: 'flex', flexDirection: 'column', gap: 28,
+          borderTop: '1px solid var(--border-light)'
+        }}>
+          {['Features','How it works','Pricing'].map(l => (
+            <a key={l} href={`/#${l.toLowerCase().replace(/ /g,'-')}`}
+              onClick={() => setMobileOpen(false)}
+              style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', textDecoration: 'none', fontFamily: "'Outfit',sans-serif" }}>
+              {l}
+            </a>
+          ))}
+          <Link to="/contact-us" onClick={() => setMobileOpen(false)} style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', textDecoration: 'none', fontFamily: "'Outfit',sans-serif" }}>Contact Us</Link>
+          <div style={{ height: 1, background: 'var(--border-light)', margin: '8px 0' }} />
+          <Link to="/owner/login" onClick={() => setMobileOpen(false)} style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-secondary)', textDecoration: 'none', fontFamily: "'Outfit',sans-serif" }}>Owner Login</Link>
+        </div>
+      )}
+
       {/* ═══════════════ HERO ═══════════════ */}
-      <section style={{ paddingTop: 160, paddingBottom: 100, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <section className="mobile-hero-container" style={{ paddingTop: 160, paddingBottom: 100, textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         {/* Radial glow */}
         <div style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 500, borderRadius: '50%', background: 'radial-gradient(ellipse, rgba(124,58,237,0.18) 0%, transparent 70%)', pointerEvents: 'none' }} />
         {/* Grid dots */}
@@ -283,7 +312,7 @@ export default function LandingPage() {
             <span style={{ fontSize: 14, fontWeight: 600, color: '#a78bfa' }}>Platform is live — v1.0</span>
           </div>
 
-          <h1 style={{ fontSize: 'clamp(36px, 6vw, 68px)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-2px', margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>
+          <h1 className="mobile-hero-title" style={{ fontSize: 'clamp(36px, 6vw, 68px)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-2px', margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>
             The Smartest Way to<br />
             <span style={{ background: 'linear-gradient(135deg,#a78bfa,#818cf8,#c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
               Run Your Café Menu
@@ -295,7 +324,7 @@ export default function LandingPage() {
           </p>
 
           {/* Buttons */}
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div className="mobile-hero-btns" style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link to="/owner/register" style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '14px 32px', borderRadius: 14, textDecoration: 'none',
@@ -589,8 +618,22 @@ export default function LandingPage() {
         @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
         * { box-sizing: border-box; }
         body { margin: 0; }
-        @media (max-width: 640px) {
+        .mobile-menu-btn { display: none !important; }
+        @media (max-width: 1024px) {
           .hidden-mobile { display: none !important; }
+          .mobile-menu-btn { display: flex !important; }
+        }
+        @media (max-width: 640px) {
+          .mobile-logo { height: 36px !important; width: 36px !important; }
+          .mobile-logo-text { font-size: 16px !important; display: none !important; }
+          .mobile-logo-link { gap: 6px !important; }
+          .mobile-cta-container { gap: 8px !important; }
+          .mobile-header-inner { padding: 0 12px !important; }
+          .mobile-header-btn { padding: 8px 12px !important; font-size: 12px !important; white-space: nowrap; }
+          .mobile-hero-container { padding-top: 110px !important; }
+          .mobile-hero-title { font-size: 32px !important; line-height: 1.2 !important; }
+          .mobile-hero-btns { flex-direction: column !important; width: 100% !important; align-items: stretch !important; }
+          .mobile-hero-btns > a { width: 100% !important; justify-content: center !important; margin-bottom: 8px !important; }
         }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg-shell); }
