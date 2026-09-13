@@ -108,8 +108,7 @@ const cafeSchema = new mongoose.Schema({
     default: true
   },
   resetPasswordToken: String,
-  resetPasswordExpire: Date,
-  login_otp: String,
+  resetPasswordExpire: Date,  login_otp: String,
   login_otp_expire: Date,
   active_sessions: [{
     token: String,
