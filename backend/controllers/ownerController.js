@@ -790,18 +790,20 @@ const updateThemeSettings = async (req, res) => {
     
     // Safety fallback
     if (!cafe.theme_settings.unlocked_themes || cafe.theme_settings.unlocked_themes.length === 0) {
-      cafe.theme_settings.unlocked_themes = ['classic'];
-    }
+        cafe.theme_settings.unlocked_themes = ['classic'];
+      }
+      
+      const actualUnlockedThemes = cafe.theme_settings.unlocked_themes.slice(0, maxThemes);
 
-    if (unlock_theme && !cafe.theme_settings.unlocked_themes.includes(unlock_theme)) {
-      if (cafe.theme_settings.unlocked_themes.length >= maxThemes) {
+    if (unlock_theme && !actualUnlockedThemes.includes(unlock_theme)) {
+      if (actualUnlockedThemes.length >= maxThemes) {
         return res.status(403).json({ success: false, message: `Your ${plan} plan only allows ${maxThemes} theme(s). Please upgrade to unlock more.` });
       }
       cafe.theme_settings.unlocked_themes.push(unlock_theme);
     }
 
     if (active_theme) {
-      if (!cafe.theme_settings.unlocked_themes.includes(active_theme)) {
+      if (!actualUnlockedThemes.includes(active_theme) && active_theme !== unlock_theme) {
          return res.status(403).json({ success: false, message: 'Theme is locked. Unlock it first.' });
       }
       cafe.theme_settings.active_theme = active_theme;

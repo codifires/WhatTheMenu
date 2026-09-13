@@ -13,6 +13,8 @@ const OwnerLogin = () => {
   const [activeSessions, setActiveSessions] = useState([])
     const [deviceLimit, setDeviceLimit] = useState(1)
     const [selectedSessions, setSelectedSessions] = useState([])
+  const [requireOtp, setRequireOtp] = useState(false)
+  const [otp, setOtp] = useState('')
 
     const toggleSession = (id) => {
       if (selectedSessions.includes(id)) {
@@ -21,15 +23,21 @@ const OwnerLogin = () => {
         setSelectedSessions([...selectedSessions, id])
       }
     }
-  const { login } = useAuth()
+  const { login, verifyLoginOtp } = useAuth()
   const navigate = useNavigate()
 
   
     const handleForceLogout = async () => {
         setLoading(true)
         try {
-          const user = await login(email, password, true, selectedSessions)
-          toast.success(`Welcome back, ${user.name}!`)
+          const res = await login(email, password, true, selectedSessions)
+          if (res?.requireOtp) {
+            setRequireOtp(true)
+            setLimitReached(false)
+            toast.success('OTP sent to your email')
+            return
+          }
+          toast.success(`Welcome back, ${res.name}!`)
           navigate('/owner')
         } catch (error) {
           if (error.response?.data?.errorType === 'DEVICE_LIMIT_REACHED') {
@@ -43,6 +51,20 @@ const OwnerLogin = () => {
       }
     }
   
+    const handleVerifyOtp = async (e) => {
+        e.preventDefault()
+        if (!otp) { toast.error('Please enter the OTP'); return }
+        setLoading(true)
+        try {
+          const user = await verifyLoginOtp(email, otp, true, selectedSessions)
+          toast.success(`Welcome back, ${user.name}!`)
+          navigate('/owner')
+        } catch (error) {
+          toast.error(error.response?.data?.message || 'Invalid or expired OTP')
+        } finally {
+          setLoading(false)
+        }
+    }
   const handleSubmit = async (e) => {
       e.preventDefault()
       if (!email || !password) { toast.error('Please fill in all fields'); return }
@@ -124,7 +146,37 @@ const OwnerLogin = () => {
           </div>
 
                       {/* Form Card */}
-            {limitReached ? (
+            {requireOtp ? (
+              <div style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 32 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                  <span style={{ fontSize: 28 }}>✉️</span>
+                  <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, fontFamily: "'Outfit',sans-serif" }}>Enter OTP</h3>
+                </div>
+                <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 24, lineHeight: 1.5 }}>
+                  Please enter the 6-digit code sent to <strong>{email}</strong> to verify the device logout.
+                </p>
+                <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 8 }}>6-Digit OTP</label>
+                    <input type="text" value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="Enter 6-digit OTP" required
+                      style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'var(--border-light)', color: 'var(--text-primary)', fontSize: 16, outline: 'none', boxSizing: 'border-box', letterSpacing: '2px', textAlign: 'center' }}
+                      onFocus={e => e.target.style.borderColor='rgba(79,70,229,0.6)'}
+                      onBlur={e => e.target.style.borderColor='var(--border-hover)'} />
+                  </div>
+                  <button type="submit" disabled={loading || otp.length !== 6}
+                    style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: (loading || otp.length !== 6) ? 'not-allowed' : 'pointer', fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', boxShadow: '0 8px 24px rgba(79,70,229,0.4)', opacity: (loading || otp.length !== 6) ? 0.7 : 1, transition: 'all 0.2s', marginTop: 4 }}>
+                    {loading ? 'Verifying...' : 'Verify & Log In'}
+                  </button>
+                  <button type="button" onClick={() => setRequireOtp(false)} disabled={loading} style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1px solid var(--border-medium)', background: 'transparent', color: 'var(--text-secondary)', fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-shell)'} onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+                    Cancel
+                  </button>
+                  <button type="button" onClick={handleForceLogout} disabled={loading} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: 'transparent', color: '#06b6d4', fontSize: 14, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }} onMouseEnter={e => { if (!loading) e.currentTarget.style.textDecoration='underline' }} onMouseLeave={e => e.currentTarget.style.textDecoration='none'}>
+                    {loading ? 'Sending...' : 'Resend OTP'}
+                  </button>
+                </form>
+              </div>
+            ) : limitReached ? (
               <div style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 32 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, color: '#f87171' }}>
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>

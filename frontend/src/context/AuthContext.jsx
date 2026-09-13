@@ -35,6 +35,21 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password, forceLogout = false, logoutSessionIds = []) => {
     const res = await authAPI.login({ email, password, forceLogout, logoutSessionIds })
+    
+    if (res.data.requireOtp) {
+      return res.data; // Return raw data to trigger OTP screen
+    }
+
+    const { token } = res.data.data
+    localStorage.setItem('token', token)
+    
+    // Immediately fetch the fully hydrated user object from /api/auth/me
+    const fullUser = await refreshUser()
+    return fullUser
+  }
+
+  const verifyLoginOtp = async (email, otp, forceLogout = false, logoutSessionIds = []) => {
+    const res = await authAPI.verifyLoginOtp({ email, otp, forceLogout, logoutSessionIds })
     const { token } = res.data.data
     localStorage.setItem('token', token)
     
@@ -61,7 +76,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, refreshUser, loading }}>
+    <AuthContext.Provider value={{ user, login, verifyLoginOtp, logout, refreshUser, loading }}>
       {children}
     </AuthContext.Provider>
   )

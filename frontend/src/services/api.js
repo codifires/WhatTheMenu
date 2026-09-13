@@ -55,6 +55,7 @@ publicApi.interceptors.response.use(
 // ============ AUTH ============
 export const authAPI = {
   login: (data) => api.post('/auth/login', data),
+  verifyLoginOtp: (data) => api.post('/auth/verify-login-otp', data),
   registerOwner: (data) => api.post('/auth/register', data),
   checkAvailability: (data) => api.post('/auth/check-availability', data),
   forgotPassword: (data) => api.post('/auth/forgotpassword', data),

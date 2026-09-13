@@ -73,10 +73,10 @@ const cafeSchema = new mongoose.Schema({
     thank_you_message: { type: String, default: 'Thank you for your visit!' }
   },
   theme_settings: {
-    active_theme: { 
-      type: String, 
-      enum: ['classic', 'midnight', 'blackgold', 'forest', 'rose'], 
-      default: 'classic' 
+    active_theme: {
+      type: String,
+      enum: ['classic', 'midnight', 'blackgold', 'forest', 'rose'],
+      default: 'classic'
     },
     unlocked_themes: {
       type: [String],
@@ -109,6 +109,8 @@ const cafeSchema = new mongoose.Schema({
   },
   resetPasswordToken: String,
   resetPasswordExpire: Date,
+  login_otp: String,
+  login_otp_expire: Date,
   active_sessions: [{
     token: String,
     device_info: String,
@@ -120,7 +122,7 @@ const cafeSchema = new mongoose.Schema({
 });
 
 // Generate slug from name
-cafeSchema.pre('save', async function(next) {
+cafeSchema.pre('save', async function (next) {
   if (this.isModified('name')) {
     this.slug = this.name
       .toLowerCase()
@@ -134,12 +136,12 @@ cafeSchema.pre('save', async function(next) {
   next();
 });
 
-cafeSchema.methods.matchPassword = async function(enteredPassword) {
+cafeSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
 // Generate and hash password token
-cafeSchema.methods.getResetPasswordToken = function() {
+cafeSchema.methods.getResetPasswordToken = function () {
   // Generate token
   const resetToken = crypto.randomBytes(20).toString('hex');
 

@@ -43,10 +43,19 @@ const OwnerSettings = () => {
   })
   const [logoFile, setLogoFile] = useState(null)
   const [themeSettings, setThemeSettings] = useState(user?.theme_settings || { active_theme: 'classic', unlocked_themes: ['classic'] })
-  const planName = user?.subscription?.plan_name || 'starter'
+  useEffect(() => {
+    if (user?.theme_settings) {
+      setThemeSettings(user.theme_settings);
+    }
+  }, [user]);
+  const isSubActive = user?.subscription_status === 'active';
+  const planName = isSubActive ? (user?.subscription?.plan_name || 'starter') : 'starter';
   let maxThemes = 1;
   if (planName === 'pro') maxThemes = 3;
   if (planName === 'pro_plus') maxThemes = 5;
+  
+  // Enforce maxThemes limitation if they downgraded or expired
+  const actualUnlockedThemes = (themeSettings.unlocked_themes || ['classic']).slice(0, maxThemes);
   const THEME_OPTIONS = [
     { id: 'classic', name: 'Classic Minimal', color: '#ffffff', desc: 'Clean white with warm accents' },
     { id: 'midnight', name: 'Midnight Amber', color: '#1a1f2e', desc: 'Deep dark with golden glow' },
@@ -228,15 +237,17 @@ const OwnerSettings = () => {
                     <p style={{ fontSize: 14, color: 'var(--text-tertiary)', margin: 0 }}>Customize the visual appearance of your digital menu.</p>
                   </div>
                   <div style={{ background: 'var(--bg-input)', padding: '6px 12px', borderRadius: 20, border: '1px solid var(--border-medium)', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
-                    Themes Unlocked: <span style={{ color: '#06b6d4' }}>{themeSettings.unlocked_themes.length}</span> / {maxThemes}
+                    Themes Unlocked: <span style={{ color: '#06b6d4' }}>{actualUnlockedThemes.length}</span> / {maxThemes}
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
                   {THEME_OPTIONS.map(theme => {
-                    const isUnlocked = themeSettings.unlocked_themes.includes(theme.id);
-                    const isActive = themeSettings.active_theme === theme.id;
-                    const canUnlock = !isUnlocked && themeSettings.unlocked_themes.length < maxThemes;
+                    const isUnlocked = actualUnlockedThemes.includes(theme.id);
+                    // Force active theme to classic if their active theme is now locked
+                    const effectiveActiveTheme = actualUnlockedThemes.includes(themeSettings.active_theme) ? themeSettings.active_theme : 'classic';
+                    const isActive = effectiveActiveTheme === theme.id;
+                    const canUnlock = !isUnlocked && actualUnlockedThemes.length < maxThemes && planName !== 'starter';
                     
                     return (
                       <div key={theme.id} style={{

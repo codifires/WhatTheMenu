@@ -15,12 +15,31 @@ const STATUS_STEPS = [
   { key: 'completed', label: 'Done', icon: '✅' },
 ]
 
-const OrderTracking = () => {
+import React from 'react';
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div style={{padding: 40, color: 'red'}}><h1>Something went wrong.</h1><pre>{String(this.state.error.stack)}</pre></div>;
+    }
+    return this.props.children;
+  }
+}
+
+const OrderTrackingContent = () => {
   const printRef = useRef();
-  const handlePrint = useReactToPrint({
+  const handlePrint = () => { console.log('print not implemented yet'); };
+  /* const handlePrint = useReactToPrint({
     contentRef: printRef,
     documentTitle: `Receipt_${orderNumber}`
-  });
+  }); */
   const { cafeId } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -31,7 +50,12 @@ const OrderTracking = () => {
   const [cafeDetails, setCafeDetails] = useState(null)
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('myOrders') || '[]')
+    let saved = [];
+    try {
+      saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
+    } catch (e) {
+      localStorage.setItem('myOrders', '[]');
+    }
     const cafeOrders = saved.filter(o => o.cafeId === cafeId)
     setMyOrders(cafeOrders)
 
@@ -59,7 +83,12 @@ const OrderTracking = () => {
           playHardwareAlert('ready')
           
           // Mark in localStorage so it doesn't show in tracking anymore
-          const saved = JSON.parse(localStorage.getItem('myOrders') || '[]')
+          let saved = [];
+    try {
+      saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
+    } catch (e) {
+      localStorage.setItem('myOrders', '[]');
+    }
           const updated = saved.map(o => o.orderNumber === data.order_number ? { ...o, status: 'completed' } : o)
           localStorage.setItem('myOrders', JSON.stringify(updated))
 
@@ -81,7 +110,12 @@ const OrderTracking = () => {
       setOrder(res.data.data)
 
       if (res.data.data.order_status === 'completed') {
-        const saved = JSON.parse(localStorage.getItem('myOrders') || '[]')
+        let saved = [];
+    try {
+      saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
+    } catch (e) {
+      localStorage.setItem('myOrders', '[]');
+    }
         const updated = saved.map(o => o.orderNumber === res.data.data.order_number ? { ...o, status: 'completed' } : o)
         localStorage.setItem('myOrders', JSON.stringify(updated))
 
@@ -89,11 +123,30 @@ const OrderTracking = () => {
         setTimeout(() => navigate(`/${cafeId}/menu/feedback`), 2000)
       }
     } catch (error) {
-      toast.error('Order not found')
+      if (error.response?.status === 404) {
+        toast.error('Order not found');
+        let saved = [];
+        try {
+          saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
+        } catch (e) {
+          localStorage.setItem('myOrders', '[]');
+        }
+        const updated = saved.filter(o => o.orderNumber !== num);
+        localStorage.setItem('myOrders', JSON.stringify(updated));
+        setMyOrders(updated);
+        if (orderNumber === num) setOrderNumber('');
+      } else {
+        toast.error('Error tracking order');
+      }
       setOrder(null)
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleRetryPayment = () => {
+    toast.error("Retry payment is not available yet. Please place a new order.");
+    setTimeout(() => navigate(`/${cafeId}/menu`), 2000);
   }
 
   const getStepIndex = (status) => {
@@ -113,6 +166,13 @@ const OrderTracking = () => {
 
 
       {/* ── Recent Orders ── */}
+      {!order && myOrders.length === 0 && !loading && (
+        <div style={{ textAlign: 'center', padding: '60px 20px', opacity: 0.5 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🛒</div>
+          <p>No recent orders found.</p>
+        </div>
+      )}
+
       {!order && myOrders.length > 0 && (
         <div style={{ animation: 'slideUp 0.3s ease' }}>
           <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 12px', paddingLeft: 4 }}>Recent Orders</h3>
@@ -239,5 +299,7 @@ const OrderTracking = () => {
     </div>
   )
 }
+
+const OrderTracking = () => <ErrorBoundary><OrderTrackingContent /></ErrorBoundary>;
 
 export default OrderTracking

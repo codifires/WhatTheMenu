@@ -105,7 +105,7 @@ const setPassword = async (req, res, next) => {
 // @route   POST /api/auth/login
 const login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, forceLogout, logoutSessionIds } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
@@ -131,14 +131,6 @@ const login = async (req, res, next) => {
       });
     }
 
-    // Check if cafe is suspended
-    // if (role === 'owner' && !user.is_active) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: 'Your account has been suspended. Contact support.'
-    //   });
-    // }
-
     // Check maintenance mode for owners
     if (role === 'owner') {
       const settings = await Settings.getSettings();
@@ -159,8 +151,6 @@ const login = async (req, res, next) => {
       });
     }
 
-    const token = generateToken(user._id, role);
-
     if (role === 'owner') {
       const plan = user.subscription?.plan_name || 'starter';
       let limit = 1;
@@ -173,26 +163,57 @@ const login = async (req, res, next) => {
       const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
       user.active_sessions = user.active_sessions.filter(s => (Date.now() - new Date(s.last_active || Date.now()).getTime()) < SEVEN_DAYS);
 
-      if (req.body.forceLogout) {
-        // Only clear selected devices if provided, otherwise clear all
-        if (req.body.logoutSessionIds && Array.isArray(req.body.logoutSessionIds)) {
-          user.active_sessions = user.active_sessions.filter(s => !req.body.logoutSessionIds.includes(s._id.toString()));
+      if (forceLogout) {
+        // The user clicked "Log Out Selected" and we need to send an OTP
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Save OTP to user document
+        user.login_otp = otp;
+        user.login_otp_expire = Date.now() + 10 * 60 * 1000; // 10 minutes
+        await user.save();
+
+        // Send Email
+        try {
+          const message = `You requested to force logout devices. Your OTP code is: ${otp}\n\nThis code is valid for 10 minutes.`;
           
-          // Re-check limit after selective deletion
-          if (user.active_sessions.length >= limit) {
-             return res.status(403).json({
-                success: false,
-                errorType: 'DEVICE_LIMIT_REACHED',
-                limit,
-                sessions: user.active_sessions,
-                message: `Device limit reached. Please select more devices to log out.`
-             });
-          }
-        } else {
-          user.active_sessions = []; // Fallback legacy clear all
+          const htmlMessage = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+              <h2 style="color: #1e293b; text-align: center;">Device Logout Verification</h2>
+              <p style="color: #475569; font-size: 16px;">Hello ${user.name},</p>
+              <p style="color: #475569; font-size: 16px;">You are trying to log out existing devices. Please use the following One-Time Password (OTP) to complete your request:</p>
+              <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0;">
+                <span style="font-size: 32px; font-weight: bold; color: #f59e0b; letter-spacing: 5px;">${otp}</span>
+              </div>
+              <p style="color: #475569; font-size: 14px;">This code is valid for 10 minutes. If you did not request this action, please ignore this email.</p>
+            </div>
+          `;
+
+          await sendEmail({
+            email: user.email,
+            subject: 'Your Force Logout OTP',
+            message: message,
+            html: htmlMessage
+          });
+
+          return res.json({
+            success: true,
+            requireOtp: true,
+            email: user.email,
+            message: 'OTP sent to email'
+          });
+        } catch (err) {
+          user.login_otp = undefined;
+          user.login_otp_expire = undefined;
+          await user.save();
+          
+          return res.status(500).json({
+            success: false,
+            message: 'Email could not be sent. Please try again.'
+          });
         }
       } else if (user.active_sessions.length >= limit) {
-        // Send safe session data (remove token)
+        // Normal login, but limit is reached
         const safeSessions = user.active_sessions.map(s => ({
           _id: s._id,
           device_info: s.device_info,
@@ -204,26 +225,44 @@ const login = async (req, res, next) => {
           errorType: 'DEVICE_LIMIT_REACHED',
           limit,
           sessions: safeSessions,
-          message: `Device limit reached. Please logout from your old device to login here.`
+          message: `Device limit reached. Please select devices to log out.`
         });
       }
 
-      // Parse a basic User-Agent string to something readable, or just save the raw string if parsing is too complex without a library.
-      // We will parse standard browser and OS names manually for simplicity.
+      // Normal login, limit NOT reached
+      const token = generateToken(user._id, role);
+      
       const ua = req.headers['user-agent'] || 'Unknown Device';
       let device_info = 'Unknown Device';
       if (ua !== 'Unknown Device') {
-        const browser = /(chrome|safari|firefox|edge|opera)/i.exec(ua) ? /(chrome|safari|firefox|edge|opera)/i.exec(ua)[0] : 'Browser';
-        const os = /(windows|macintosh|android|iphone|ipad|linux)/i.exec(ua) ? /(windows|macintosh|android|iphone|ipad|linux)/i.exec(ua)[0] : 'OS';
+        const browserMatch = /(chrome|safari|firefox|edge|opera)/i.exec(ua);
+        const browser = browserMatch ? browserMatch[0] : 'Browser';
+        const osMatch = /(windows|macintosh|android|iphone|ipad|linux)/i.exec(ua);
+        const os = osMatch ? osMatch[0] : 'OS';
         device_info = `${browser.charAt(0).toUpperCase() + browser.slice(1)} on ${os === 'macintosh' ? 'Mac' : os.charAt(0).toUpperCase() + os.slice(1)}`;
       }
 
       user.active_sessions.push({ token, device_info, last_active: Date.now() });
       user.markModified('active_sessions');
       await user.save();
+
+      return res.json({
+        success: true,
+        data: {
+          token,
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role
+          }
+        }
+      });
     }
 
-    res.json({
+    // For admin, login successfully directly
+    const token = generateToken(user._id, role);
+    return res.json({
       success: true,
       data: {
         token,
@@ -235,6 +274,93 @@ const login = async (req, res, next) => {
         }
       }
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Verify Login OTP
+// @route   POST /api/auth/verify-login-otp
+const verifyLoginOtp = async (req, res, next) => {
+  try {
+    const { email, otp, forceLogout, logoutSessionIds } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email and OTP'
+      });
+    }
+
+    const user = await Cafe.findOne({ 
+      email,
+      login_otp: otp,
+      login_otp_expire: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired OTP'
+      });
+    }
+
+    // Clear OTP fields
+    user.login_otp = undefined;
+    user.login_otp_expire = undefined;
+
+    const plan = user.subscription?.plan_name || 'starter';
+    let limit = 1;
+    if (plan === 'pro') limit = 2;
+    if (plan === 'pro_plus' || plan === 'pro-plus' || plan === 'pro plus') limit = 3;
+
+    if (!user.active_sessions) user.active_sessions = [];
+
+    if (forceLogout && logoutSessionIds && Array.isArray(logoutSessionIds)) {
+      user.active_sessions = user.active_sessions.filter(s => !logoutSessionIds.includes(s._id.toString()));
+    } else if (forceLogout) {
+      user.active_sessions = []; // Legacy clear all
+    }
+
+    if (user.active_sessions.length >= limit) {
+      return res.status(403).json({
+        success: false,
+        errorType: 'DEVICE_LIMIT_REACHED',
+        limit,
+        sessions: user.active_sessions.map(s => ({ _id: s._id, device_info: s.device_info, last_active: s.last_active })),
+        message: 'Device limit reached. Please select more devices to log out.'
+      });
+    }
+
+    // Success: add new session
+    const token = generateToken(user._id, 'owner');
+    const ua = req.headers['user-agent'] || 'Unknown Device';
+    let device_info = 'Unknown Device';
+    if (ua !== 'Unknown Device') {
+      const browserMatch = /(chrome|safari|firefox|edge|opera)/i.exec(ua);
+      const browser = browserMatch ? browserMatch[0] : 'Browser';
+      const osMatch = /(windows|macintosh|android|iphone|ipad|linux)/i.exec(ua);
+      const os = osMatch ? osMatch[0] : 'OS';
+      device_info = `${browser.charAt(0).toUpperCase() + browser.slice(1)} on ${os === 'macintosh' ? 'Mac' : os.charAt(0).toUpperCase() + os.slice(1)}`;
+    }
+
+    user.active_sessions.push({ token, device_info, last_active: Date.now() });
+    user.markModified('active_sessions');
+    await user.save();
+
+    return res.json({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: 'owner'
+        }
+      }
+    });
+
   } catch (error) {
     next(error);
   }
@@ -457,6 +583,7 @@ const register = async (req, res, next) => {
 module.exports = {
   register,
   login,
+  verifyLoginOtp,
   getMe,
   logout,
   setPassword,

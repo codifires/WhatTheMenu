@@ -88,12 +88,15 @@ const searchMenu = async (req, res, next) => {
       return res.json({ success: true, data: [] });
     }
 
+    const resolvedCafeId = await resolveCafeIdHelper(req.params.cafeId);
+    if (!resolvedCafeId) {
+      return res.status(404).json({ success: false, message: 'Cafe not found' });
+    }
+
+    const safeQ = q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const items = await MenuItem.find({
-      cafe_id: req.params.cafeId,
-      $or: [
-        { name: { $regex: q, $options: 'i' } },
-        { description: { $regex: q, $options: 'i' } }
-      ]
+      cafe_id: resolvedCafeId,
+      $or: [{ name: { $regex: safeQ, $options: 'i' } }, { description: { $regex: safeQ, $options: 'i' } }]
     }).populate('category_id', 'name').lean();
 
     res.json({ success: true, data: items });
