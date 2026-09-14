@@ -226,6 +226,11 @@ const CafeManagement = () => {
                               <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 50, background: planConfig.bg, color: planConfig.color, border: `1px solid ${planConfig.border}`, textTransform: 'capitalize', display: 'inline-block' }}>
                                 {planConfig.icon} {plan}
                               </span>
+                              {cafe.subscription?.end_date && (
+                                <span style={{ display: 'block', fontSize: 10, color: 'var(--text-tertiary)', marginTop: 4 }}>
+                                  Expires: {new Date(cafe.subscription.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                                </span>
+                              )}
                               {subStatus === 'pending' && (
                                 <span style={{ display: 'block', fontSize: 10, color: '#f59e0b', marginTop: 3 }}>⏳ Awaiting approval</span>
                               )}

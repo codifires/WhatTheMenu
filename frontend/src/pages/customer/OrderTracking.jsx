@@ -84,11 +84,11 @@ const OrderTrackingContent = () => {
           
           // Mark in localStorage so it doesn't show in tracking anymore
           let saved = [];
-    try {
-      saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
-    } catch (e) {
-      localStorage.setItem('myOrders', '[]');
-    }
+          try {
+            saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
+          } catch (e) {
+            localStorage.setItem('myOrders', '[]');
+          }
           const updated = saved.map(o => o.orderNumber === data.order_number ? { ...o, status: 'completed' } : o)
           localStorage.setItem('myOrders', JSON.stringify(updated))
 
@@ -104,18 +104,34 @@ const OrderTrackingContent = () => {
     setLoading(true)
     try {
       const res = await customerAPI.trackOrder(num)
-        if (!cafeDetails) {
-          customerAPI.getCafeMenu(cafeId).then(cRes => setCafeDetails(cRes.data.data.cafe)).catch(()=>{})
+      if (!cafeDetails) {
+        customerAPI.getCafeMenu(cafeId).then(cRes => setCafeDetails(cRes.data.data.cafe)).catch(()=>{})
+      }
+
+      if (res.data.data.order_status === 'RAZORPAY - FAILED' || res.data.data.order_status === 'PAYMENT_PENDING') {
+        let saved = [];
+        try {
+          saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
+        } catch (e) {
+          localStorage.setItem('myOrders', '[]');
         }
+        const updated = saved.filter(o => o.orderNumber !== num);
+        localStorage.setItem('myOrders', JSON.stringify(updated));
+        setMyOrders(updated);
+        if (orderNumber === num) setOrderNumber('');
+        setOrder(null);
+        return;
+      }
+
       setOrder(res.data.data)
 
       if (res.data.data.order_status === 'completed') {
         let saved = [];
-    try {
-      saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
-    } catch (e) {
-      localStorage.setItem('myOrders', '[]');
-    }
+        try {
+          saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
+        } catch (e) {
+          localStorage.setItem('myOrders', '[]');
+        }
         const updated = saved.map(o => o.orderNumber === res.data.data.order_number ? { ...o, status: 'completed' } : o)
         localStorage.setItem('myOrders', JSON.stringify(updated))
 
