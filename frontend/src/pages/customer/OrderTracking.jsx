@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
-import { useReactToPrint } from 'react-to-print'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { customerAPI, SOCKET_URL } from '../../services/api'
 import { io } from 'socket.io-client'
 import toast from 'react-hot-toast'
 import { playHardwareAlert } from '../../utils/hardwareAlerts'
 import BillReceipt from '../../components/BillReceipt'
+import html2canvas from 'html2canvas'
+import { jsPDF } from 'jspdf'
 
 const STATUS_STEPS = [
   { key: 'new', label: 'Placed', icon: '📝' },
@@ -35,11 +36,24 @@ class ErrorBoundary extends React.Component {
 
 const OrderTrackingContent = () => {
   const printRef = useRef();
-  const handlePrint = () => { console.log('print not implemented yet'); };
-  /* const handlePrint = useReactToPrint({
-    contentRef: printRef,
-    documentTitle: `Receipt_${orderNumber}`
-  }); */
+  const handleDownloadPDF = async () => {
+    if (!printRef.current) return;
+    printRef.current.style.display = 'block';
+    try {
+      const canvas = await html2canvas(printRef.current, { scale: 2, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Invoice_${order?.order_number || 'Order'}.pdf`);
+      toast.success('Bill downloaded successfully! 📄');
+    } catch (err) {
+      toast.error('Failed to generate PDF');
+    } finally {
+      printRef.current.style.display = 'none';
+    }
+  };
   const { cafeId } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -303,8 +317,85 @@ const OrderTrackingContent = () => {
                   <span style={{ fontSize: 24, fontWeight: 900, color: 'var(--accent-primary)', fontFamily: "'Outfit',sans-serif" }}>₹{order.total_amount}</span>
                 </div>
               </div>
+
+              {/* Download Bill Button */}
+              <button
+                onClick={handleDownloadPDF}
+                style={{
+                  width: '100%', padding: '14px', borderRadius: 14, background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'var(--text-primary)', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16,
+                  transition: 'background 0.2s, border-color 0.2s'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.borderColor = 'var(--border-hover)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download PDF Bill
+              </button>
             </>
           )}
+        </div>
+      )}
+
+      {/* ── Hidden PDF Bill Template ── */}
+      {order && cafeDetails && (
+        <div 
+          ref={printRef}
+          style={{
+            display: 'none', width: '210mm', padding: '20mm', background: '#fff', color: '#000', fontFamily: 'sans-serif'
+          }}
+        >
+          <div style={{ textAlign: 'center', marginBottom: '10mm' }}>
+            <h1 style={{ margin: '0 0 2mm', fontSize: '24px', fontWeight: 'bold' }}>{cafeDetails.name}</h1>
+            <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>{cafeDetails.address || 'Dining Receipt'}</p>
+          </div>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8mm', fontSize: '14px' }}>
+            <div>
+              <p style={{ margin: '0 0 1mm' }}><strong>Order #:</strong> {order.order_number}</p>
+              <p style={{ margin: '0 0 1mm' }}><strong>Date:</strong> {new Date(order.created_at).toLocaleString()}</p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ margin: '0 0 1mm' }}><strong>Customer:</strong> {order.customer_name || 'Guest'}</p>
+              <p style={{ margin: '0 0 1mm' }}><strong>Table:</strong> {order.table_number || 'Takeaway'}</p>
+            </div>
+          </div>
+          
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '8mm' }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #000' }}>
+                <th style={{ textAlign: 'left', padding: '2mm 0', fontSize: '14px' }}>Item</th>
+                <th style={{ textAlign: 'center', padding: '2mm 0', fontSize: '14px' }}>Qty</th>
+                <th style={{ textAlign: 'right', padding: '2mm 0', fontSize: '14px' }}>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {order.items?.map((item, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
+                  <td style={{ padding: '2mm 0', fontSize: '14px' }}>{item.name}</td>
+                  <td style={{ textAlign: 'center', padding: '2mm 0', fontSize: '14px' }}>{item.quantity}</td>
+                  <td style={{ textAlign: 'right', padding: '2mm 0', fontSize: '14px' }}>₹{item.price * item.quantity}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '14px' }}>
+            <div style={{ width: '60%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2mm' }}>
+                <span>Subtotal:</span>
+                <span>₹{order.total_amount}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #000', paddingTop: '2mm', fontWeight: 'bold', fontSize: '16px' }}>
+                <span>Total Paid:</span>
+                <span>₹{order.total_amount}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style={{ textAlign: 'center', marginTop: '15mm', fontSize: '12px', color: '#666' }}>
+            <p>Thank you for your visit!</p>
+          </div>
         </div>
       )}
 

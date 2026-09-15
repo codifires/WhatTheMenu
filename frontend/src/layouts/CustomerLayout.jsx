@@ -1,4 +1,4 @@
-import { NavLink, useParams, useLocation } from 'react-router-dom'
+import { NavLink, useParams, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { customerAPI } from '../services/api'
 import { useCart } from '../context/CartContext'
@@ -9,6 +9,9 @@ const CustomerLayout = ({ children }) => {
   const { totalItems } = useCart()
   const id = cafeId || localStorage.getItem('cartCafeId') || ''
   const isCheckout = location.pathname.includes('/checkout')
+  const isCart = location.pathname.includes('/cart')
+  const navigate = useNavigate()
+  
   useEffect(() => {
     if (!id) return;
     
@@ -29,7 +32,6 @@ const CustomerLayout = ({ children }) => {
       document.body.className = '';
     }
   }, [id])
-
 
   const navItems = [
     { to: `/${id}/menu`, label: 'Menu', end: true, icon: (
@@ -71,6 +73,48 @@ const CustomerLayout = ({ children }) => {
       
       {/* Content Area */}
       {children}
+
+      {/* Floating View Cart Banner */}
+      {!isCheckout && !isCart && totalItems > 0 && (
+        <div style={{ position: 'fixed', bottom: 95, left: 0, right: 0, zIndex: 99, display: 'flex', justifyContent: 'center', pointerEvents: 'none', padding: '0 16px' }}>
+          <div 
+            onClick={() => navigate(`/${id}/menu/cart`)}
+            style={{ 
+              pointerEvents: 'auto',
+              background: 'var(--accent-primary)',
+              color: 'var(--bg-main)',
+              borderRadius: 30,
+              padding: '6px 16px 6px 6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              cursor: 'pointer',
+              boxShadow: '0 8px 25px rgba(0, 0, 0, 0.25)',
+              width: 'max-content',
+              minWidth: 180,
+              animation: 'slideUpCart 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), pulseCart 2s infinite ease-in-out'
+            }}
+          >
+            {/* Circular Icon */}
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--bg-main)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+            </div>
+            
+            {/* Text Info */}
+            <div style={{ flex: 1, paddingRight: 8 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, lineHeight: 1.2, color: 'var(--bg-main)' }}>View cart</div>
+              <div style={{ fontSize: 11, opacity: 0.9, fontWeight: 600, color: 'var(--bg-main)' }}>{totalItems} item{totalItems > 1 ? 's' : ''}</div>
+            </div>
+            
+            {/* Arrow */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </div>
+        </div>
+      )}
 
       {/* Floating Bottom Navigation (Hidden on Checkout) */}
       {!isCheckout && (
@@ -116,6 +160,15 @@ const CustomerLayout = ({ children }) => {
         @keyframes pop {
           0% { transform: scale(0.5); opacity: 0; }
           100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes slideUpCart {
+          0% { transform: translateY(30px) scale(0.9); opacity: 0; }
+          100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes pulseCart {
+          0% { transform: scale(1); box-shadow: 0 8px 25px rgba(0,0,0,0.25); }
+          50% { transform: scale(1.02); box-shadow: 0 12px 30px rgba(0,0,0,0.3); }
+          100% { transform: scale(1); box-shadow: 0 8px 25px rgba(0,0,0,0.25); }
         }
       `}</style>
     </div>

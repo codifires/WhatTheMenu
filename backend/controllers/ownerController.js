@@ -809,6 +809,7 @@ const updateThemeSettings = async (req, res) => {
       cafe.theme_settings.active_theme = active_theme;
     }
 
+    cafe.markModified('theme_settings');
     await cafe.save();
     res.status(200).json({ success: true, data: cafe.theme_settings });
   } catch (error) {
