@@ -44,6 +44,14 @@ const protect = async (req, res, next) => {
           message: 'Device limit reached. You have been logged out because a new device logged in.'
         });
       }
+
+      // Throttled refresh of last_active timestamp (at most once every 10 minutes)
+      const currentSession = req.user.active_sessions.find(s => s.token === token);
+      if (currentSession && (Date.now() - new Date(currentSession.last_active || 0).getTime() > 10 * 60 * 1000)) {
+        currentSession.last_active = Date.now();
+        req.user.markModified('active_sessions');
+        req.user.save({ validateBeforeSave: false }).catch(() => {});
+      }
     }
 
     next();

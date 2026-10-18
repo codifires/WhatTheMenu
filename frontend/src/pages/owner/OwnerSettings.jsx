@@ -26,12 +26,14 @@ function InputField({ label, helperText, ...props }) {
   )
 }
 
+
 const OwnerSettings = () => {
   const navigate = useNavigate();
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('profile')
   const [form, setForm] = useState({
     name: user?.name || '',
+    email: user?.email || '',
     slug: user?.slug || '',
     phone: user?.phone || '',
     address: user?.address || '',
@@ -124,6 +126,7 @@ const OwnerSettings = () => {
     try {
       const formData = new FormData()
       formData.append('name', form.name)
+      if (form.email) formData.append('email', form.email)
       if (form.slug) formData.append('slug', form.slug)
       formData.append('phone', form.phone)
       formData.append('address', form.address)
@@ -216,6 +219,7 @@ const OwnerSettings = () => {
                 <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>Café Profile</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0 20px', '@media(minWidth:640px)': { gridTemplateColumns: '1fr 1fr' } }}>
                   <InputField label="Café Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
+                  <InputField label="Email Address" type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
                   <InputField label="Contact Phone" type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} required />
                 </div>
                 <InputField label="Full Address" as="textarea" value={form.address} onChange={e => setForm({...form, address: e.target.value})} required helperText="This address appears on customer receipts." />

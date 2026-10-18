@@ -153,10 +153,31 @@ const emailChangeNewTemplate = (cafeName) => {
   return baseEmailTemplate(content, 'Email Address Updated');
 };
 
+const deviceLogoutOtpTemplate = (otp, cafeName, deviceCount = 1) => {
+  const content = `
+    <h2 style="margin: 0 0 20px 0; color: #0f172a; font-size: 20px; font-weight: 700;">Device Logout Verification</h2>
+    <p style="margin: 0 0 20px 0; color: #475569; font-size: 15px; line-height: 1.6;">
+      Hello <strong>${cafeName || 'Café Owner'}</strong>,<br><br>
+      A login attempt was initiated that exceeds your active device limit. To log out the selected ${deviceCount > 1 ? deviceCount + ' devices' : 'device'} and sign in on your new device, please use the One-Time Password (OTP) below:
+    </p>
+    <div style="background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); border: 1.5px dashed #6366f1; border-radius: 12px; padding: 24px; text-align: center; margin: 28px 0;">
+      <p style="margin: 0 0 8px 0; color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">Your 6-Digit OTP</p>
+      <span style="font-size: 36px; font-weight: 900; color: #4f46e5; letter-spacing: 8px; font-family: monospace;">${otp}</span>
+    </div>
+    <div style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 14px; margin-bottom: 24px;">
+      <p style="margin: 0; color: #92400e; font-size: 13px; line-height: 1.5;">
+        ⏳ <strong>Security Notice:</strong> This code is valid for <strong>10 minutes</strong>. If you did not initiate this login request, your account password may be compromised. Please change your password immediately.
+      </p>
+    </div>
+  `;
+  return baseEmailTemplate(content, 'Your Device Logout Verification Code');
+};
+
 module.exports = {
   resetPasswordTemplate,
   welcomeTemplate,
   subscriptionExpiryTemplate,
   emailChangeOldTemplate,
-  emailChangeNewTemplate
+  emailChangeNewTemplate,
+  deviceLogoutOtpTemplate
 };

@@ -6,7 +6,7 @@ const SubscriptionRequest = require('../models/SubscriptionRequest');
 const { generateToken } = require('../utils/jwt');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
-const { resetPasswordTemplate } = require('../utils/emailTemplates');
+const { resetPasswordTemplate, deviceLogoutOtpTemplate } = require('../utils/emailTemplates');
 
 // @desc    Forgot password
 // @route   POST /api/auth/forgotpassword
@@ -171,27 +171,19 @@ const login = async (req, res, next) => {
         // Save OTP to user document
         user.login_otp = otp;
         user.login_otp_expire = Date.now() + 10 * 60 * 1000; // 10 minutes
-        await user.save();
+        user.pending_logout_sessions = Array.isArray(logoutSessionIds) ? logoutSessionIds : [];
+        await user.save({ validateBeforeSave: false });
+
+        console.log(`🔐 [DEVICE LOGOUT OTP] Generated code for ${user.email}: ${otp}`);
 
         // Send Email
         try {
           const message = `You requested to force logout devices. Your OTP code is: ${otp}\n\nThis code is valid for 10 minutes.`;
-          
-          const htmlMessage = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
-              <h2 style="color: #1e293b; text-align: center;">Device Logout Verification</h2>
-              <p style="color: #475569; font-size: 16px;">Hello ${user.name},</p>
-              <p style="color: #475569; font-size: 16px;">You are trying to log out existing devices. Please use the following One-Time Password (OTP) to complete your request:</p>
-              <div style="background-color: #f8fafc; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0;">
-                <span style="font-size: 32px; font-weight: bold; color: #f59e0b; letter-spacing: 5px;">${otp}</span>
-              </div>
-              <p style="color: #475569; font-size: 14px;">This code is valid for 10 minutes. If you did not request this action, please ignore this email.</p>
-            </div>
-          `;
+          const htmlMessage = deviceLogoutOtpTemplate(otp, user.name, (logoutSessionIds || []).length || 1);
 
           await sendEmail({
             email: user.email,
-            subject: 'Your Force Logout OTP',
+            subject: 'Your Device Logout Verification Code (OTP)',
             message: message,
             html: htmlMessage
           });
@@ -200,24 +192,26 @@ const login = async (req, res, next) => {
             success: true,
             requireOtp: true,
             email: user.email,
-            message: 'OTP sent to email'
+            message: 'Verification OTP sent to your registered email'
           });
         } catch (err) {
+          console.error('❌ Failed to send force logout OTP email:', err);
           user.login_otp = undefined;
           user.login_otp_expire = undefined;
-          await user.save();
+          user.pending_logout_sessions = undefined;
+          await user.save({ validateBeforeSave: false });
           
           return res.status(500).json({
             success: false,
-            message: 'Email could not be sent. Please try again.'
+            message: `Email could not be sent: ${err.message || 'SMTP connection failed'}. Please verify email settings or try again.`
           });
         }
       } else if (user.active_sessions.length >= limit) {
         // Normal login, but limit is reached
         const safeSessions = user.active_sessions.map(s => ({
-          _id: s._id,
-          device_info: s.device_info,
-          last_active: s.last_active
+          _id: s._id ? s._id.toString() : '',
+          device_info: s.device_info || 'Unknown Device',
+          last_active: s.last_active || Date.now()
         }));
         
         return res.status(403).json({
@@ -225,7 +219,7 @@ const login = async (req, res, next) => {
           errorType: 'DEVICE_LIMIT_REACHED',
           limit,
           sessions: safeSessions,
-          message: `Device limit reached. Please select devices to log out.`
+          message: `Device limit reached (${user.active_sessions.length}/${limit}). Please select device(s) to log out.`
         });
       }
 
@@ -244,7 +238,7 @@ const login = async (req, res, next) => {
 
       user.active_sessions.push({ token, device_info, last_active: Date.now() });
       user.markModified('active_sessions');
-      await user.save();
+      await user.save({ validateBeforeSave: false });
 
       return res.json({
         success: true,
@@ -292,22 +286,21 @@ const verifyLoginOtp = async (req, res, next) => {
       });
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanOtp = otp.toString().trim();
+
     const user = await Cafe.findOne({ 
-      email,
-      login_otp: otp,
+      email: cleanEmail,
+      login_otp: cleanOtp,
       login_otp_expire: { $gt: Date.now() }
     });
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired OTP'
+        message: 'Invalid or expired OTP. Please verify the code or request a new one.'
       });
     }
-
-    // Clear OTP fields
-    user.login_otp = undefined;
-    user.login_otp_expire = undefined;
 
     const plan = user.subscription?.plan_name || 'starter';
     let limit = 1;
@@ -316,20 +309,30 @@ const verifyLoginOtp = async (req, res, next) => {
 
     if (!user.active_sessions) user.active_sessions = [];
 
-    if (forceLogout && logoutSessionIds && Array.isArray(logoutSessionIds)) {
-      user.active_sessions = user.active_sessions.filter(s => !logoutSessionIds.includes(s._id.toString()));
-    } else if (forceLogout) {
-      user.active_sessions = []; // Legacy clear all
+    // Clean up expired sessions (older than 7 days)
+    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+    user.active_sessions = user.active_sessions.filter(s => (Date.now() - new Date(s.last_active || Date.now()).getTime()) < SEVEN_DAYS);
+
+    // Determine sessions to remove:
+    const targetSessionIds = (Array.isArray(logoutSessionIds) && logoutSessionIds.length > 0)
+      ? logoutSessionIds
+      : (Array.isArray(user.pending_logout_sessions) ? user.pending_logout_sessions : []);
+
+    if (targetSessionIds.length > 0) {
+      user.active_sessions = user.active_sessions.filter(s => {
+        const sId = s._id ? s._id.toString() : '';
+        return !targetSessionIds.includes(sId);
+      });
+    } else {
+      // Clear all active sessions if no specific target is given
+      user.active_sessions = [];
     }
 
+    // Safety check: ensure user is under limit to guarantee they are never trapped
     if (user.active_sessions.length >= limit) {
-      return res.status(403).json({
-        success: false,
-        errorType: 'DEVICE_LIMIT_REACHED',
-        limit,
-        sessions: user.active_sessions.map(s => ({ _id: s._id, device_info: s.device_info, last_active: s.last_active })),
-        message: 'Device limit reached. Please select more devices to log out.'
-      });
+      const excess = (user.active_sessions.length - limit) + 1;
+      user.active_sessions.sort((a, b) => new Date(a.last_active || 0) - new Date(b.last_active || 0));
+      user.active_sessions.splice(0, excess);
     }
 
     // Success: add new session
@@ -345,8 +348,14 @@ const verifyLoginOtp = async (req, res, next) => {
     }
 
     user.active_sessions.push({ token, device_info, last_active: Date.now() });
+
+    // Clear OTP fields
+    user.login_otp = undefined;
+    user.login_otp_expire = undefined;
+    user.pending_logout_sessions = undefined;
+
     user.markModified('active_sessions');
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
     return res.json({
       success: true,

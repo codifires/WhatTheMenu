@@ -705,7 +705,7 @@ const getFeedback = async (req, res, next) => {
 // @route   PUT /api/owner/settings
 const updateSettings = async (req, res, next) => {
   try {
-    const { name, phone, address, tax_percentage, razorpay_key_id, razorpay_key_secret, razorpay_webhook_secret, billing_settings, slug } = req.body;
+    const { name, email, phone, address, tax_percentage, razorpay_key_id, razorpay_key_secret, razorpay_webhook_secret, billing_settings, slug } = req.body;
       const updateData = {};
 
       if (billing_settings !== undefined) {
@@ -727,6 +727,22 @@ const updateSettings = async (req, res, next) => {
       updateData.slug = slug;
     }
     if (name !== undefined) updateData.name = name;
+    if (email !== undefined && email.trim() !== '') {
+      const emailLower = email.toLowerCase().trim();
+      if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(emailLower)) {
+        return res.status(400).json({ success: false, message: 'Invalid email address' });
+      }
+      const existingEmail = await Cafe.findOne({ email: emailLower, _id: { $ne: req.user._id } });
+      if (existingEmail) {
+        return res.status(400).json({ success: false, message: 'This email is already in use by another café' });
+      }
+      const Admin = require('../models/Admin');
+      const existingAdmin = await Admin.findOne({ email: emailLower });
+      if (existingAdmin) {
+         return res.status(400).json({ success: false, message: 'This email is already in use' });
+      }
+      updateData.email = emailLower;
+    }
     if (phone !== undefined) updateData.phone = phone;
     if (address !== undefined) updateData.address = address;
     if (tax_percentage !== undefined) updateData.tax_percentage = tax_percentage;

@@ -23,48 +23,56 @@ const OwnerLogin = () => {
         setSelectedSessions([...selectedSessions, id])
       }
     }
+
+    const toggleSelectAll = () => {
+      if (selectedSessions.length === activeSessions.length) {
+        setSelectedSessions([])
+      } else {
+        setSelectedSessions(activeSessions.map(s => s._id).filter(Boolean))
+      }
+    }
+
   const { login, verifyLoginOtp } = useAuth()
   const navigate = useNavigate()
 
-  
-    const handleForceLogout = async () => {
-        setLoading(true)
-        try {
-          const res = await login(email, password, true, selectedSessions)
-          if (res?.requireOtp) {
-            setRequireOtp(true)
-            setLimitReached(false)
-            toast.success('OTP sent to your email')
-            return
-          }
-          toast.success(`Welcome back, ${res.name}!`)
-          navigate('/owner')
-        } catch (error) {
-          if (error.response?.data?.errorType === 'DEVICE_LIMIT_REACHED') {
-            toast.error(error.response.data.message || 'Please select more devices to log out.')
-            setActiveSessions(error.response?.data?.sessions || [])
-          } else {
-            toast.error(error.response?.data?.message || 'Login failed')
-          }
-        } finally {
-        setLoading(false)
+  const handleForceLogout = async () => {
+    setLoading(true)
+    try {
+      const res = await login(email, password, true, selectedSessions)
+      if (res?.requireOtp) {
+        setRequireOtp(true)
+        setLimitReached(false)
+        toast.success('Verification OTP sent to your registered email! Check inbox or spam.', { duration: 6000 })
+        return
       }
+      toast.success(`Welcome back, ${res.name}!`)
+      navigate('/owner')
+    } catch (error) {
+      if (error.response?.data?.errorType === 'DEVICE_LIMIT_REACHED') {
+        toast.error(error.response.data.message || 'Please select more devices to log out.')
+        setActiveSessions(error.response?.data?.sessions || [])
+      } else {
+        toast.error(error.response?.data?.message || 'Login failed. Please try again.')
+      }
+    } finally {
+      setLoading(false)
     }
-  
-    const handleVerifyOtp = async (e) => {
-        e.preventDefault()
-        if (!otp) { toast.error('Please enter the OTP'); return }
-        setLoading(true)
-        try {
-          const user = await verifyLoginOtp(email, otp, true, selectedSessions)
-          toast.success(`Welcome back, ${user.name}!`)
-          navigate('/owner')
-        } catch (error) {
-          toast.error(error.response?.data?.message || 'Invalid or expired OTP')
-        } finally {
-          setLoading(false)
-        }
+  }
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault()
+    if (!otp || otp.length !== 6) { toast.error('Please enter the 6-digit OTP'); return }
+    setLoading(true)
+    try {
+      const user = await verifyLoginOtp(email, otp, true, selectedSessions)
+      toast.success(`Welcome back, ${user.name}!`)
+      navigate('/owner')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Invalid or expired OTP')
+    } finally {
+      setLoading(false)
     }
+  }
   const handleSubmit = async (e) => {
       e.preventDefault()
       if (!email || !password) { toast.error('Please fill in all fields'); return }
@@ -187,9 +195,18 @@ const OwnerLogin = () => {
                 </p>
                 
                 <div style={{ border: '1px solid var(--border-light)', borderRadius: 12, overflow: 'hidden', marginBottom: 24 }}>
-                  <div style={{ background: 'var(--bg-shell)', padding: '12px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ background: 'var(--bg-shell)', padding: '12px 16px', borderBottom: '1px solid var(--border-light)', fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>Currently Logged In ({activeSessions.length})</span>
-                    <span>Selected: {selectedSessions.length}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <button
+                        type="button"
+                        onClick={toggleSelectAll}
+                        style={{ background: 'none', border: 'none', color: '#06b6d4', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                      >
+                        {selectedSessions.length === activeSessions.length && activeSessions.length > 0 ? 'Deselect All' : 'Select All'}
+                      </button>
+                      <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>Selected: {selectedSessions.length}</span>
+                    </div>
                   </div>
                   <div style={{ maxHeight: 240, overflowY: 'auto' }}>
                     {activeSessions.map((session, i) => {
@@ -212,9 +229,22 @@ const OwnerLogin = () => {
                   </div>
                 </div>
                 
-                <button onClick={handleForceLogout} disabled={loading || selectedSessions.length < Math.max(1, activeSessions.length - deviceLimit + 1)} style={{ width: '100%', padding: '15px', borderRadius: 12, border: 'none', background: (selectedSessions.length >= Math.max(1, activeSessions.length - deviceLimit + 1)) ? 'linear-gradient(135deg,#f87171,#ef4444)' : 'var(--bg-shell)', color: (selectedSessions.length >= Math.max(1, activeSessions.length - deviceLimit + 1)) ? '#fff' : 'var(--text-tertiary)', fontSize: 15, fontWeight: 700, cursor: (loading || selectedSessions.length < Math.max(1, activeSessions.length - deviceLimit + 1)) ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, transition: 'all 0.2s', boxShadow: (selectedSessions.length >= Math.max(1, activeSessions.length - deviceLimit + 1)) ? '0 4px 20px rgba(239, 68, 68, 0.4)' : 'none' }}>
-                  {loading ? 'Logging out...' : `Log Out Selected (${selectedSessions.length}) & Continue`}
+                <button
+                  onClick={handleForceLogout}
+                  disabled={loading || (activeSessions.length > 0 && selectedSessions.length < Math.min(activeSessions.length, Math.max(1, activeSessions.length - deviceLimit + 1)))}
+                  style={{
+                    width: '100%', padding: '15px', borderRadius: 12, border: 'none',
+                    background: (selectedSessions.length >= Math.min(activeSessions.length, Math.max(1, activeSessions.length - deviceLimit + 1))) ? 'linear-gradient(135deg,#f87171,#ef4444)' : 'var(--bg-shell)',
+                    color: (selectedSessions.length >= Math.min(activeSessions.length, Math.max(1, activeSessions.length - deviceLimit + 1))) ? '#fff' : 'var(--text-tertiary)',
+                    fontSize: 15, fontWeight: 700,
+                    cursor: (loading || (activeSessions.length > 0 && selectedSessions.length < Math.min(activeSessions.length, Math.max(1, activeSessions.length - deviceLimit + 1)))) ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.7 : 1, transition: 'all 0.2s',
+                    boxShadow: (selectedSessions.length >= Math.min(activeSessions.length, Math.max(1, activeSessions.length - deviceLimit + 1))) ? '0 4px 20px rgba(239, 68, 68, 0.4)' : 'none'
+                  }}
+                >
+                  {loading ? 'Sending OTP code...' : `Log Out Selected (${selectedSessions.length}) & Continue`}
                 </button>
+
                 <button type="button" onClick={() => { setLimitReached(false); setSelectedSessions([]); }} disabled={loading} style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1px solid var(--border-medium)', background: 'transparent', color: 'var(--text-secondary)', fontSize: 15, fontWeight: 600, cursor: 'pointer', marginTop: 12, transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-shell)'} onMouseLeave={e => e.currentTarget.style.background='transparent'}>
                   Cancel
                 </button>
