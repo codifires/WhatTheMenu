@@ -327,9 +327,11 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (!user) return
 
+    const token = localStorage.getItem('token')
     const socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      auth: { token }
     })
 
     const cafeOwnerId = user?.id || user?._id

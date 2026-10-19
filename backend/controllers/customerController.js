@@ -187,7 +187,7 @@ const placeOrder = async (req, res, next) => {
       items: orderItems,
       total_amount: finalTotal,
       token_number: tokenNumber,
-      payment_method: 'upi',
+      payment_method: (payment_method && ['cash', 'online', 'razorpay', 'upi'].includes(payment_method)) ? payment_method : (cafe.upi_id ? 'upi' : 'cash'),
       payment_transaction_id: payment_transaction_id || '',
       payment_status: 'pending',
       notes: notes || ''

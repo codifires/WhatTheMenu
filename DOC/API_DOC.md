@@ -283,6 +283,8 @@ Logout current device session.
 }
 ```
 
+> **Security Note:** `razorpay_key_secret` and `razorpay_webhook_secret` are **write-only configuration fields**. They are stored securely with `select: false` on the server and are **never** returned in GET or PUT responses to the browser. Each café owner can only configure their own credentials via their authenticated session token.
+
 ---
 
 ### Subscription (Manual UPI Flow)

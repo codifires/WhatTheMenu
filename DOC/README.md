@@ -16,6 +16,7 @@
 | 6 | [FEATURES_DOC.md](./FEATURES_DOC.md) | Full feature list per role, feature-to-file mapping, planned features |
 | 7 | [SECURITY_DOC.md](./SECURITY_DOC.md) | JWT, bcrypt, OTP, rate limiting, webhook verification, CORS, known gaps |
 | 8 | [DEPLOYMENT_DOC.md](./DEPLOYMENT_DOC.md) | Vercel, Render, MongoDB Atlas, Cloudinary, Gmail SMTP, Razorpay setup |
+| 9 | [MOBILE_APP_DOC.md](./MOBILE_APP_DOC.md) | Mobile app & PWA strategy, responsive layout, notifications, offline sync, device sessions |
 
 ---
 

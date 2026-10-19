@@ -1,291 +1,225 @@
-import React, { useState, useEffect } from 'react';
-import api from '../../services/api';
-import toast from 'react-hot-toast';
+import React, { useState, useEffect } from 'react'
+import api from '../../services/api'
+import toast from 'react-hot-toast'
+import { 
+  Sparkles, Plus, Trash2, Save, Crown, Zap, 
+  Gift, CheckCircle2, RefreshCw 
+} from 'lucide-react'
 
-const PlanServicesManagement = () => {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [starterFeatures, setStarterFeatures] = useState([]);
-  const [proFeatures, setProFeatures] = useState([]);
-  const [proPlusFeatures, setProPlusFeatures] = useState([]);
+export default function PlanServicesManagement() {
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [starterFeatures, setStarterFeatures] = useState([])
+  const [proFeatures, setProFeatures] = useState([])
+  const [proPlusFeatures, setProPlusFeatures] = useState([])
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    fetchSettings()
+  }, [])
 
   const fetchSettings = async () => {
     try {
-      setLoading(true);
-      const res = await api.get('/admin/settings');
-      if (res.data.success) {
-        setStarterFeatures(res.data.data.starter_features || []);
-          setStarterFeatures(res.data.data.starter_features || []);
-        setProFeatures(res.data.data.pro_features || []);
+      setLoading(true)
+      const res = await api.get('/admin/settings')
+      if (res.data?.success) {
+        setStarterFeatures(res.data.data.starter_features || [
+          'Digital QR Menu',
+          'Basic Analytics',
+          'Up to 15 Menu Items',
+          'Standard Support'
+        ])
+        setProFeatures(res.data.data.pro_features || [
+          'Digital QR Menu & Tables',
+          'Real-time Order KDS',
+          'Detailed Sales Analytics',
+          'Sound Chime Alerts'
+        ])
+        setProPlusFeatures(res.data.data.pro_plus_features || [
+          'Everything in Starter & Pro',
+          'Advanced Analytics & Reports',
+          'Priority 24/7 Phone Support',
+          'Custom Branding & Standees',
+          'Unlimited Products & Tables'
+        ])
       }
     } catch (error) {
-      toast.error('Failed to load plan services');
+      toast.error('Failed to load plan features')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleSave = async () => {
     try {
-      setSaving(true);
+      setSaving(true)
       const res = await api.put('/admin/settings', {
-        starter_features: starterFeatures,
-          pro_features: proFeatures,
-          pro_plus_features: proPlusFeatures
-      });
-      if (res.data.success) {
-        toast.success('Plan services updated successfully!');
+        starter_features: starterFeatures.filter(f => f.trim()),
+        pro_features: proFeatures.filter(f => f.trim()),
+        pro_plus_features: proPlusFeatures.filter(f => f.trim())
+      })
+      if (res.data?.success) {
+        toast.success('Plan feature sets saved successfully!')
       }
     } catch (error) {
-      toast.error('Failed to save plan services');
+      toast.error('Failed to save plan feature sets')
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   const addFeature = (plan) => {
-    if (plan === 'starter') setStarterFeatures([...starterFeatures, '']);
-    else if (plan === 'pro') setProFeatures([...proFeatures, '']);
-    else setProPlusFeatures([...proPlusFeatures, '']);
-  };
+    if (plan === 'starter') setStarterFeatures([...starterFeatures, ''])
+    else if (plan === 'pro') setProFeatures([...proFeatures, ''])
+    else setProPlusFeatures([...proPlusFeatures, ''])
+  }
 
   const updateFeature = (plan, index, value) => {
     if (plan === 'starter') {
-      const newFeatures = [...starterFeatures];
-      newFeatures[index] = value;
-      setStarterFeatures(newFeatures);
+      const arr = [...starterFeatures]
+      arr[index] = value
+      setStarterFeatures(arr)
     } else if (plan === 'pro') {
-      const newFeatures = [...proFeatures];
-      newFeatures[index] = value;
-      setProFeatures(newFeatures);
+      const arr = [...proFeatures]
+      arr[index] = value
+      setProFeatures(arr)
     } else {
-      const newFeatures = [...proPlusFeatures];
-      newFeatures[index] = value;
-      setProPlusFeatures(newFeatures);
+      const arr = [...proPlusFeatures]
+      arr[index] = value
+      setProPlusFeatures(arr)
     }
-  };
+  }
 
   const removeFeature = (plan, index) => {
     if (plan === 'starter') {
-      setStarterFeatures(starterFeatures.filter((_, i) => i !== index));
+      setStarterFeatures(starterFeatures.filter((_, i) => i !== index))
     } else if (plan === 'pro') {
-      setProFeatures(proFeatures.filter((_, i) => i !== index));
+      setProFeatures(proFeatures.filter((_, i) => i !== index))
     } else {
-      setProPlusFeatures(proPlusFeatures.filter((_, i) => i !== index));
+      setProPlusFeatures(proPlusFeatures.filter((_, i) => i !== index))
     }
-  };
+  }
 
   if (loading) {
     return (
-      <div className="p-8 flex justify-center items-center h-full">
-        <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="py-24 flex flex-col justify-center items-center">
+        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3" />
+        <span className="text-xs text-[var(--text-secondary)]">Loading plan configuration...</span>
       </div>
-    );
+    )
   }
 
-  const FeatureList = ({ title, features, plan }) => (
-    <div style={{
-      background: plan === 'pro_plus' 
-        ? 'linear-gradient(180deg, rgba(6,182,212,0.05) 0%, rgba(255,255,255,0.01) 100%)' 
-        : 'var(--bg-card)',
-      border: plan === 'pro_plus'
-        ? '1px solid rgba(6,182,212,0.2)'
-        : '1px solid rgba(255,255,255,0.05)',
-      borderRadius: '24px',
-      padding: '32px',
-      position: 'relative'
-    }}>
-      {plan === 'pro_plus' && (
-        <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(90deg, #06b6d4, #4f46e5)', padding: '4px 14px', borderRadius: 20, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-primary)', boxShadow: '0 4px 12px rgba(6,182,212,0.3)' }}>Premium</div>
-      )}
-      
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h2 className="text-2xl font-bold font-display" style={{ color: plan === 'pro_plus' ? '#06b6d4' : 'var(--text-primary)' }}>
-            {title}
-          </h2>
-          <p className="text-sm text-dark-400 mt-1">Configure {plan} tier perks</p>
-        </div>
-        <button 
-          onClick={() => addFeature(plan)}
-          style={{
-            padding: '10px 18px',
-            borderRadius: '12px',
-            border: plan === 'pro_plus' ? 'none' : '1px solid rgba(255,255,255,0.1)',
-            background: plan === 'pro_plus' ? '#06b6d4' : 'var(--border-light)',
-            color: plan === 'pro_plus' ? 'var(--bg-shell)' : 'var(--text-primary)',
-            fontSize: '14px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-          onMouseEnter={e => {
-            if (plan === 'pro_plus') e.currentTarget.style.transform = 'translateY(-2px)'
-            else e.currentTarget.style.background = 'var(--border-hover)'
-          }}
-          onMouseLeave={e => {
-            if (plan === 'pro_plus') e.currentTarget.style.transform = 'translateY(0)'
-            else e.currentTarget.style.background = 'var(--border-light)'
-          }}
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Add Perk
-        </button>
-      </div>
-
-      <div className="space-y-4">
-        {features.map((feature, index) => (
-          <div key={index} className="flex gap-3 items-center group relative">
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '10px',
-              background: plan === 'pro_plus' ? 'var(--cyan-bg-light)' : 'var(--border-light)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-            }}>
-              <span style={{ color: plan === 'pro_plus' ? '#06b6d4' : 'var(--text-secondary)', fontSize: '14px', fontWeight: 600 }}>{index + 1}</span>
+  const FeatureSection = ({ title, desc, icon: Icon, plan, features, badge }) => (
+    <div className={`p-6 sm:p-7 rounded-3xl border shadow-sm flex flex-col justify-between ${
+      badge ? 'bg-gradient-to-b from-indigo-950/20 to-[var(--bg-card)] border-indigo-500/40' : 'bg-[var(--bg-card)] border-[var(--border-medium)]'
+    }`}>
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              badge ? 'bg-indigo-500/20 text-indigo-400' : 'bg-[var(--bg-input)] text-[var(--text-secondary)]'
+            }`}>
+              <Icon className="w-5 h-5" />
             </div>
-            <div className="flex-1 relative">
+            <div>
+              <h3 className="font-bold text-base font-heading text-[var(--text-primary)]">
+                {title}
+              </h3>
+              <p className="text-xs text-[var(--text-secondary)]">{desc}</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => addFeature(plan)}
+            className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Perk</span>
+          </button>
+        </div>
+
+        <div className="space-y-2.5 my-4">
+          {features.map((feat, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <span className="w-6 text-center text-xs text-[var(--text-tertiary)] font-bold">
+                {idx + 1}.
+              </span>
               <input
                 type="text"
-                value={feature}
-                onChange={(e) => updateFeature(plan, index, e.target.value)}
-                placeholder="Enter perk description (e.g., 'Custom Domain')"
-                style={{
-                  width: '100%',
-                  background: 'rgba(0,0,0,0.2)',
-                  border: '1px solid rgba(255,255,255,0.05)',
-                  borderRadius: '12px',
-                  padding: '14px 16px',
-                  color: 'var(--text-primary)',
-                  fontSize: '14px',
-                  outline: 'none',
-                  transition: 'border-color 0.2s, box-shadow 0.2s'
-                }}
-                onFocus={e => {
-                  e.target.style.borderColor = plan === 'pro_plus' ? 'rgba(6,182,212,0.5)' : 'rgba(124,58,237,0.5)'
-                  e.target.style.boxShadow = plan === 'pro_plus' ? '0 0 0 3px rgba(6,182,212,0.1)' : '0 0 0 3px rgba(124,58,237,0.1)'
-                }}
-                onBlur={e => {
-                  e.target.style.borderColor = 'var(--border-light)'
-                  e.target.style.boxShadow = 'none'
-                }}
+                value={feat}
+                onChange={e => updateFeature(plan, idx, e.target.value)}
+                placeholder="e.g. Real-time Kitchen Orders"
+                className="flex-1 px-3 py-2 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-xs text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
               />
+              <button
+                type="button"
+                onClick={() => removeFeature(plan, idx)}
+                className="p-2 rounded-xl text-[var(--text-tertiary)] hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                title="Remove perk"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
-            <button
-              onClick={() => removeFeature(plan, index)}
-              style={{
-                width: '42px', height: '42px', borderRadius: '12px',
-                border: '1px solid rgba(239,68,68,0.2)',
-                background: 'rgba(239,68,68,0.05)',
-                color: '#ef4444',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', transition: 'all 0.2s',
-                opacity: 0.6
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.background = '#ef4444'
-                e.currentTarget.style.color = 'var(--text-primary)'
-                e.currentTarget.style.opacity = 1
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.background = 'rgba(239,68,68,0.05)'
-                e.currentTarget.style.color = '#ef4444'
-                e.currentTarget.style.opacity = 0.6
-              }}
-              title="Remove perk"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
-            </button>
-          </div>
-        ))}
-        {features.length === 0 && (
-          <div style={{
-            textAlign: 'center', padding: '40px 20px', 
-            border: '1px dashed rgba(255,255,255,0.1)', 
-            borderRadius: '16px', background: 'rgba(0,0,0,0.1)'
-          }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-              <svg className="w-6 h-6 text-dark-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            </div>
-            <p className="text-dark-400 font-medium text-sm">No perks added yet.</p>
-            <p className="text-dark-500 text-xs mt-1">Click the button above to add your first feature.</p>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
     </div>
-  );
+  )
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+    <div className="space-y-8 max-w-7xl mx-auto pb-16 font-sans">
+      {/* ── Top Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[var(--border-medium)] pb-6">
         <div>
-          <h1 className="text-4xl font-black text-white font-display tracking-tight mb-2">Plan Perks</h1>
-          <p className="text-dark-400 text-lg">Define exactly what your Cafe Owners get when they subscribe.</p>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-2">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Feature Entitlements</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black font-heading text-[var(--text-primary)] tracking-tight">
+            Plan Feature Services & Perks
+          </h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            Edit the bullet points shown on pricing pages and café registration plan selection cards.
+          </p>
         </div>
-        <button 
-          onClick={handleSave} 
+
+        <button
+          onClick={handleSave}
           disabled={saving}
-          style={{
-            padding: '14px 28px',
-            borderRadius: '14px',
-            border: 'none',
-            background: 'linear-gradient(135deg,#7c3aed,#4f46e5)',
-            color: 'var(--text-primary)',
-            fontSize: '15px',
-            fontWeight: 700,
-            cursor: saving ? 'not-allowed' : 'pointer',
-            boxShadow: '0 8px 20px rgba(124,58,237,0.3)',
-            transition: 'transform 0.2s',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-          onMouseEnter={e => { if(!saving) e.currentTarget.style.transform = 'translateY(-2px)' }}
-          onMouseLeave={e => { if(!saving) e.currentTarget.style.transform = 'translateY(0)' }}
+          className="py-2.5 px-6 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs shadow-md shadow-indigo-500/25 active:scale-[0.99] disabled:opacity-50 transition-all flex items-center gap-2 self-start sm:self-auto"
         >
-          {saving ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-              Publish Changes
-            </>
-          )}
+          <Save className="w-4 h-4" />
+          <span>{saving ? 'Saving...' : 'Save All Changes'}</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8" style={{ marginTop: '80px' }}>
-        <FeatureList 
-          title="Starter Plan Features" 
-          features={starterFeatures} 
-          plan="starter" 
+      {/* ── 3 Column Feature Lists ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <FeatureSection
+          title="Starter Tier"
+          desc="Kiosk pilot & trial tier"
+          icon={Gift}
+          plan="starter"
+          features={starterFeatures}
         />
-        <FeatureList 
-          title="Pro Plan Features" 
-          features={proFeatures} 
-          plan="pro" 
+
+        <FeatureSection
+          title="Pro Standard"
+          desc="Recommended for busy cafés"
+          icon={Zap}
+          plan="pro"
+          features={proFeatures}
+          badge="Popular"
         />
-        <FeatureList 
-          title="Pro Plus Plan Features" 
-          features={proPlusFeatures} 
-          plan="pro_plus" 
+
+        <FeatureSection
+          title="Pro Plus Ultra"
+          desc="Enterprise dining & full branding"
+          icon={Crown}
+          plan="pro_plus"
+          features={proPlusFeatures}
         />
       </div>
     </div>
-  );
-};
-
-export default PlanServicesManagement;
+  )
+}

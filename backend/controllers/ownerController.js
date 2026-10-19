@@ -387,6 +387,10 @@ const toggleAvailability = async (req, res, next) => {
     const io = req.app.get('io');
     if (io) {
       io.to(`cafe-${req.user._id}`).emit('menu_item_updated', item);
+      io.to(`menu-${req.user._id}`).emit('menu_item_updated', item);
+      if (req.user.slug) {
+        io.to(`menu-${req.user.slug}`).emit('menu_item_updated', item);
+      }
     }
 
     res.json({ success: true, data: item });
@@ -761,7 +765,7 @@ const updateSettings = async (req, res, next) => {
       req.user._id,
       updateData,
       { new: true }
-    ).select('-password');
+    ).select('-password -razorpay_key_secret -razorpay_webhook_secret');
 
     res.json({ success: true, data: cafe });
   } catch (error) {

@@ -256,18 +256,26 @@ frontend/src/
 - **Auth pages** — synchronous import (entry point, fast load priority)
 - **Layouts** — synchronous import (prevents layout shift)
 
+### Mobile & Owner PWA Architecture
+
+- **Unified Single Codebase:** Desktop web and mobile PWA run off the exact same React 19 frontend and Node.js backend — no separate mobile backend required.
+- **Responsive Adaptations:** Desktop 256px sidebar switches to Thumb-Zone Bottom Navigation for touch devices, with safe-area notch insets.
+- **Kitchen Mode Features:** HTML5 Screen Wake Lock API (`navigator.wakeLock`) prevents screen dimming during kitchen shifts. Instant hardware audio synthesizer alert tones without external audio file loading overhead.
+- **Detailed Specification:** See [MOBILE_APP_DOC.md](./MOBILE_APP_DOC.md) for full mobile navigation, offline reconciliation, device limitations, and PWA installation strategies.
+
 ---
 
 ## 6. Real-Time Architecture (Socket.io)
 
-### Socket Rooms
+### Socket Rooms & Authorization Matrix
 
-| Room Name | Who Joins | Events Emitted |
-|-----------|-----------|----------------|
-| `cafe-{cafeId}` | Owner browser (live orders page) | `new-order`, `order-updated` |
-| `order-{orderNumber}` | Customer browser (order tracking) | `order-status-changed` |
-| `session-{sessionId}` | Customer payment flow | `payment-confirmed`, `payment-failed` |
-| `admin-room` | Admin browser | `new-subscription-request`, `revenue-update` |
+| Room Name | Access Policy | Authorization Check | Events Emitted |
+|-----------|---------------|---------------------|----------------|
+| `cafe-{cafeId}` | **Protected (Owner & Admin)** | Verified JWT `user.id === cafeId` or `superadmin` | `new-order`, `order-updated`, `staff-alert`, `subscription-activated` |
+| `menu-{cafeId}` | **Public** | Open to customer QR viewers | `menu_item_updated` (live 86-ing/availability toggles) |
+| `order-{orderNumber}` | **Validated Guest** | Sanitized order number + verified exists in MongoDB | `order-status-update` |
+| `session-{sessionId}` | **Protected** | Verified owner for `cafe-*` payment sessions | `payment-confirmed`, `subscription-activated` |
+| `admin-room` | **Protected (Superadmin only)** | Verified JWT `user.role === 'superadmin'` | `new-cafe-registered`, `new-subscription-revenue`, `new-support-ticket` |
 
 ### Socket Event Flow (Order Example)
 

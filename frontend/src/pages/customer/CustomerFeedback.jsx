@@ -117,28 +117,28 @@ const CustomerFeedback = () => {
   }
 
   return (
-    <div style={{ padding: '20px 16px', animation: 'fadeIn 0.4s ease', paddingBottom: 100 }}>
+    <div style={{ padding: '20px 16px', animation: 'fadeIn 0.4s ease', paddingBottom: 130 }}>
       
       {/* 🌟 Header 🌟 */}
-      <div style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>Leave Feedback</h2>
-        <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>How was your experience today?</p>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.3px' }}>Leave Feedback</h1>
+        <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>How was your dining experience today?</p>
       </div>
 
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: 28, padding: 24 }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-medium)', borderRadius: 24, padding: 20, boxShadow: 'var(--shadow-card)' }}>
         
         <InputField label="Select Order" as={myOrders.length > 0 ? 'select' : 'input'} placeholder="Enter Order ID" value={orderId} onChange={e => setOrderId(e.target.value)}>
           {myOrders.length > 0 && (
             <>
-              <option value="" style={{ color: '#000' }}>Select an order</option>
-              {myOrders.map((o, i) => <option key={i} value={o.orderNumber} style={{ color: '#000' }}>{o.orderNumber}</option>)}
+              <option value="" style={{ color: 'var(--text-primary)', background: 'var(--bg-card)' }}>Select an order</option>
+              {myOrders.map((o, i) => <option key={i} value={o.orderNumber} style={{ color: 'var(--text-primary)', background: 'var(--bg-card)' }}>{o.tokenNumber || o.orderNumber}</option>)}
             </>
           )}
         </InputField>
 
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 12, paddingLeft: 4 }}>Rating</label>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', background: 'var(--bg-card)', padding: 16, borderRadius: 20, border: '1px solid var(--border-light)' }}>
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 10, paddingLeft: 2 }}>Rating</label>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', background: 'var(--bg-main)', padding: 14, borderRadius: 16, border: '1px solid var(--border-medium)' }}>
             {[1, 2, 3, 4, 5].map(star => {
               const active = star <= (hoverRating || rating)
               return (

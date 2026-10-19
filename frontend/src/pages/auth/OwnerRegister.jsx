@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import ThemeToggle from '../../components/ThemeToggle';
+import { 
+  Coffee, Store, Mail, Lock, KeyRound, Eye, EyeOff, 
+  Phone, MapPin, ArrowLeft, ArrowRight, Sparkles, 
+  Check, CheckCircle2, Gift, Zap, Crown, Loader2
+} from 'lucide-react'
+import ThemeToggle from '../../components/ThemeToggle'
 import { authAPI, publicAPI } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
@@ -9,11 +14,11 @@ import toast from 'react-hot-toast'
 const STAGES = [
   {
     step: 1,
-    title: 'Create Your Account',
+    title: 'Account Setup',
     subtitle: 'Start your digital menu journey',
     image: '/images/stage1_account.png',
     imageCaption: 'Your café, digitalized',
-    imageDesc: 'Join hundreds of café owners who switched to smart digital menus.',
+    imageDesc: 'Join hundreds of forward-thinking café owners who switched to smart, interactive QR menus.',
   },
   {
     step: 2,
@@ -21,21 +26,18 @@ const STAGES = [
     subtitle: 'Tell us where you are',
     image: '/images/stage2_cafe.png',
     imageCaption: 'Put your café on the map',
-    imageDesc: 'Help customers find you and set up your digital presence in minutes.',
+    imageDesc: 'Help customers discover your brand and set up your digital storefront in minutes.',
   },
   {
     step: 3,
-    title: 'Choose Your Plan',
+    title: 'Choose Plan',
     subtitle: 'Pick what works for you',
     image: '/images/stage3_plan.png',
     imageCaption: 'Scale as you grow',
-    imageDesc: 'Start with what you need. Upgrade anytime as your café grows.',
+    imageDesc: 'Start with what you need today. Upgrade seamlessly as your orders and tables expand.',
   },
 ]
 
-// removed static PLANS, moved into component
-
-// ─── Component ─────────────────────────────────────────────────────────────────
 const OwnerRegister = () => {
   const [form, setForm] = useState({
     name: '', email: '', password: '', confirmPassword: '',
@@ -43,10 +45,10 @@ const OwnerRegister = () => {
   })
   const [errors, setErrors] = useState({ email: '', phone: '' })
   const [showPass, setShowPass] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
   const [trialDays, setTrialDays] = useState(14)
-  const [basicPrice, setBasicPrice] = useState(199)
   const [starterPrice, setStarterPrice] = useState(299)
   const [proPrice, setProPrice] = useState(499)
   const navigate = useNavigate()
@@ -55,15 +57,13 @@ const OwnerRegister = () => {
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
   const stage = STAGES[step - 1]
 
-  // Fetch trial days and prices from admin settings on mount
   useEffect(() => {
     publicAPI.getSettings()
       .then(res => {
-        const d = res.data.data
-        setTrialDays(d.trial_days || 14)
-        if(d.basic_price) setBasicPrice(d.basic_price)
-        if(d.starter_price) setStarterPrice(d.starter_price)
-        if(d.pro_price) setProPrice(d.pro_price)
+        const d = res.data?.data || {}
+        if (d.trial_days) setTrialDays(d.trial_days)
+        if (d.starter_price) setStarterPrice(d.starter_price)
+        if (d.pro_price) setProPrice(d.pro_price)
       })
       .catch(() => {})
   }, [])
@@ -72,49 +72,43 @@ const OwnerRegister = () => {
     {
       id: 'starter',
       name: 'Free Trial',
-      priceLabel: (days) => `${days} Days Free`,
+      priceLabel: `${trialDays} Days Free`,
       period: '',
       description: 'Full Pro features, no credit card required',
-      features: ['Everything in Pro Plus Plan', 'Advanced Analytics', 'Custom Branding', 'Multiple QR Codes', 'Priority Support'],
-      color: 'var(--success-text)',
-      gradient: 'linear-gradient(135deg, rgba(52,211,153,0.18), rgba(16,185,129,0.05))',
-      border: 'rgba(52,211,153,0.5)',
-      icon: '🎁',
-      iconBg: 'linear-gradient(135deg, #059669, #10b981)',
-      
-      badgeBg: 'linear-gradient(135deg, #059669, #10b981)',
+      features: ['Full Pro Features Access', 'Live Order KDS & Sound Alerts', 'Custom QR Code Standees', 'Up to 50 Menu Items', 'Community & Email Support'],
+      color: '#10b981',
+      badge: 'RECOMMENDED',
+      icon: Gift,
+      iconClass: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+      activeRing: 'border-emerald-500/50 bg-emerald-500/5'
     },
     {
       id: 'pro',
-      name: 'Temp Pro Plus Plan',
-      priceLabel: () => `₹${starterPrice}`,
+      name: 'Starter Plan',
+      priceLabel: `₹${starterPrice}`,
       period: '/month',
-      description: 'Basic features',
-      features: ['Digital QR Menu', 'Order Management', 'Basic Analytics', 'Email Support'],
-      color: '#818cf8',
-      gradient: 'linear-gradient(135deg, rgba(129,140,248,0.2), rgba(79,70,229,0.05))',
-      border: 'rgba(129,140,248,0.5)',
-      icon: 'S',
-      iconBg: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+      description: 'Essential toolkit for growing cafés',
+      features: ['Digital QR Menu & Tables', 'Real-time Order Management', 'Basic Sales & Item Analytics', 'Standard Email Support'],
+      color: '#6366f1',
+      icon: Zap,
+      iconClass: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
+      activeRing: 'border-indigo-500/50 bg-indigo-500/5'
     },
     {
       id: 'pro_plus',
       name: 'Pro Plus Plan',
-      priceLabel: () => `₹${proPrice}`,
+      priceLabel: `₹${proPrice}`,
       period: '/month',
-      description: 'All features included',
-      features: ['Everything in Starter', 'Advanced Analytics', 'Priority Support', 'Custom Branding', 'Multiple QR Codes'],
-      color: '#fb923c',
-      gradient: 'linear-gradient(135deg, rgba(251,146,60,0.2), rgba(245,101,101,0.05))',
-      border: 'rgba(251,146,60,0.5)',
-      icon: 'P',
-      iconBg: 'linear-gradient(135deg, #f97316, #ef4444)',
+      description: 'Advanced operations & high-volume dining',
+      features: ['Everything in Starter Plan', 'Unlimited Menu Items & Tables', 'Advanced Multi-Metric Analytics', 'Custom Domain & Full Branding', 'Priority 24/7 Phone Support'],
+      color: '#f59e0b',
       badge: 'POPULAR',
-      badgeBg: 'linear-gradient(135deg, #f97316, #ef4444)',
+      icon: Crown,
+      iconClass: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+      activeRing: 'border-amber-500/50 bg-amber-500/5'
     },
   ]
 
-  // ── Step navigation ──
   const handleEmailChange = (e) => {
     const val = e.target.value
     set('email', val)
@@ -131,8 +125,8 @@ const OwnerRegister = () => {
     window.emailTimeout = setTimeout(async () => {
       try {
         const res = await authAPI.checkAvailability({ email: val })
-        if (res.data.data.emailExists) {
-          setErrors(p => ({ ...p, email: 'Email is already taken' }))
+        if (res.data?.data?.emailExists) {
+          setErrors(p => ({ ...p, email: 'Email is already registered' }))
         }
       } catch (err) {}
     }, 500)
@@ -157,7 +151,7 @@ const OwnerRegister = () => {
     window.phoneTimeout = setTimeout(async () => {
       try {
         const res = await authAPI.checkAvailability({ phone: val })
-        if (res.data.data.phoneExists) {
+        if (res.data?.data?.phoneExists) {
           setErrors(p => ({ ...p, phone: 'Phone number is already registered' }))
         }
       } catch (err) {}
@@ -192,7 +186,7 @@ const OwnerRegister = () => {
         address: form.address,
         plan_name: form.plan_name,
       })
-      toast.success('Café registered! Signing you in...')
+      toast.success('Café registered successfully! Logging you in...')
       await login(form.email, form.password)
       navigate('/owner')
     } catch (error) {
@@ -202,342 +196,413 @@ const OwnerRegister = () => {
     }
   }
 
-  // ── Shared input styles ──
-  const input = {
-    width: '100%', padding: '12px 14px 12px 42px', borderRadius: 12,
-    border: '1px solid rgba(255,255,255,0.1)', background: 'var(--border-light)',
-    color: 'var(--text-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box',
-    transition: 'border-color 0.2s',
-  }
-  const focus = e => e.target.style.borderColor = 'rgba(79,70,229,0.6)'
-  const blur  = e => e.target.style.borderColor = 'var(--border-hover)'
-  const label = { fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 8 }
-  const icon  = { position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16 }
-
-  // ── Progress segments ──
-  const ProgressBar = () => (
-    <div style={{ marginBottom: 28 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        {[1, 2, 3].map(s => (
-          <div key={s} style={{
-            flex: 1, height: 3, borderRadius: 2,
-            background: step >= s
-              ? 'linear-gradient(90deg,#4f46e5,#06b6d4)'
-              : 'var(--border-medium)',
-            transition: 'background 0.4s'
-          }} />
-        ))}
-      </div>
-      <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 8 }}>
-        Step {step} of 3 — {stage.subtitle}
-      </p>
-    </div>
-  )
-
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-shell)', display: 'flex', fontFamily: "'Inter', sans-serif" }}>
-
-      {/* ─── LEFT PANEL (desktop only) ─── */}
-      <div className="reg-left-panel" style={{
-        display: 'none', flex: 1,
-        background: 'var(--bg-panel-gradient)',
-        padding: 0, flexDirection: 'column', borderRight: '1px solid rgba(79,70,229,0.15)',
-        overflow: 'hidden', position: 'relative'
-      }}>
-        {/* Logo top-left */}
-        <div style={{ position: 'absolute', top: 32, left: 32, display: 'flex', alignItems: 'center', gap: 10, zIndex: 2 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" strokeWidth="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <div className="min-h-screen bg-[var(--bg-shell)] text-[var(--text-primary)] flex font-sans">
+      {/* ─── LEFT PANEL (Desktop only) ─── */}
+      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-slate-950 via-indigo-950/40 to-slate-900 border-r border-[var(--border-medium)] flex-col overflow-hidden">
+        {/* Brand header */}
+        <div className="absolute top-8 left-8 flex items-center gap-3 z-20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+            <Coffee className="w-5 h-5 text-white" />
           </div>
-          <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', fontFamily: "'Outfit',sans-serif" }}>QRMenu <span style={{ color: '#67e8f9' }}>Café</span></span>
+          <span className="text-xl font-bold font-heading tracking-tight text-white">
+            WhatThe<span className="text-cyan-400">Menu</span>
+          </span>
         </div>
 
-        {/* Stage image — full bleed */}
-        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+        {/* Backdrop visual */}
+        <div className="absolute inset-0">
           {STAGES.map(s => (
             <img
               key={s.step}
               src={s.image}
               alt={s.imageCaption}
-              style={{
-                position: 'absolute', inset: 0, width: '100%', height: '100%',
-                objectFit: 'cover', objectPosition: 'center',
-                opacity: step === s.step ? 1 : 0,
-                transition: 'opacity 0.6s ease',
-                filter: 'brightness(0.6)'
-              }}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 filter brightness-[0.4] ${
+                step === s.step ? 'opacity-100' : 'opacity-0'
+              }`}
             />
           ))}
-          {/* Dark overlay gradient at bottom */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%', background: 'linear-gradient(to top, #080c14 0%, transparent 100%)' }} />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#090d16] via-[#090d16]/70 to-transparent" />
         </div>
 
-        {/* Bottom text */}
-        <div style={{ position: 'absolute', bottom: 48, left: 40, right: 40, zIndex: 2 }}>
-          {/* Step dots */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-            {[1, 2, 3].map(s => (
-              <div key={s} style={{
-                width: step === s ? 24 : 8, height: 8, borderRadius: 4,
-                background: step === s ? 'linear-gradient(90deg,#4f46e5,#06b6d4)' : 'rgba(255,255,255,0.25)',
-                transition: 'all 0.4s ease'
-              }} />
-            ))}
-          </div>
-
-          <h2 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 10px', fontFamily: "'Outfit',sans-serif", lineHeight: 1.2, transition: 'all 0.4s' }}>
-            {stage.imageCaption}
-          </h2>
-          <p style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.6, margin: 0 }}>
-            {stage.imageDesc}
-          </p>
-        </div>
-
-        {/* Step list at top-right area */}
-        <div style={{ position: 'absolute', top: 32, right: 32, display: 'flex', flexDirection: 'column', gap: 8, zIndex: 2 }}>
+        {/* Step indicator top right */}
+        <div className="absolute top-8 right-8 flex flex-col gap-2 z-20">
           {STAGES.map(s => (
-            <div key={s.step} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{
-                width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', fontSize: 10, fontWeight: 700, flexShrink: 0,
-                background: step >= s.step ? 'linear-gradient(135deg,#4f46e5,#06b6d4)' : 'var(--border-hover)',
-                color: step >= s.step ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                border: step === s.step ? '2px solid rgba(6,182,212,0.5)' : 'none',
-                boxShadow: step === s.step ? '0 0 12px rgba(79,70,229,0.6)' : 'none',
-                transition: 'all 0.4s'
-              }}>
-                {step > s.step ? '✓' : s.step}
+            <div key={s.step} className="flex items-center gap-2.5">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                step >= s.step 
+                  ? 'bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white shadow-md shadow-indigo-500/30' 
+                  : 'bg-white/10 text-white/40'
+              }`}>
+                {step > s.step ? <Check className="w-3.5 h-3.5" /> : s.step}
               </div>
-              <span style={{ fontSize: 12, color: step >= s.step ? 'var(--text-primary)' : 'var(--text-tertiary)', fontWeight: step === s.step ? 600 : 400, transition: 'all 0.4s' }}>
+              <span className={`text-xs font-medium transition-colors ${
+                step === s.step ? 'text-white' : 'text-white/40'
+              }`}>
                 {s.title}
               </span>
             </div>
           ))}
         </div>
 
-        <p style={{ position: 'absolute', bottom: 16, left: 40, fontSize: 11, color: 'var(--border-hover)', zIndex: 2 }}>
-          © {new Date().getFullYear()} QRMenu SaaS Platform
-        </p>
+        {/* Bottom text */}
+        <div className="mt-auto p-12 relative z-20 max-w-lg">
+          <div className="flex gap-2 mb-4">
+            {[1, 2, 3].map(s => (
+              <div
+                key={s}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  step === s ? 'w-8 bg-cyan-400' : 'w-2 bg-white/20'
+                }`}
+              />
+            ))}
+          </div>
+          <h2 className="text-2xl font-black text-white font-heading mb-2">
+            {stage.imageCaption}
+          </h2>
+          <p className="text-sm text-slate-300 leading-relaxed">
+            {stage.imageDesc}
+          </p>
+          <div className="mt-8 text-xs text-slate-400">
+            © {new Date().getFullYear()} WhatTheMenu SaaS Platform. All rights reserved.
+          </div>
+        </div>
       </div>
 
-      {/* ─── RIGHT PANEL — FORM ─── */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px', overflowY: 'auto' }}>
-        {/* Ambient glow */}
-        <div style={{ position: 'fixed', top: '30%', left: '60%', transform: 'translate(-50%,-50%)', width: 500, height: 400, background: 'radial-gradient(ellipse, rgba(79,70,229,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      {/* ─── RIGHT PANEL (Form) ─── */}
+      <div className="flex-1 flex flex-col justify-center items-center p-4 sm:p-8 lg:p-12 relative overflow-y-auto">
+        {/* Ambient Top Glow */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div style={{ width: '100%', maxWidth: 440, position: 'relative' }}>
-          {/* Back to home */}
-          <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-tertiary)', textDecoration: 'none', marginBottom: 28 }}
-            onMouseEnter={e => e.currentTarget.style.color = '#67e8f9'}
-            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"/></svg>
-            Back to Home
+        {/* Theme Toggle Top Right */}
+        <div className="absolute top-6 right-6 z-20">
+          <ThemeToggle />
+        </div>
+
+        <div className="w-full max-w-md relative z-10">
+          {/* Back button */}
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Home</span>
           </Link>
 
           {/* Header */}
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, boxShadow: '0 8px 24px rgba(79,70,229,0.4)' }}>☕</div>
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                <Store className="w-6 h-6 text-white" />
+              </div>
               <div>
-                <p style={{ fontSize: 11, fontWeight: 700, color: '#06b6d4', letterSpacing: 2, textTransform: 'uppercase', margin: 0 }}>Café Registration</p>
-                <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', margin: 0, fontFamily: "'Outfit',sans-serif" }}>Register Your Café</h1>
+                <span className="text-[11px] font-bold text-cyan-400 uppercase tracking-widest block">
+                  Café Onboarding
+                </span>
+                <h1 className="text-2xl font-black tracking-tight font-heading">
+                  Register Your Café
+                </h1>
               </div>
             </div>
-            <ProgressBar />
+
+            {/* Stepper Progress Bar */}
+            <div className="mt-4">
+              <div className="flex items-center gap-2">
+                {[1, 2, 3].map(s => (
+                  <div
+                    key={s}
+                    className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${
+                      step >= s ? 'bg-gradient-to-r from-indigo-500 to-cyan-400' : 'bg-[var(--border-medium)]'
+                    }`}
+                  />
+                ))}
+              </div>
+              <div className="flex justify-between items-center mt-2 text-xs text-[var(--text-secondary)]">
+                <span>Step {step} of 3</span>
+                <span className="font-semibold text-[var(--text-primary)]">{stage.title}</span>
+              </div>
+            </div>
           </div>
 
           {/* Form Card */}
-          <div style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 28 }}>
-
-            {/* ══════════ STEP 1: Account ══════════ */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border-medium)] rounded-2xl p-6 sm:p-7 shadow-xl backdrop-blur-xl">
+            {/* STEP 1: Account */}
             {step === 1 && (
-              <form onSubmit={handleStep1} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <form onSubmit={handleStep1} className="space-y-4">
                 <div>
-                  <label style={label}>Café / Owner Name *</label>
-                  <div style={{ position: 'relative' }}>
-                    <span style={icon}>🏪</span>
-                    <input type="text" value={form.name} onChange={e => set('name', e.target.value)}
-                      placeholder="Brew & Bite Café" required style={input} onFocus={focus} onBlur={blur} />
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+                    Café or Owner Name *
+                  </label>
+                  <div className="relative">
+                    <Store className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      required
+                      value={form.name}
+                      onChange={e => set('name', e.target.value)}
+                      placeholder="e.g. Brew & Roast Artisanal Café"
+                      className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-indigo-500 transition-colors"
+                    />
                   </div>
                 </div>
 
                 <div>
-                  <label style={label}>Email Address *</label>
-                  <div style={{ position: 'relative' }}>
-                    <span style={icon}>📧</span>
-                    <input type="email" value={form.email} onChange={handleEmailChange}
-                      placeholder="owner@mycafe.com" required style={{...input, borderColor: errors.email ? '#ef4444' : 'var(--border-hover)'}} onFocus={focus} onBlur={blur} />
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+                    Email Address *
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="email"
+                      required
+                      value={form.email}
+                      onChange={handleEmailChange}
+                      placeholder="owner@mycafe.com"
+                      className={`w-full pl-10 pr-4 py-2.5 bg-[var(--bg-input)] border rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none transition-colors ${
+                        errors.email ? 'border-rose-500 ring-1 ring-rose-500' : 'border-[var(--border-medium)] focus:border-indigo-500'
+                      }`}
+                    />
                   </div>
-                  {errors.email && <span style={{ color: '#ef4444', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.email}</span>}
+                  {errors.email && (
+                    <p className="text-xs text-rose-400 mt-1">{errors.email}</p>
+                  )}
                 </div>
 
                 <div>
-                  <label style={label}>Password *</label>
-                  <div style={{ position: 'relative' }}>
-                    <span style={icon}>🔒</span>
-                    <input type={showPass ? 'text' : 'password'} value={form.password}
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+                    Password *
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      required
+                      value={form.password}
                       onChange={e => set('password', e.target.value)}
-                      placeholder="Min. 6 characters" required
-                      style={{ ...input, paddingRight: 44 }} onFocus={focus} onBlur={blur} />
-                    <button type="button" onClick={() => setShowPass(!showPass)}
-                      style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--text-tertiary)', padding: 0 }}>
-                      {showPass ? '🙈' : '👁️'}
+                      placeholder="Min. 6 characters"
+                      className="w-full pl-10 pr-11 py-2.5 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-indigo-500 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass(!showPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] p-1 transition-colors"
+                    >
+                      {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label style={label}>Confirm Password *</label>
-                  <div style={{ position: 'relative' }}>
-                    <span style={icon}>🔑</span>
-                    <input type="password" value={form.confirmPassword}
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+                    Confirm Password *
+                  </label>
+                  <div className="relative">
+                    <KeyRound className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type={showConfirm ? 'text' : 'password'}
+                      required
+                      value={form.confirmPassword}
                       onChange={e => set('confirmPassword', e.target.value)}
-                      placeholder="Re-enter password" required style={input} onFocus={focus} onBlur={blur} />
+                      placeholder="Re-enter password"
+                      className="w-full pl-10 pr-11 py-2.5 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-indigo-500 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm(!showConfirm)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] p-1 transition-colors"
+                    >
+                      {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
 
-                <button type="submit" style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', boxShadow: '0 8px 24px rgba(79,70,229,0.35)', marginTop: 4, transition: 'transform 0.2s, opacity 0.2s' }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                  Continue to Café Details →
+                <button
+                  type="submit"
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-semibold text-sm shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/35 active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-4"
+                >
+                  <span>Continue to Café Details</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </form>
             )}
 
-            {/* ══════════ STEP 2: Café Info ══════════ */}
+            {/* STEP 2: Café Details */}
             {step === 2 && (
-              <form onSubmit={handleStep2} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <form onSubmit={handleStep2} className="space-y-4">
                 <div>
-                  <label style={label}>Phone Number *</label>
-                  <div style={{ position: 'relative' }}>
-                    <span style={icon}>📞</span>
-                    <input type="tel" value={form.phone} onChange={handlePhoneChange}
-                      placeholder="9876543210" required style={{...input, borderColor: errors.phone ? '#ef4444' : 'var(--border-hover)'}} onFocus={focus} onBlur={blur} />
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+                    Contact Phone Number *
+                  </label>
+                  <div className="relative">
+                    <Phone className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="tel"
+                      required
+                      value={form.phone}
+                      onChange={handlePhoneChange}
+                      placeholder="e.g. 9876543210"
+                      className={`w-full pl-10 pr-4 py-2.5 bg-[var(--bg-input)] border rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none transition-colors ${
+                        errors.phone ? 'border-rose-500 ring-1 ring-rose-500' : 'border-[var(--border-medium)] focus:border-indigo-500'
+                      }`}
+                    />
                   </div>
-                  {errors.phone && <span style={{ color: '#ef4444', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.phone}</span>}
+                  {errors.phone && (
+                    <p className="text-xs text-rose-400 mt-1">{errors.phone}</p>
+                  )}
                 </div>
 
                 <div>
-                  <label style={label}>Café Address *</label>
-                  <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: 14, top: 14, fontSize: 16 }}>📍</span>
-                    <textarea value={form.address} onChange={e => set('address', e.target.value)}
-                      placeholder="123 MG Road, Bangalore, Karnataka" required rows={3}
-                      style={{ ...input, paddingTop: 12, resize: 'none', fontFamily: 'inherit' }}
-                      onFocus={focus} onBlur={blur} />
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+                    Physical Café Address *
+                  </label>
+                  <div className="relative">
+                    <MapPin className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3.5 top-3.5 pointer-events-none" />
+                    <textarea
+                      required
+                      rows={3}
+                      value={form.address}
+                      onChange={e => set('address', e.target.value)}
+                      placeholder="e.g. Shop 4B, 100 Feet Road, Indiranagar, Bengaluru, Karnataka"
+                      className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-indigo-500 transition-colors resize-none font-sans"
+                    />
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 4 }}>
-                  <button type="button" onClick={() => setStep(1)}
-                    style={{ padding: '14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg-card-hover)', color: 'var(--text-secondary)', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
-                    ← Back
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="py-3 px-4 rounded-xl border border-[var(--border-medium)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Back</span>
                   </button>
-                  <button type="submit"
-                    style={{ padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', boxShadow: '0 8px 24px rgba(79,70,229,0.35)', transition: 'transform 0.2s' }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
-                    Choose Plan →
+                  <button
+                    type="submit"
+                    className="py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-semibold text-sm shadow-lg shadow-indigo-500/25 active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>Choose Plan</span>
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
               </form>
             )}
 
-            {/* ══════════ STEP 3: Plan Selection ══════════ */}
+            {/* STEP 3: Plan Selection */}
             {step === 3 && (
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {PLANS.map(plan => (
-                    <div key={plan.id} onClick={() => set('plan_name', plan.id)}
-                      style={{
-                        borderRadius: 14, padding: '16px', cursor: 'pointer', transition: 'all 0.25s',
-                        background: form.plan_name === plan.id ? plan.gradient : 'var(--bg-card)',
-                        border: `1.5px solid ${form.plan_name === plan.id ? plan.border : 'var(--border-medium)'}`,
-                        position: 'relative',
-                        transform: form.plan_name === plan.id ? 'scale(1.01)' : 'scale(1)',
-                        boxShadow: form.plan_name === plan.id ? `0 4px 20px ${plan.border}` : 'none',
-                      }}>
-                      {plan.badge && (
-                        <span style={{ position: 'absolute', top: -9, right: 14, background: plan.badgeBg, color: 'var(--text-primary)', fontSize: 9, fontWeight: 800, padding: '3px 10px', borderRadius: 20, letterSpacing: 1.5, textTransform: 'uppercase' }}>{plan.badge}</span>
-                      )}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 42, height: 42, borderRadius: 12, background: plan.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: plan.id === 'starter' ? 22 : 18, fontWeight: 800, color: 'var(--text-primary)', flexShrink: 0 }}>
-                          {plan.icon}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{plan.name}</span>
-                            <span style={{ fontSize: plan.id === 'starter' ? 14 : 18, fontWeight: 800, color: plan.color }}>
-                              {plan.priceLabel(trialDays)}<span style={{ fontSize: 10, color: 'var(--text-tertiary)', fontWeight: 400 }}>{plan.period}</span>
-                            </span>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-3">
+                  {PLANS.map(plan => {
+                    const PlanIcon = plan.icon
+                    const isSelected = form.plan_name === plan.id
+                    return (
+                      <div
+                        key={plan.id}
+                        onClick={() => set('plan_name', plan.id)}
+                        className={`relative p-4 rounded-xl border transition-all cursor-pointer ${
+                          isSelected 
+                            ? `${plan.activeRing} ring-2 ring-indigo-500 shadow-md` 
+                            : 'border-[var(--border-medium)] bg-[var(--bg-card)] hover:border-[var(--border-hover)]'
+                        }`}
+                      >
+                        {plan.badge && (
+                          <span className="absolute -top-2.5 right-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                            {plan.badge}
+                          </span>
+                        )}
+
+                        <div className="flex items-start gap-3.5">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center border flex-shrink-0 ${plan.iconClass}`}>
+                            <PlanIcon className="w-5 h-5" />
                           </div>
-                          <p style={{ fontSize: 11, color: plan.id === 'starter' ? '#6ee7b7' : 'var(--text-tertiary)', margin: '2px 0 6px' }}>{plan.description}</p>
-                          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                            {plan.features.map(f => (
-                              <span key={f} style={{ fontSize: 10, color: plan.id === 'starter' && form.plan_name === 'starter' ? '#6ee7b7' : 'var(--text-secondary)', background: 'var(--border-light)', padding: '1px 7px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.06)' }}>✓ {f}</span>
-                            ))}
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-baseline gap-2">
+                              <h3 className="text-sm font-bold truncate">{plan.name}</h3>
+                              <div className="text-right flex-shrink-0">
+                                <span className="text-base font-extrabold text-[var(--text-primary)]">
+                                  {plan.priceLabel}
+                                </span>
+                                {plan.period && (
+                                  <span className="text-xs text-[var(--text-secondary)]">{plan.period}</span>
+                                )}
+                              </div>
+                            </div>
+                            <p className="text-xs text-[var(--text-secondary)] mt-0.5 mb-2.5">
+                              {plan.description}
+                            </p>
+                            
+                            <div className="flex flex-wrap gap-1.5">
+                              {plan.features.slice(0, 3).map(feat => (
+                                <span
+                                  key={feat}
+                                  className="inline-flex items-center gap-1 text-[11px] bg-[var(--bg-input)] px-2 py-0.5 rounded-md text-[var(--text-secondary)] border border-[var(--border-medium)]"
+                                >
+                                  <Check className="w-3 h-3 text-emerald-400" />
+                                  <span>{feat}</span>
+                                </span>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                        {/* Radio */}
-                        <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${form.plan_name === plan.id ? plan.color : 'var(--border-hover)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'border-color 0.2s' }}>
-                          {form.plan_name === plan.id && <div style={{ width: 9, height: 9, borderRadius: '50%', background: plan.color }} />}
+
+                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 mt-1 transition-colors ${
+                            isSelected ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-[var(--border-medium)]'
+                          }`}>
+                            {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
 
-                {/* Note changes based on selected plan */}
-                {form.plan_name === 'starter' ? (
-                  <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)' }}>
-                    <p style={{ fontSize: 11, color: '#6ee7b7', margin: 0 }}>
-                      🎁 You get <strong>full Pro features</strong> free for <strong>{trialDays} days</strong>. After trial ends, choose a plan to continue.
-                    </p>
-                  </div>
-                ) : (
-                  <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(79,70,229,0.08)', border: '1px solid rgba(79,70,229,0.2)' }}>
-                    <p style={{ fontSize: 11, color: '#67e8f9', margin: 0 }}>
-                      ℹ️ Your account will be reviewed. You'll receive a confirmation email once approved.
-                    </p>
-                  </div>
-                )}
+                <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300 flex items-start gap-2.5">
+                  <Sparkles className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Instant Free Trial:</strong> You get complete Pro features access for {trialDays} days. No payment details required to start.
+                  </span>
+                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <button type="button" onClick={() => setStep(2)}
-                    style={{ padding: '14px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg-card-hover)', color: 'var(--text-secondary)', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
-                    ← Back
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="py-3 px-4 rounded-xl border border-[var(--border-medium)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Back</span>
                   </button>
-                  <button type="submit" disabled={loading}
-                    style={{ padding: '14px', borderRadius: 12, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', opacity: loading ? 0.7 : 1, boxShadow: '0 8px 24px rgba(79,70,229,0.35)', transition: 'transform 0.2s' }}
-                    onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = 'translateY(-1px)' }}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-semibold text-sm shadow-lg shadow-indigo-500/25 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                  >
                     {loading ? (
-                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                        <span style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: 'var(--text-primary)', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
-                        Registering...
-                      </span>
-                    ) : 'Register Café 🎉'}
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Creating Café...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Activate Café</span>
+                        <CheckCircle2 className="w-4 h-4" />
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
             )}
-
           </div>
 
-          <p style={{ textAlign: 'center', marginTop: 24, fontSize: 13, color: 'var(--text-tertiary)' }}>
+          {/* Footer note */}
+          <p className="text-center text-xs text-[var(--text-secondary)] mt-6">
             Already registered?{' '}
-            <Link to="/owner/login" style={{ color: '#06b6d4', textDecoration: 'none', fontWeight: 600 }}>Sign in →</Link>
+            <Link to="/owner/login" className="text-cyan-400 hover:text-cyan-300 font-semibold ml-1">
+              Sign in to Dashboard →
+            </Link>
           </p>
         </div>
       </div>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap');
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @media (min-width: 768px) { .reg-left-panel { display: flex !important; } }
-        input::placeholder, textarea::placeholder { color: #4b5563; }
-        * { box-sizing: border-box; }
-      `}</style>
     </div>
   )
 }

@@ -164,13 +164,13 @@ const login = async (req, res, next) => {
       user.active_sessions = user.active_sessions.filter(s => (Date.now() - new Date(s.last_active || Date.now()).getTime()) < SEVEN_DAYS);
 
       if (forceLogout) {
-        // The user clicked "Log Out Selected" and we need to send an OTP
-        // Generate 6-digit OTP
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        // Generate cryptographically secure 6-digit OTP
+        const otp = crypto.randomInt(100000, 1000000).toString();
         
         // Save OTP to user document
         user.login_otp = otp;
         user.login_otp_expire = Date.now() + 10 * 60 * 1000; // 10 minutes
+        user.login_otp_attempts = 0; // Reset failed attempt counter
         user.pending_logout_sessions = Array.isArray(logoutSessionIds) ? logoutSessionIds : [];
         await user.save({ validateBeforeSave: false });
 
@@ -198,6 +198,7 @@ const login = async (req, res, next) => {
           console.error('❌ Failed to send force logout OTP email:', err);
           user.login_otp = undefined;
           user.login_otp_expire = undefined;
+          user.login_otp_attempts = 0;
           user.pending_logout_sessions = undefined;
           await user.save({ validateBeforeSave: false });
           
@@ -289,16 +290,60 @@ const verifyLoginOtp = async (req, res, next) => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanOtp = otp.toString().trim();
 
-    const user = await Cafe.findOne({ 
-      email: cleanEmail,
-      login_otp: cleanOtp,
-      login_otp_expire: { $gt: Date.now() }
-    });
+    const user = await Cafe.findOne({ email: cleanEmail });
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired OTP. Please verify the code or request a new one.'
+        message: 'Invalid request. User not found.'
+      });
+    }
+
+    // Check if OTP exists and is within 10-minute expiry window
+    if (!user.login_otp || !user.login_otp_expire || user.login_otp_expire < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP has expired or is invalid. Please request a new verification code.'
+      });
+    }
+
+    // Enforce max 5 failed attempts limit
+    if ((user.login_otp_attempts || 0) >= 5) {
+      user.login_otp = undefined;
+      user.login_otp_expire = undefined;
+      user.login_otp_attempts = 0;
+      user.pending_logout_sessions = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      return res.status(429).json({
+        success: false,
+        message: 'Too many failed verification attempts. This OTP has been invalidated for security. Please request a new code.'
+      });
+    }
+
+    // Validate OTP match
+    if (user.login_otp !== cleanOtp) {
+      user.login_otp_attempts = (user.login_otp_attempts || 0) + 1;
+      const remaining = 5 - user.login_otp_attempts;
+
+      if (user.login_otp_attempts >= 5) {
+        user.login_otp = undefined;
+        user.login_otp_expire = undefined;
+        user.login_otp_attempts = 0;
+        user.pending_logout_sessions = undefined;
+        await user.save({ validateBeforeSave: false });
+
+        return res.status(429).json({
+          success: false,
+          message: 'Too many failed attempts. This OTP has been invalidated for security. Please request a new code.'
+        });
+      }
+
+      await user.save({ validateBeforeSave: false });
+
+      return res.status(400).json({
+        success: false,
+        message: `Invalid OTP code. You have ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`
       });
     }
 
@@ -349,9 +394,10 @@ const verifyLoginOtp = async (req, res, next) => {
 
     user.active_sessions.push({ token, device_info, last_active: Date.now() });
 
-    // Clear OTP fields
+    // Clear OTP fields and reset attempt counter
     user.login_otp = undefined;
     user.login_otp_expire = undefined;
+    user.login_otp_attempts = 0;
     user.pending_logout_sessions = undefined;
 
     user.markModified('active_sessions');

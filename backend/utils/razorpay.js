@@ -62,13 +62,22 @@ const verifyWebhookSignature = (body, signature, secret) => {
  * @returns {boolean}
  */
 const verifyPaymentSignature = (orderId, paymentId, signature, secret) => {
+  if (!orderId || !paymentId || !signature || !secret) return false;
   try {
     const body = orderId + '|' + paymentId;
     const expectedSignature = crypto
       .createHmac('sha256', secret)
       .update(body)
       .digest('hex');
-    return expectedSignature === signature;
+
+    const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
+    const signatureBuffer = Buffer.from(signature, 'utf8');
+
+    if (expectedBuffer.length !== signatureBuffer.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(expectedBuffer, signatureBuffer);
   } catch (err) {
     console.error('Payment signature verification error:', err.message);
     return false;
@@ -84,13 +93,22 @@ const verifyPaymentSignature = (orderId, paymentId, signature, secret) => {
  * @returns {boolean}
  */
 const verifySubscriptionSignature = (subscriptionId, paymentId, signature, secret) => {
+  if (!subscriptionId || !paymentId || !signature || !secret) return false;
   try {
     const body = paymentId + '|' + subscriptionId;
     const expectedSignature = crypto
       .createHmac('sha256', secret)
       .update(body)
       .digest('hex');
-    return expectedSignature === signature;
+
+    const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
+    const signatureBuffer = Buffer.from(signature, 'utf8');
+
+    if (expectedBuffer.length !== signatureBuffer.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(expectedBuffer, signatureBuffer);
   } catch (err) {
     console.error('Subscription signature verification error:', err.message);
     return false;

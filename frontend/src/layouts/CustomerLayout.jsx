@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext'
 const CustomerLayout = ({ children }) => {
   const { cafeId } = useParams()
   const location = useLocation()
-  const { totalItems } = useCart()
+  const { totalItems, totalAmount } = useCart()
   const id = cafeId || localStorage.getItem('cartCafeId') || ''
   const isCheckout = location.pathname.includes('/checkout')
   const isCart = location.pathname.includes('/cart')
@@ -68,61 +68,80 @@ const CustomerLayout = ({ children }) => {
     )},
   ]
 
+  // Safe bottom padding so sticky bottom summaries and bottom nav NEVER cover content
+  const bottomPadding = isCheckout ? 20 : (!isCart && totalItems > 0 ? 168 : 100)
+
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-main)', color: 'var(--text-primary)', paddingBottom: isCheckout ? 0 : 100, maxWidth: 500, margin: '0 auto', position: 'relative', fontFamily: "'Inter',sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-main)', color: 'var(--text-primary)', paddingBottom: bottomPadding, maxWidth: 500, margin: '0 auto', position: 'relative', fontFamily: "'Inter', sans-serif" }}>
       
       {/* Content Area */}
       {children}
 
       {/* Floating View Cart Banner */}
       {!isCheckout && !isCart && totalItems > 0 && (
-        <div style={{ position: 'fixed', bottom: 95, left: 0, right: 0, zIndex: 99, display: 'flex', justifyContent: 'center', pointerEvents: 'none', padding: '0 16px' }}>
+        <div style={{ position: 'fixed', bottom: 84, left: 0, right: 0, zIndex: 99, display: 'flex', justifyContent: 'center', pointerEvents: 'none', padding: '0 16px' }}>
           <div 
             onClick={() => navigate(`/${id}/menu/cart`)}
+            role="button"
+            aria-label="View Cart"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/${id}/menu/cart`) }}
             style={{ 
               pointerEvents: 'auto',
-              background: 'var(--accent-primary)',
-              color: 'var(--bg-main)',
+              background: 'var(--accent-gradient)',
+              color: 'var(--accent-text, #ffffff)',
               borderRadius: 30,
-              padding: '6px 16px 6px 6px',
+              padding: '8px 18px 8px 8px',
               display: 'flex',
               alignItems: 'center',
               gap: 12,
               cursor: 'pointer',
-              boxShadow: '0 8px 25px rgba(0, 0, 0, 0.25)',
-              width: 'max-content',
-              minWidth: 180,
-              animation: 'slideUpCart 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), pulseCart 2s infinite ease-in-out'
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.18), var(--accent-shadow)',
+              width: '100%',
+              maxWidth: 440,
+              animation: 'slideUpCart 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
           >
-            {/* Circular Icon */}
-            <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--bg-main)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            {/* Circular Bag Icon with item badge */}
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255, 255, 255, 0.22)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 0 1-8 0"/>
               </svg>
             </div>
             
             {/* Text Info */}
-            <div style={{ flex: 1, paddingRight: 8 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, lineHeight: 1.2, color: 'var(--bg-main)' }}>View cart</div>
-              <div style={{ fontSize: 11, opacity: 0.9, fontWeight: 600, color: 'var(--bg-main)' }}>{totalItems} item{totalItems > 1 ? 's' : ''}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.2, color: '#ffffff', letterSpacing: '0.2px' }}>
+                {totalItems} {totalItems === 1 ? 'item' : 'items'} added
+              </div>
+              <div style={{ fontSize: 12, opacity: 0.95, fontWeight: 700, color: '#ffffff', fontVariantNumeric: 'tabular-nums' }}>
+                ₹{totalAmount.toFixed(2)} <span style={{ opacity: 0.75, fontWeight: 500, fontSize: 11 }}>plus taxes</span>
+              </div>
             </div>
             
-            {/* Arrow */}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
+            {/* View Cart Action Pill */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#ffffff', color: 'var(--accent-primary, #ea580c)', padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 800, flexShrink: 0, boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
+              <span>View Cart</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </div>
           </div>
         </div>
       )}
 
       {/* Floating Bottom Navigation (Hidden on Checkout) */}
       {!isCheckout && (
-        <nav style={{ position: 'fixed', bottom: 20, left: 16, right: 16, zIndex: 100, display: 'flex', justifyContent: 'center' }}>
+        <nav style={{ position: 'fixed', bottom: 16, left: 16, right: 16, zIndex: 100, display: 'flex', justifyContent: 'center' }}>
           <div style={{
             width: '100%', maxWidth: 440, background: 'var(--nav-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-            borderRadius: 30, border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 10px 40px rgba(0,0,0,0.5), 0 0 20px rgba(245,158,11,0.05)',
-            padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+            borderRadius: 24, border: '1px solid var(--nav-border)', boxShadow: 'var(--nav-shadow)',
+            padding: '6px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
           }}>
             {navItems.map(item => (
               <NavLink
@@ -130,26 +149,25 @@ const CustomerLayout = ({ children }) => {
                 to={item.to}
                 end={item.end}
                 style={({ isActive }) => ({
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '8px 12px', borderRadius: 20,
-                  textDecoration: 'none', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '8px 14px', borderRadius: 16,
+                  textDecoration: 'none', transition: 'all 0.2s ease', position: 'relative', minHeight: 44, justifyContent: 'center',
                   color: isActive ? 'var(--accent-primary)' : 'var(--text-tertiary)',
                   background: isActive ? 'var(--accent-bg-subtle)' : 'transparent',
-                  transform: isActive ? 'translateY(-2px)' : 'translateY(0)'
                 })}
               >
                 <div style={{ position: 'relative' }}>
                   {item.icon}
                   {item.badge > 0 && (
                     <span style={{
-                      position: 'absolute', top: -4, right: -8, minWidth: 18, height: 18, background: '#ef4444', color: 'var(--text-primary)',
+                      position: 'absolute', top: -4, right: -8, minWidth: 18, height: 18, background: '#ef4444', color: '#ffffff',
                       fontSize: 10, fontWeight: 800, borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      border: '2px solid var(--bg-main)', padding: '0 4px', animation: 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                      border: '2px solid #ffffff', padding: '0 4px', animation: 'pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
                     }}>
                       {item.badge}
                     </span>
                   )}
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.3 }}>{item.label}</span>
+                <span style={{ fontSize: 11, fontWeight: 600 }}>{item.label}</span>
               </NavLink>
             ))}
           </div>

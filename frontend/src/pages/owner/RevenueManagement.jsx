@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { ownerAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { 
+  TrendingUp, BarChart3, Trophy, Receipt, Calendar, 
+  CalendarDays, Inbox, IndianRupee, Filter, ArrowUpRight, 
+  CheckCircle2, Sparkles, ChevronRight, Layers
+} from 'lucide-react'
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const MONTH_FULL  = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -25,12 +30,12 @@ const RevenueManagement = () => {
       if (v === 'daily')                    params.month = m
       const res = await ownerAPI.getRevenue(params)
       setData(res.data.data)
-      if (res.data.data.availableYears?.length) {
+      if (res.data.data?.availableYears?.length) {
         setYears(res.data.data.availableYears)
       }
       setIdx(0)
     } catch {
-      toast.error('Failed to load revenue')
+      toast.error('Failed to load revenue analytics')
     } finally {
       setLoading(false)
     }
@@ -172,13 +177,9 @@ const RevenueManagement = () => {
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", color: 'var(--text-primary)', position: 'relative' }}>
       <style>{`
-        @keyframes slideUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes pulse { 0%,100% { opacity:0.4 } 50% { opacity:0.9 } }
-        .rev-row:hover { background: var(--border-light) !important; transform: translateX(4px) !important; }
-        .rev-row { transition: all 0.2s ease !important; }
-        .yr-btn:hover { background: var(--border-medium) !important; }
-        .day-btn:hover { background: rgba(16,185,129,0.15) !important; color: #34d399 !important; }
-        .mo-btn:hover { background: rgba(16,185,129,0.15) !important; color: #34d399 !important; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+        .rev-row:hover { background: var(--bg-card-hover) !important; border-color: rgba(16, 185, 129, 0.3) !important; }
+        .rev-row { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; }
         .custom-scroll::-webkit-scrollbar { height: 4px; width: 4px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
@@ -186,12 +187,17 @@ const RevenueManagement = () => {
       `}</style>
 
       {/* ─── Header ─── */}
-      <div style={{ marginBottom: 24, animation: 'slideUp 0.4s ease' }}>
-        <h1 style={{ fontSize: 'clamp(22px,4vw,30px)', fontWeight: 900, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
-          Revenue Analytics
-        </h1>
+      <div style={{ marginBottom: 24, animation: 'fadeIn 0.3s ease' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <TrendingUp size={18} />
+          </div>
+          <h1 style={{ fontSize: 'clamp(22px,4vw,28px)', fontWeight: 900, margin: 0, fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
+            Revenue Analytics
+          </h1>
+        </div>
         <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0, fontWeight: 500 }}>
-          Permanent revenue history — filter by Year, Month, or Day.
+          Real-time and historic café order revenue breakdowns with daily, monthly, and yearly insights.
         </p>
       </div>
 
@@ -201,35 +207,44 @@ const RevenueManagement = () => {
         flexDirection: 'column',
         gap: 12,
         marginBottom: 24,
-        padding: '14px 18px',
+        padding: '16px 20px',
         borderRadius: 16,
-        background: 'var(--bg-input)',
+        background: 'var(--bg-card)',
         border: '1px solid var(--border-medium)',
-        animation: 'slideUp 0.42s ease'
+        boxShadow: 'var(--shadow-card)',
+        animation: 'fadeIn 0.35s ease'
       }}>
-        {/* Top Controls Row: View Tabs + Year + (Month selector if in daily mode) */}
+        {/* Top Controls Row: View Tabs + Year + Month Selector */}
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           {/* View Toggle */}
-          <div style={{ display: 'flex', background: 'var(--bg-card-hover)', padding: 3, borderRadius: 10, gap: 2 }}>
-            {[['yearly','Yearly'],['monthly','Monthly'],['daily','Daily']].map(([v, label]) => (
+          <div style={{ display: 'flex', background: 'var(--bg-input)', padding: 4, borderRadius: 10, gap: 4 }}>
+            {[
+              { id: 'daily', label: 'Daily', icon: CalendarDays },
+              { id: 'monthly', label: 'Monthly', icon: Calendar },
+              { id: 'yearly', label: 'Yearly', icon: Layers }
+            ].map(({ id: v, label, icon: Icon }) => (
               <button
                 key={v}
                 onClick={() => switchView(v)}
                 style={{
-                  padding: '6px 16px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '7px 16px',
                   borderRadius: 8,
                   fontSize: 12,
                   fontWeight: 700,
                   border: 'none',
                   cursor: 'pointer',
-                  background: view === v ? 'linear-gradient(135deg,#10b981,#059669)' : 'transparent',
-                  color: view === v ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  background: view === v ? 'linear-gradient(135deg, #10b981, #059669)' : 'transparent',
+                  color: view === v ? '#ffffff' : 'var(--text-secondary)',
                   boxShadow: view === v ? '0 4px 12px rgba(16,185,129,0.3)' : 'none',
                   fontFamily: "'Inter',sans-serif",
                   transition: 'all 0.2s'
                 }}
               >
-                {label}
+                <Icon size={14} />
+                <span>{label}</span>
               </button>
             ))}
           </div>
@@ -238,23 +253,24 @@ const RevenueManagement = () => {
 
           {/* Year Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Year</span>
+            <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Year
+            </span>
             <div style={{ display: 'flex', gap: 4 }}>
               {availableYears.map(y => (
                 <button
                   key={y}
-                  className="yr-btn"
                   onClick={() => changeYear(y)}
                   style={{
-                    padding: '5px 12px',
+                    padding: '6px 12px',
                     borderRadius: 8,
                     fontSize: 12,
                     fontWeight: 700,
                     border: 'none',
                     cursor: 'pointer',
-                    background: selectedYear === y ? 'rgba(16,185,129,0.15)' : 'transparent',
-                    color: selectedYear === y ? 'var(--success-text)' : 'var(--text-secondary)',
-                    outline: selectedYear === y ? '1px solid rgba(16,185,129,0.3)' : '1px solid transparent',
+                    background: selectedYear === y ? 'rgba(16,185,129,0.15)' : 'var(--bg-input)',
+                    color: selectedYear === y ? '#10b981' : 'var(--text-secondary)',
+                    outline: selectedYear === y ? '1px solid rgba(16,185,129,0.4)' : '1px solid transparent',
                     fontFamily: "'Inter',sans-serif",
                     transition: 'all 0.15s'
                   }}
@@ -270,15 +286,17 @@ const RevenueManagement = () => {
             <>
               <div style={{ width: 1, height: 26, background: 'var(--border-medium)' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Month</span>
+                <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Month
+                </span>
                 <select
                   value={selectedMonth}
                   onChange={(e) => changeMonth(Number(e.target.value))}
                   style={{
-                    background: 'var(--overlay-bg)',
+                    background: 'var(--bg-input)',
                     border: '1px solid rgba(16,185,129,0.3)',
-                    color: 'var(--success-text)',
-                    padding: '5px 12px',
+                    color: '#10b981',
+                    padding: '6px 14px',
                     borderRadius: 8,
                     fontSize: 12,
                     fontWeight: 700,
@@ -288,7 +306,7 @@ const RevenueManagement = () => {
                   }}
                 >
                   {MONTH_FULL.map((m, idx) => (
-                    <option key={idx} value={idx + 1} style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)' }}>
+                    <option key={idx} value={idx + 1} style={{ background: '#131b2e', color: '#ffffff' }}>
                       {m}
                     </option>
                   ))}
@@ -299,14 +317,13 @@ const RevenueManagement = () => {
         </div>
 
         {/* ─── DYNAMIC SUB-FILTER ROW ─── */}
-
         {/* 1. In DAILY View: Show DAY Pills (All, 1, 2, 3... 31) */}
         {view === 'daily' && (
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            paddingTop: 10,
+            paddingTop: 12,
             borderTop: '1px solid var(--border-medium)'
           }}>
             <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, flexShrink: 0 }}>
@@ -321,7 +338,6 @@ const RevenueManagement = () => {
               width: '100%'
             }}>
               <button
-                className="day-btn"
                 onClick={() => handleSelectDay('all')}
                 style={{
                   padding: '5px 12px',
@@ -332,8 +348,8 @@ const RevenueManagement = () => {
                   cursor: 'pointer',
                   flexShrink: 0,
                   background: selectedDay === 'all' ? 'linear-gradient(135deg,#10b981,#059669)' : 'var(--bg-input)',
-                  color: selectedDay === 'all' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  outline: selectedDay === 'all' ? '1px solid rgba(16,185,129,0.4)' : '1px solid var(--border-light)',
+                  color: selectedDay === 'all' ? '#ffffff' : 'var(--text-secondary)',
+                  outline: selectedDay === 'all' ? '1px solid rgba(16,185,129,0.4)' : '1px solid var(--border-medium)',
                   boxShadow: selectedDay === 'all' ? '0 2px 10px rgba(16,185,129,0.3)' : 'none',
                   fontFamily: "'Inter',sans-serif",
                   transition: 'all 0.15s'
@@ -348,7 +364,6 @@ const RevenueManagement = () => {
                 return (
                   <button
                     key={dayNum}
-                    className="day-btn"
                     onClick={() => handleSelectDay(dayNum)}
                     style={{
                       padding: '4px 9px',
@@ -362,14 +377,14 @@ const RevenueManagement = () => {
                       background: isSelected
                         ? 'linear-gradient(135deg,#10b981,#059669)'
                         : hasData
-                        ? 'var(--success-light)'
+                        ? 'rgba(16,185,129,0.12)'
                         : 'transparent',
-                      color: isSelected ? 'var(--text-primary)' : hasData ? 'var(--success-text)' : 'var(--text-tertiary)',
+                      color: isSelected ? '#ffffff' : hasData ? '#10b981' : 'var(--text-tertiary)',
                       outline: isSelected
                         ? '1px solid rgba(16,185,129,0.4)'
                         : hasData
                         ? '1px solid rgba(16,185,129,0.25)'
-                        : '1px solid var(--border-light)',
+                        : '1px solid var(--border-light, rgba(255,255,255,0.06))',
                       boxShadow: isSelected ? '0 2px 10px rgba(16,185,129,0.3)' : 'none',
                       fontFamily: "'Inter',sans-serif",
                       transition: 'all 0.15s',
@@ -386,7 +401,7 @@ const RevenueManagement = () => {
                         width: 4,
                         height: 4,
                         borderRadius: '50%',
-                        background: 'var(--success-text)'
+                        background: '#10b981'
                       }} />
                     )}
                   </button>
@@ -402,7 +417,7 @@ const RevenueManagement = () => {
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            paddingTop: 10,
+            paddingTop: 12,
             borderTop: '1px solid var(--border-medium)'
           }}>
             <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, flexShrink: 0 }}>
@@ -417,7 +432,6 @@ const RevenueManagement = () => {
               width: '100%'
             }}>
               <button
-                className="mo-btn"
                 onClick={() => handleSelectMonthFilter('all')}
                 style={{
                   padding: '5px 12px',
@@ -428,8 +442,8 @@ const RevenueManagement = () => {
                   cursor: 'pointer',
                   flexShrink: 0,
                   background: selectedMonthFilter === 'all' ? 'linear-gradient(135deg,#10b981,#059669)' : 'var(--bg-input)',
-                  color: selectedMonthFilter === 'all' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  outline: selectedMonthFilter === 'all' ? '1px solid rgba(16,185,129,0.4)' : '1px solid var(--border-light)',
+                  color: selectedMonthFilter === 'all' ? '#ffffff' : 'var(--text-secondary)',
+                  outline: selectedMonthFilter === 'all' ? '1px solid rgba(16,185,129,0.4)' : '1px solid var(--border-medium)',
                   boxShadow: selectedMonthFilter === 'all' ? '0 2px 10px rgba(16,185,129,0.3)' : 'none',
                   fontFamily: "'Inter',sans-serif",
                   transition: 'all 0.15s'
@@ -445,7 +459,6 @@ const RevenueManagement = () => {
                 return (
                   <button
                     key={m}
-                    className="mo-btn"
                     onClick={() => handleSelectMonthFilter(mNum)}
                     style={{
                       padding: '5px 10px',
@@ -458,14 +471,14 @@ const RevenueManagement = () => {
                       background: isSelected
                         ? 'linear-gradient(135deg,#10b981,#059669)'
                         : hasData
-                        ? 'var(--success-light)'
+                        ? 'rgba(16,185,129,0.12)'
                         : 'transparent',
-                      color: isSelected ? 'var(--text-primary)' : hasData ? 'var(--success-text)' : 'var(--text-tertiary)',
+                      color: isSelected ? '#ffffff' : hasData ? '#10b981' : 'var(--text-tertiary)',
                       outline: isSelected
                         ? '1px solid rgba(16,185,129,0.4)'
                         : hasData
                         ? '1px solid rgba(16,185,129,0.25)'
-                        : '1px solid var(--border-light)',
+                        : '1px solid var(--border-light, rgba(255,255,255,0.06))',
                       boxShadow: isSelected ? '0 2px 10px rgba(16,185,129,0.3)' : 'none',
                       fontFamily: "'Inter',sans-serif",
                       transition: 'all 0.15s'
@@ -481,23 +494,23 @@ const RevenueManagement = () => {
       </div>
 
       {/* ─── Stats Row ─── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24, animation: 'slideUp 0.46s ease' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 24, animation: 'fadeIn 0.4s ease' }}>
         {[
           {
             label: 'Selected Filter',
             value: `₹${heroData.total.toLocaleString()}`,
             sub: heroData.label,
-            icon: '💰',
+            icon: IndianRupee,
             bg: 'rgba(16,185,129,0.08)',
             border: 'rgba(16,185,129,0.2)',
-            glow: 'var(--success-light)',
-            accent: 'var(--success-text)'
+            glow: 'rgba(16,185,129,0.1)',
+            accent: '#10b981'
           },
           {
             label: view === 'daily' ? `${MONTH_NAMES[selectedMonth - 1]} Total` : `${selectedYear} Total`,
             value: `₹${totalRevenue.toLocaleString()}`,
-            sub: `All ${history.length} records`,
-            icon: '📊',
+            sub: `All ${history.length} records in view`,
+            icon: BarChart3,
             bg: 'rgba(99,102,241,0.08)',
             border: 'rgba(99,102,241,0.2)',
             glow: 'rgba(99,102,241,0.1)',
@@ -506,72 +519,78 @@ const RevenueManagement = () => {
           {
             label: 'Peak Revenue',
             value: `₹${bestRevenue.toLocaleString()}`,
-            sub: 'Highest earning period',
-            icon: '🏆',
+            sub: 'Highest recorded period',
+            icon: Trophy,
             bg: 'rgba(245,158,11,0.08)',
             border: 'rgba(245,158,11,0.2)',
-            glow: 'var(--warning-light)',
+            glow: 'rgba(245,158,11,0.1)',
             accent: '#fbbf24'
           },
           {
             label: 'Total Orders',
             value: `${history.reduce((s,h) => s + (h.orders || 0), 0)} orders`,
             sub: 'Paid orders in period',
-            icon: '🧾',
+            icon: Receipt,
             bg: 'rgba(6,182,212,0.08)',
-            border: 'var(--cyan-border-hover)',
-            glow: 'var(--cyan-bg-light)',
-            accent: 'var(--cyan-text)'
+            border: 'rgba(6,182,212,0.2)',
+            glow: 'rgba(6,182,212,0.1)',
+            accent: '#06b6d4'
           },
-        ].map((card, i) => (
-          <div
-            key={i}
-            style={{
-              padding: '18px 20px',
-              borderRadius: 16,
-              background: card.bg,
-              border: `1px solid ${card.border}`,
-              boxShadow: `0 4px 24px ${card.glow}`,
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              animation: `slideUp 0.4s ease ${i * 0.06}s both`
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform='translateY(-3px)'; e.currentTarget.style.boxShadow=`0 12px 32px ${card.glow}` }}
-            onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow=`0 4px 24px ${card.glow}` }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 20 }}>{card.icon}</span>
+        ].map((card, i) => {
+          const Icon = card.icon
+          return (
+            <div
+              key={i}
+              style={{
+                padding: '18px 20px',
+                borderRadius: 16,
+                background: 'var(--bg-card)',
+                border: `1px solid ${card.border}`,
+                boxShadow: 'var(--shadow-card)',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform='translateY(-2px)' }}
+              onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  {card.label}
+                </span>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: card.bg, color: card.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon size={16} />
+                </div>
+              </div>
+              <p style={{ fontSize: 24, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
+                {loading ? (
+                  <span style={{ display:'inline-block', width:80, height:24, borderRadius:6, background:'var(--border-medium)', opacity: 0.5 }} />
+                ) : (
+                  card.value
+                )}
+              </p>
+              <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {card.sub}
+              </p>
             </div>
-            <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '0 0 4px', fontWeight: 500 }}>{card.label}</p>
-            <p style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 3px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
-              {loading ? (
-                <span style={{ display:'inline-block', width:80, height:22, borderRadius:6, background:'var(--border-light)', animation:'pulse 1.5s ease infinite' }} />
-              ) : (
-                card.value
-              )}
-            </p>
-            <p style={{ fontSize: 10, color: 'var(--text-tertiary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {card.sub}
-            </p>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* ─── Main Grid: Hero Card + History List ─── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: 18, animation: 'slideUp 0.5s ease' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 1.6fr', gap: 20, animation: 'fadeIn 0.45s ease' }}>
 
         {/* Left: Hero Card */}
         <div style={{
           padding: '28px 24px',
           borderRadius: 20,
-          background: 'linear-gradient(145deg, rgba(16,185,129,0.12) 0%, rgba(6,78,59,0.04) 100%)',
-          border: '1px solid rgba(16,185,129,0.2)',
-          boxShadow: '0 8px 40px rgba(16,185,129,0.1)',
+          background: 'linear-gradient(145deg, rgba(16,185,129,0.12) 0%, rgba(19, 27, 46, 0.95) 100%)',
+          border: '1px solid rgba(16,185,129,0.25)',
+          boxShadow: 'var(--shadow-card)',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
           position: 'relative',
           overflow: 'hidden',
-          minHeight: 300
+          minHeight: 320
         }}>
           <div style={{
             position: 'absolute',
@@ -579,50 +598,54 @@ const RevenueManagement = () => {
             right: -50,
             width: 180,
             height: 180,
-            background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)',
             pointerEvents: 'none'
           }} />
 
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--success-text)', textTransform: 'uppercase', letterSpacing: 1 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: 1, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Sparkles size={13} />
                 {view === 'daily' && selectedDay !== 'all'
-                  ? `✦ Day ${selectedDay}`
+                  ? `Day ${selectedDay} Breakdown`
                   : view === 'monthly' && selectedMonthFilter !== 'all'
-                  ? `✦ ${MONTH_NAMES[Number(selectedMonthFilter) - 1]}`
-                  : '✦ Summary Overview'}
+                  ? `${MONTH_NAMES[Number(selectedMonthFilter) - 1]} Summary`
+                  : 'Active Filter Breakdown'}
               </span>
               <span style={{
                 fontSize: 10,
-                fontWeight: 700,
-                padding: '3px 8px',
+                fontWeight: 800,
+                padding: '3px 10px',
                 borderRadius: 50,
                 background: 'rgba(16,185,129,0.15)',
-                color: 'var(--success-text)',
+                color: '#10b981',
                 border: '1px solid rgba(16,185,129,0.3)',
-                textTransform: 'uppercase'
+                textTransform: 'uppercase',
+                letterSpacing: 0.5
               }}>
                 {view}
               </span>
             </div>
           </div>
 
-          <div style={{ textAlign: 'center', padding: '24px 0' }}>
-            <div style={{ fontSize: 46, marginBottom: 10 }}>💰</div>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 10px', fontWeight: 600, letterSpacing: 0.3 }}>
+          <div style={{ textAlign: 'center', padding: '28px 0' }}>
+            <div style={{ width: 56, height: 56, borderRadius: 16, background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(16, 185, 129, 0.2)' }}>
+              <IndianRupee size={28} />
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 10px', fontWeight: 600 }}>
               {loading ? 'Fetching revenue...' : heroData.label}
             </p>
             <p style={{
-              fontSize: 'clamp(38px,7vw,56px)',
+              fontSize: 'clamp(36px,5vw,50px)',
               fontWeight: 900,
               color: 'var(--text-primary)',
               margin: 0,
               fontFamily: "'Outfit',sans-serif",
-              letterSpacing: '-2px',
+              letterSpacing: '-1.5px',
               lineHeight: 1
             }}>
               {loading ? (
-                <span style={{ display:'inline-block', width:140, height:56, borderRadius:12, background:'var(--border-light)', animation:'pulse 1.5s ease infinite' }} />
+                <span style={{ display:'inline-block', width:140, height:48, borderRadius:12, background:'var(--border-medium)', opacity: 0.5 }} />
               ) : (
                 `₹${heroData.total.toLocaleString()}`
               )}
@@ -640,11 +663,21 @@ const RevenueManagement = () => {
               borderRadius: 50,
               fontSize: 11,
               fontWeight: 700,
-              background: heroData.total > 0 ? 'rgba(16,185,129,0.15)' : 'var(--border-light)',
-              color: heroData.total > 0 ? 'var(--success-text)' : 'var(--text-tertiary)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              background: heroData.total > 0 ? 'rgba(16,185,129,0.15)' : 'var(--bg-input)',
+              color: heroData.total > 0 ? '#10b981' : 'var(--text-tertiary)',
               border: `1px solid ${heroData.total > 0 ? 'rgba(16,185,129,0.3)' : 'var(--border-medium)'}`
             }}>
-              {heroData.total > 0 ? '✓ Cash Collected' : '— No Revenue'}
+              {heroData.total > 0 ? (
+                <>
+                  <CheckCircle2 size={13} />
+                  <span>Settled Revenue</span>
+                </>
+              ) : (
+                <span>No Revenue Recorded</span>
+              )}
             </span>
           </div>
         </div>
@@ -654,7 +687,10 @@ const RevenueManagement = () => {
           borderRadius: 20,
           background: 'var(--bg-card)',
           border: '1px solid var(--border-medium)',
-          overflow: 'hidden'
+          boxShadow: 'var(--shadow-card)',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
         }}>
           <div style={{
             padding: '18px 22px',
@@ -664,7 +700,7 @@ const RevenueManagement = () => {
             alignItems: 'center'
           }}>
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+              <h2 style={{ fontSize: 14, fontWeight: 800, margin: 0, color: 'var(--text-primary)', fontFamily: "'Outfit', sans-serif" }}>
                 {view === 'yearly'
                   ? 'Yearly Breakdown'
                   : view === 'monthly'
@@ -672,32 +708,34 @@ const RevenueManagement = () => {
                   : `Daily Breakdown — ${MONTH_FULL[selectedMonth - 1]} ${selectedYear}`}
               </h2>
               <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '2px 0 0', fontWeight: 500 }}>
-                Click any row to view breakdown in the left card.
+                Select any row to inspect metrics in the summary card.
               </p>
             </div>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-tertiary)' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-tertiary)', background: 'var(--bg-input)', padding: '4px 10px', borderRadius: 20, border: '1px solid var(--border-medium)' }}>
               {history.length} records
             </span>
           </div>
 
           <div style={{
-            padding: '10px 14px',
+            padding: '12px 16px',
             display: 'flex',
             flexDirection: 'column',
-            gap: 5,
-            maxHeight: 440,
+            gap: 6,
+            maxHeight: 460,
             overflowY: 'auto'
           }}>
             {loading ? (
               [...Array(6)].map((_, i) => (
-                <div key={i} style={{ height: 54, borderRadius: 12, background: 'var(--bg-input)', animation: 'pulse 1.5s ease infinite', animationDelay: `${i * 0.1}s` }} />
+                <div key={i} style={{ height: 56, borderRadius: 12, background: 'var(--bg-input)', opacity: 0.5 }} />
               ))
             ) : history.length === 0 ? (
-              <div style={{ padding: '50px 20px', textAlign: 'center' }}>
-                <div style={{ fontSize: 36, marginBottom: 10, opacity: 0.3 }}>📭</div>
-                <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0, fontWeight: 600 }}>No revenue recorded for this period.</p>
-                <p style={{ fontSize: 11, color: 'var(--border-hover)', margin: '5px 0 0' }}>
-                  {view === 'daily' ? 'Try picking a different month or year above.' : 'Revenue appears here once orders are paid.'}
+              <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.04)', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                  <Inbox size={24} />
+                </div>
+                <p style={{ fontSize: 14, color: 'var(--text-primary)', margin: 0, fontWeight: 700 }}>No revenue recorded</p>
+                <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: '4px 0 0' }}>
+                  {view === 'daily' ? 'Try picking a different month or year above.' : 'Revenue appears here once customer orders are paid.'}
                 </p>
               </div>
             ) : (
@@ -720,8 +758,8 @@ const RevenueManagement = () => {
                       padding: '12px 14px',
                       borderRadius: 12,
                       cursor: 'pointer',
-                      background: isSelected ? 'var(--success-light)' : 'transparent',
-                      border: isSelected ? '1px solid rgba(16,185,129,0.3)' : '1px solid transparent',
+                      background: isSelected ? 'rgba(16,185,129,0.08)' : 'var(--bg-input)',
+                      border: isSelected ? '1px solid rgba(16,185,129,0.3)' : '1px solid var(--border-medium)',
                       position: 'relative',
                       overflow: 'hidden'
                     }}
@@ -733,40 +771,40 @@ const RevenueManagement = () => {
                       top: 0,
                       bottom: 0,
                       width: `${pct}%`,
-                      background: isSelected ? 'rgba(16,185,129,0.06)' : 'var(--bg-card)',
-                      transition: 'width 0.5s ease',
+                      background: isSelected ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.02)',
+                      transition: 'width 0.4s ease',
                       pointerEvents: 'none',
                       borderRadius: 12
                     }} />
 
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <div style={{
-                          width: 34,
-                          height: 34,
-                          borderRadius: 9,
+                          width: 36,
+                          height: 36,
+                          borderRadius: 10,
                           flexShrink: 0,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: 15,
-                          background: isCur ? 'rgba(16,185,129,0.2)' : isSelected ? 'var(--success-light)' : 'var(--border-light)'
+                          background: isCur ? 'rgba(16,185,129,0.2)' : isSelected ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.04)',
+                          color: isCur || isSelected ? '#10b981' : 'var(--text-tertiary)'
                         }}>
-                          {isCur ? '📅' : '🗓️'}
+                          {isCur ? <CalendarDays size={18} /> : <Calendar size={18} />}
                         </div>
                         <div>
-                          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: isCur ? 'var(--success-text)' : isSelected ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: isCur ? '#10b981' : isSelected ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
                             {formatLabel(hist)}
                           </p>
                           {isCur && (
-                            <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--success-text)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                            <span style={{ fontSize: 9, fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                               {view === 'yearly' ? 'Current Year' : view === 'monthly' ? 'Current Month' : 'Today'}
                             </span>
                           )}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--text-primary)', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
+                        <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.3px' }}>
                           ₹{(hist.total || 0).toLocaleString()}
                         </p>
                         <p style={{ margin: 0, fontSize: 10, color: 'var(--text-tertiary)' }}>

@@ -56,51 +56,50 @@ frontend/src/
 
 ---
 
+---
+
 ## 3. Color Palette
 
-### Primary Brand Colors (Violet/Purple)
+### Primary Brand Colors (Professional Indigo / Violet)
 
 | Token | Hex | Usage |
 |-------|-----|-------|
-| `--primary-400` | `#a78bfa` | Light hover states |
-| `--primary-500` | `#8b5cf6` | **Primary brand color** — CTAs, active states |
-| `--primary-600` | `#7c3aed` | Button backgrounds |
-| `--primary-700` | `#6d28d9` | Pressed states |
+| `--color-primary-400` | `#818cf8` | Subtle accents, active indicators |
+| `--color-primary-500` | `#6366f1` | Vibrant primary highlight |
+| `--color-primary-600` / `--brand-primary` | `#4f46e5` | **Primary brand CTA** — Buttons, active highlights, key links |
+| `--color-primary-700` / `--brand-hover` | `#4338ca` | Hover & pressed states |
+| `--brand-subtle` | `rgba(79, 70, 229, 0.08)` | Active background tint |
 
-### Dark Background Scale
+### Dashboard Surfaces (Consistent Dark Sidebar + Balanced Surfaces)
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `--dark-950` | `#0A0A0F` | Page background (darkest) |
-| `--dark-900` | `#111117` | Card backgrounds |
-| `--dark-800` | `#1C1C27` | Input backgrounds, sidebar |
-| `--dark-700` | `#252535` | Borders, dividers |
-| `--dark-400` | `#6B7280` | Placeholder text |
-| `--dark-300` | `#9CA3AF` | Secondary text |
-| `--dark-100` | `#F3F4F6` | Primary text on dark |
+| Surface | Dark Mode | Light Mode | Description |
+|---------|-----------|------------|-------------|
+| Sidebar | `#0f172a` | `#0f172a` | Permanent dark sidebar for contrast and focus |
+| Main Page Shell | `#0b0f19` | `#f8fafc` | Main content canvas |
+| Cards & Panels | `#131b2e` | `#ffffff` | Content cards, data widgets |
+| Inputs & Selects | `#162035` | `#ffffff` | Form controls |
+| Elevated Modals | `#1e293b` | `#ffffff` | Modals, flyouts, dropdowns |
 
-### Semantic / Status Colors
+### Customer Portal Surfaces (Clean, Food-Focused & Welcoming)
 
-| Color | Hex | Usage |
-|-------|-----|-------|
-| Success Green | `#10B981` | Paid orders, active status |
-| Warning Amber | `#F59E0B` | Pending payment, warnings |
-| Danger Red | `#EF4444` | Errors, cancel actions |
-| Info Blue | `#3B82F6` | Info badges, new orders |
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--bg-main` | `#fafaf9` / `#fcfbfa` | Clean, welcoming porcelain background |
+| `--bg-card` | `#ffffff` | Crisp white food cards |
+| `--text-primary` | `#1c1917` | High-contrast rich charcoal text |
+| `--text-secondary` | `#57534e` | Warm stone secondary text |
+| `--accent-primary` | `#ea580c` / `#d97706` | Appetizing warm food accent / CTA |
 
-### Gradient System
+### Semantic & Order-Status Colors
 
-```css
-/* Primary gradient — buttons, logo, key accents */
-.gradient-primary {
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-}
-
-/* Glow effect on hover */
-.glow-primary {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
-}
-```
+| Role | Color | Hex | Status Token |
+|------|-------|-----|--------------|
+| **Success** | Emerald | `#10b981` | Paid orders, completed status (`--status-completed-*`) |
+| **Warning** | Amber | `#f59e0b` | Pending payments, preparing status (`--status-preparing-*`) |
+| **Danger / Error** | Red | `#ef4444` | Cancelled orders, destructive actions (`--status-cancelled-*`) |
+| **Info / New** | Blue | `#3b82f6` | New orders, info notices (`--status-new-*`) |
+| **Accepted** | Violet | `#8b5cf6` | Accepted kitchen orders (`--status-accepted-*`) |
+| **Ready** | Teal | `#0d9488` | Food ready for pickup / delivery (`--status-ready-*`) |
 
 ---
 
@@ -108,47 +107,45 @@ frontend/src/
 
 ### Font Stack
 
-| Font | Weight | Role |
-|------|--------|------|
-| `Inter` | 400, 500, 600, 700 | Primary body font — all UI text |
-| `Space Grotesk` | 600, 700 | Display font — headings, logo, dashboard numbers |
+| Font | Weights | Role |
+|------|---------|------|
+| `Inter` | 300, 400, 500, 600, 700, 800 | Primary font — All UI text, body, labels, tables |
+| `Outfit` | 600, 700, 800, 900 | Display font — Page titles, section headings, numbers & prices |
 
-Both fonts are loaded from **Google Fonts** via `index.html`.
+### Typographic Hierarchy
 
-### Type Scale
-
-| Class | Size | Usage |
-|-------|------|-------|
-| `.text-xs` | 12px | Timestamps, badges |
-| `.text-sm` | 14px | Labels, input help text |
-| `.text-base` | 16px | Body text, descriptions |
-| `.text-lg` | 18px | Subheadings |
-| `.text-xl` | 20px | Section titles |
-| `.text-2xl` | 24px | Card titles, dashboard stats |
-| `.text-3xl` | 30px | Page headers |
-| `.text-4xl+` | 36px+ | Hero text, large metrics |
-
-### Font Usage Rules
-
-- **Numbers & Metrics:** Always use `font-display` (Space Grotesk) — gives a premium data dashboard feel
-- **Body copy:** `font-sans` (Inter)
-- **Avoid system fonts** — always load Google Fonts
+| Role | Class | Size & Weight | Line Height | Usage |
+|------|-------|---------------|-------------|-------|
+| **Page Title** | `.page-title` | 26px–30px, 800 | 1.25 | Main page headers (`<h1>`) |
+| **Section Title** | `.section-title` | 20px–22px, 700 | 1.30 | Major card/section titles (`<h2>`) |
+| **Card Title** | `.card-title` | 15px–16px, 600 | 1.40 | Component headings (`<h3>`) |
+| **Body Text** | `.body-text` | 14px, 400/500 | 1.50 | Descriptions, table contents |
+| **Small / Label** | `.label-text` | 12px, 600 | 1.40 | Form labels, badges, metadata |
+| **Prices** | `.price-text` | 16px–18px, 700–800 | 1.20 | Menu prices (tabular numbers) |
 
 ---
 
 ## 5. Spacing & Layout Grid
 
-### Base Unit: 4px
+### Strict Spacing Scale: 4, 8, 12, 16, 20, 24, 32, 48px
 
-All spacing is based on a **4px grid**.
+| Token | Value | Standard Usage |
+|-------|-------|----------------|
+| `--space-1` | `4px` | Micro gaps, status dot spacing |
+| `--space-2` | `8px` | Icon-text spacing, button horizontal gaps |
+| `--space-3` | `12px` | Compact list items, small card padding |
+| `--space-4` | `16px` | Standard mobile card padding, grid gaps |
+| `--space-5` | `20px` | Medium section gaps, modal header spacing |
+| `--space-6` | `24px` | Standard desktop card padding, page title margins |
+| `--space-8` | `32px` | Section separators, dashboard widget gaps |
+| `--space-12` | `48px` | Major page breaks |
 
-| Token | px | Usage |
-|-------|----|-------|
-| `gap-1` | 4px | Icon-text gaps |
-| `gap-2` | 8px | Tight element spacing |
-| `gap-4` | 16px | Card padding |
-| `gap-6` | 24px | Section spacing |
-| `gap-8` | 32px | Large section breaks |
+### Component Standardization
+
+- **Button Heights:** Standard `44px` (`--btn-h`), Small `36px` (`--btn-h-sm`), Large `48px` (`--btn-h-lg`).
+- **Input Heights:** Standard `44px` (`--input-h`).
+- **Border Radii:** Small `8px` (`--radius-sm`), Medium `12px` (`--radius-md`), Large `16px` (`--radius-lg`), Extra Large `20px` (`--radius-xl`), Pill `9999px` (`--radius-full`).
+- **Card Padding:** `24px` desktop / `16px` mobile.
 
 ### Layout Structure
 
@@ -415,22 +412,42 @@ Leave Feedback → /:cafeId/menu/feedback
 
 | Page | Route | Key UI Elements |
 |------|-------|-----------------|
-| Landing Page | `/` | Hero section, pricing cards, feature showcase, CTA buttons |
-| Owner Login | `/owner/login` | Email/password form, OTP modal for device limit, device selection list |
-| Owner Register | `/owner/register` | Multi-field form: café name, email, password |
-| Admin Login | `/admin/codifires` | Minimal form, hidden URL, admin branding |
-| Owner Dashboard | `/owner` | KPI cards, recent orders table, revenue summary |
-| Menu Management | `/owner/menu` | Category sidebar, item grid, drag-to-reorder |
-| QR Code Page | `/owner/qr-code` | Large QR display, download button, menu URL |
-| Customer Menu | `/:cafeId/menu` | Category tabs, item grid with theme colors |
-| Customer Cart | `/:cafeId/menu/cart` | Item list with qty controls, total summary |
-| Customer Checkout | `/:cafeId/menu/checkout` | Form + payment method selector (cash/online/razorpay) |
-| Order Tracking | `/:cafeId/menu/orders` | Status stepper, real-time Socket.io updates |
-| Customer Feedback | `/:cafeId/menu/feedback` | Star rating + review text form |
-| Admin Dashboard | `/admin` | Platform KPIs, subscription request alerts |
-| Maintenance Page | `/maintenance` | Full-screen branded message (admin-only bypass) |
+| Landing Page | `/` | Hero section, interactive live preview mockups, pricing cards, feature showcase, FAQ accordion |
+| Owner Login | `/owner/login` | Email/password form, Lucide icons, multi-device session inspector, OTP security challenge |
+| Owner Register | `/owner/register` | 3-stage onboarding wizard (Account → Café Details → Plan Selection), plan cards, slug checker |
+| Password Recovery | `/forgot-password`, `/set-password/:token` | Password visibility toggles, strength validation feedback, email dispatch confirmation |
+| Admin Login | `/admin/codifires` | Restricted portal branding, purple/violet accents, shield verification badge |
+| Owner Dashboard | `/owner` | 4 executive KPI cards, real-time orders table, quick actions, audio alert volume audition |
+| Order Management | `/owner/orders` | Real-time KDS kitchen order system, audio triggers, order status progression, thermal printing |
+| Completed Orders | `/owner/completed-orders` | Executive KPIs, date presets (All Time, Today, Yesterday, Custom), card vs table view, receipt print |
+| Menu Management | `/owner/menu` | Category filter pills with dish counters, drag-and-drop reordering, instant 86 item toggle, photo modal |
+| Table QR Code Generator | `/owner/qr-code` | General vs Table-specific QR, Canvas high-res PNG generator, acrylic tabletop standee preview |
+| Owner Payments | `/owner/payments` | Financial reconciliation ledger, KPI metrics, UTR copy action, payment status toggle |
+| Owner Revenue Analytics | `/owner/revenue` | Daily/Monthly/Yearly modes, day picker pills with revenue dots, peak revenue card, breakdown ledger |
+| Customer Reviews | `/owner/feedback` | Rating breakdown widget with star distributions (1..5 stars), average rating hero, review cards |
+| Café Settings | `/owner/settings` | Profile, brand assets, customer menu theme previewer (5 themes), Razorpay keys, hardware sound audition |
+| Subscription Plans | `/owner/subscription` | Monthly/yearly cycle toggle with discount pill, active plan status card, 3-tier SaaS cards, Razorpay trigger |
+| Help & Support | `/owner/support` | Direct WhatsApp chat, phone and email helpline, tabbed ticket desk with status badges, accordion FAQs |
+| Customer Menu | `/:cafeId/menu` | Category tabs, dish cards with Lucide icon fallback, one-handed add/increment/decrement, table pill |
+| Customer Search | `/:cafeId/menu/search` | Live instant dish search, dietary filters (All, Veg, Non-Veg), Lucide empty/helper states |
+| Customer Cart | `/:cafeId/menu/cart` | Dine-in table badge, cooking notes, quantity steppers, safe bottom padding, empty cart prompt |
+| Customer Checkout | `/:cafeId/menu/checkout` | Order review receipt, cash vs Razorpay payment methods, customer contact and table validation |
+| Order Tracking | `/:cafeId/menu/orders` | Real-time status progression stepper, Call Waiter & Request Bill buttons, itemized receipt breakdown |
+| Customer Feedback | `/:cafeId/menu/feedback` | Star rating selector, AI-assisted review helper, review feedback submission |
+| Super Admin Dashboard | `/admin` | 5 platform KPI cards, tenant activations list, platform health telemetry, urgent ticket desk |
+| Café Tenant Management | `/admin/cafes` | Tenant directory table, live debounce search, Add/Edit modal, suspension toggle, preview link |
+| Subscription Desk | `/admin/subscriptions` | SaaS plan tier overview, offline UPI verification queue with UTR copy and Approve/Reject buttons |
+| Admin Payments Ledger | `/admin/payments` | Global payment transaction ledger, UTR copy action, status badges, pagination controls |
+| Plan Services Config | `/admin/services` | 3-column perk editor for Starter, Pro, and Pro Plus plans with inline add/edit/delete and bulk save |
+| Global Media Library | `/admin/media` | Global stock food photography library, category pills, upload modal with file picker, delete action |
+| Support Ticket Desk | `/admin/support` | Multi-status filter tabs, search input, ticket directory table, and admin reply modal |
+| System Logs & Telemetry | `/admin/logs` | Telemetry viewer with severity badges (info, warn, error, critical), expandable stack trace accordion |
+| Platform Revenue Tracker | `/admin/revenue` | Platform SaaS subscription MRR tracker styled in Super Admin dark obsidian theme with renewal volume counts |
+| Platform Settings | `/admin/settings` | Tabbed platform configuration (General, Billing & Plans, Security & Access), schedule picker, cache purge |
+| Contact Us | `/contact-us` | Brand hero with Lucide icons (Mail, Phone, MessageSquare, Clock), operating schedule card |
+| Legal Policies | `/terms`, `/privacy-policy`, `/refund-policy` | Brand headers, back to home buttons, Lucide contact icons, consistent typography and dark shell |
+| Maintenance Page | `/maintenance` | Full-screen branded message with Super Admin bypass login |
 
 ---
 
-*This document covers the WhatTheMenu design system as implemented in the production codebase.*  
-*Update this document when adding new themes, components, or design tokens.*
+*This document covers the complete WhatTheMenu design system and screen architecture as implemented in the production codebase.*

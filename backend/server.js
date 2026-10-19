@@ -3,8 +3,10 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const http = require('http');
 const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
 const connectDB = require('./config/db');
 const compression = require('compression');
+const Order = require('./models/Order');
 
 // Load env vars
 dotenv.config();
@@ -130,32 +132,159 @@ initOrderCleanupCron();
 const initPaymentReconciliationCron = require('./jobs/paymentReconciliationCron');
 initPaymentReconciliationCron(io);
 
+// Socket.io authentication middleware (parses JWT token if provided)
+io.use((socket, next) => {
+  try {
+    const token =
+      socket.handshake.auth?.token ||
+      socket.handshake.query?.token ||
+      (socket.handshake.headers?.authorization?.startsWith('Bearer ')
+        ? socket.handshake.headers.authorization.split(' ')[1]
+        : null);
+
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      socket.user = decoded; // { id, role }
+    }
+  } catch (err) {
+    // Non-fatal on handshake: customer tracking or public menu subscribers do not have tokens.
+    // However, protected room joins (join-admin, join-cafe) will check authorization.
+    console.warn(`[SOCKET] Handshake token verification note: ${err.message}`);
+  }
+  next();
+});
+
+// Helper to resolve user from socket or event token
+const resolveSocketUser = (socket, incomingToken) => {
+  if (socket.user) return socket.user;
+  const token = incomingToken || socket.handshake.auth?.token || socket.handshake.query?.token;
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      socket.user = decoded;
+      return decoded;
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+};
+
 // Socket.io connection handling
 io.on('connection', (socket) => {
   console.log(`🔌 Client connected: ${socket.id}`);
 
-  // Join café-specific room for order updates
-  socket.on('join-cafe', (cafeId) => {
-    socket.join(`cafe-${cafeId}`);
-    console.log(`📡 Socket ${socket.id} joined cafe-${cafeId}`);
+  // 1. Join café-specific room (PROTECTED: Café owner or Superadmin only)
+  socket.on('join-cafe', (payload) => {
+    let cafeId = payload;
+    let token = null;
+
+    if (payload && typeof payload === 'object') {
+      cafeId = payload.cafeId || payload.id;
+      token = payload.token;
+    }
+
+    if (!cafeId || typeof cafeId !== 'string') {
+      socket.emit('socket-error', { message: 'Valid café ID required' });
+      return;
+    }
+
+    const cleanCafeId = cafeId.trim();
+    const user = resolveSocketUser(socket, token);
+    const isOwner = user && (String(user.id) === String(cleanCafeId) || String(user._id) === String(cleanCafeId));
+    const isAdmin = user && user.role === 'superadmin';
+
+    if (!isOwner && !isAdmin) {
+      console.warn(`🚨 Unauthorized join-cafe attempt for cafe-${cleanCafeId} from socket ${socket.id}`);
+      socket.emit('socket-error', { message: 'Unauthorized: Access to this café room is forbidden' });
+      return;
+    }
+
+    socket.join(`cafe-${cleanCafeId}`);
+    console.log(`📡 Authorized socket ${socket.id} joined cafe-${cleanCafeId}`);
   });
 
-  // Join order-specific room for customer tracking
-  socket.on('track-order', (orderNumber) => {
-    socket.join(`order-${orderNumber}`);
-    console.log(`📡 Socket ${socket.id} tracking order-${orderNumber}`);
+  // 2. Join public menu room for real-time item availability updates (PUBLIC)
+  socket.on('join-menu', (cafeId) => {
+    if (!cafeId || typeof cafeId !== 'string' || cafeId.length > 100) {
+      return;
+    }
+    const cleanId = cafeId.trim();
+    socket.join(`menu-${cleanId}`);
+    console.log(`📡 Socket ${socket.id} joined menu-${cleanId}`);
   });
 
-  // Join payment session room for automatic UPI payment confirmation
-  socket.on('join-payment-session', (sessionId) => {
-    socket.join(`session-${sessionId}`);
-    console.log(`📡 Socket ${socket.id} joined session-${sessionId}`);
+  // 3. Join order-specific room for customer tracking (VALIDATED: Must exist in DB)
+  socket.on('track-order', async (payload) => {
+    const orderNumber = typeof payload === 'object' ? payload?.orderNumber : payload;
+    if (!orderNumber || typeof orderNumber !== 'string' || orderNumber.length > 60) {
+      socket.emit('socket-error', { message: 'Valid order number required' });
+      return;
+    }
+
+    const cleanOrderNumber = orderNumber.trim();
+    if (!/^[a-zA-Z0-9\-_#]+$/.test(cleanOrderNumber)) {
+      socket.emit('socket-error', { message: 'Invalid order number format' });
+      return;
+    }
+
+    try {
+      const orderExists = await Order.exists({ order_number: cleanOrderNumber });
+      if (!orderExists) {
+        socket.emit('socket-error', { message: 'Order not found' });
+        return;
+      }
+
+      socket.join(`order-${cleanOrderNumber}`);
+      console.log(`📡 Socket ${socket.id} verified and tracking order-${cleanOrderNumber}`);
+    } catch (err) {
+      console.error(`Error verifying order in track-order:`, err.message);
+      socket.emit('socket-error', { message: 'Could not track order' });
+    }
   });
 
-  // Join admin room for real-time subscription revenue and request updates
-  socket.on('join-admin', () => {
+  // 4. Join payment session room (PROTECTED: Cafe owner or session owner)
+  socket.on('join-payment-session', (payload) => {
+    let sessionId = payload;
+    let token = null;
+    if (payload && typeof payload === 'object') {
+      sessionId = payload.sessionId;
+      token = payload.token;
+    }
+
+    if (!sessionId || typeof sessionId !== 'string') {
+      socket.emit('socket-error', { message: 'Invalid session ID' });
+      return;
+    }
+
+    const cleanSessionId = sessionId.trim();
+    if (cleanSessionId.startsWith('cafe-')) {
+      const cafeId = cleanSessionId.replace('cafe-', '');
+      const user = resolveSocketUser(socket, token);
+      if (!user || (String(user.id) !== String(cafeId) && String(user._id) !== String(cafeId) && user.role !== 'superadmin')) {
+        console.warn(`🚨 Unauthorized payment session join attempt for ${cleanSessionId}`);
+        socket.emit('socket-error', { message: 'Unauthorized session join' });
+        return;
+      }
+    }
+
+    socket.join(`session-${cleanSessionId}`);
+    console.log(`📡 Socket ${socket.id} joined session-${cleanSessionId}`);
+  });
+
+  // 5. Join admin room (PROTECTED: Superadmin only)
+  socket.on('join-admin', (payload) => {
+    const token = typeof payload === 'object' ? payload?.token : (typeof payload === 'string' ? payload : null);
+    const user = resolveSocketUser(socket, token);
+
+    if (!user || user.role !== 'superadmin') {
+      console.warn(`🚨 Unauthorized join-admin attempt from socket ${socket.id}`);
+      socket.emit('socket-error', { message: 'Unauthorized: Superadmin access required' });
+      return;
+    }
+
     socket.join('admin-room');
-    console.log(`📡 Socket ${socket.id} joined admin-room`);
+    console.log(`📡 Superadmin socket ${socket.id} joined admin-room`);
   });
 
   socket.on('disconnect', () => {

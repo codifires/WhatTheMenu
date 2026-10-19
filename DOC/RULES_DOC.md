@@ -415,16 +415,20 @@ Rate limit headers returned to client:
 
 | Data | Retention Policy | Reason |
 |------|-----------------|--------|
-| Orders | **5 days** (TTL index) | Operational data, not archived |
-| Order Revenue | **Forever** | Financial ledger, immutable |
+| Orders (`orders`) | **5–15 days** (Configurable operational window) | Operational kitchen/tracking data |
+| Order Revenue (`order_revenues`) | **Forever** (Permanent Ledger) | Financial ledger, immutable audit records |
 | Subscriptions | **Forever** | Billing records |
 | Subscription History | **Forever** | Audit trail |
 | Feedback | Until café deleted | Owner insights |
 | Support Tickets | Until admin clears | Helpdesk records |
 | System Logs | Until admin clears | Audit trail |
 | Webhook Logs | Until admin clears | Payment audit |
-| OTP tokens | Auto-expired (10 min) | Security hygiene |
+| OTP tokens | Auto-expired (10 min) + Max 5 attempts | Security hygiene |
 | Reset tokens | Auto-expired (10 min) | Security hygiene |
+
+> **Retention Architecture Note:**  
+> - **Financial Ledger (`order_revenues`):** Contains immutable records of all completed/paid transactions (order number, token, total amount, payment method, transaction IDs). This collection has **no TTL index** and is retained permanently for financial accounting, reporting, and tax compliance.
+> - **Operational Orders (`orders`):** Contains transient order lifecycle data (kitchen preparation status, item snapshots, customer phone, notes). The MongoDB schema defines an index with TTL (`expireAfterSeconds`), and a daily 3 AM maintenance cron runs to purge terminal states (`completed`, `cancelled`, `failed`). For production deployments handling chargebacks and customer disputes, extending operational order retention to 30–90 days is recommended before deletion.
 
 ---
 

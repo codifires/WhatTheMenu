@@ -1,18 +1,26 @@
 import { useState, useEffect, useMemo } from 'react'
 import { ownerAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { 
+  IndianRupee, Clock, CheckCircle2, CreditCard, Banknote, 
+  Copy, Check, Search, RefreshCw, ArrowUpRight, Filter, AlertCircle
+} from 'lucide-react'
 
-const FILTERS = ['all', 'pending', 'received', 'online', 'upi']
-
-const STATUS_COLORS = {
-  pending: { bg: 'var(--warning-light)', color: '#fbbf24', border: 'rgba(245,158,11,0.2)' },
-  received: { bg: 'var(--success-light)', color: 'var(--success-text)', border: 'rgba(16,185,129,0.2)' },
-}
+const FILTERS = [
+  { id: 'all', label: 'All Payments' },
+  { id: 'received', label: 'Received' },
+  { id: 'pending', label: 'Pending' },
+  { id: 'online', label: 'Online / Gateway' },
+  { id: 'upi', label: 'Direct UPI' },
+  { id: 'cash', label: 'Cash at Counter' },
+]
 
 const PaymentManagement = () => {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [copiedUTR, setCopiedUTR] = useState(null)
   const [processingId, setProcessingId] = useState(null)
 
   useEffect(() => {
@@ -24,44 +32,66 @@ const PaymentManagement = () => {
   const fetchOrders = async () => {
     try {
       const res = await ownerAPI.getOrders()
-      const validOrders = res.data.data.filter(o => o.payment_status !== 'failed')
+      const validOrders = res.data?.data?.filter(o => o.payment_status !== 'failed') || []
       setOrders(validOrders)
     } catch (error) {
-      toast.error('Failed to fetch payments')
+      toast.error('Failed to fetch payment records')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleCopyUTR = (utr, e) => {
+  const handleCopyUTR = (utr) => {
+    if (!utr) return
     navigator.clipboard.writeText(utr)
-    const btn = e.currentTarget
-    const originalText = btn.innerText
-    btn.innerText = 'Copied!'
-    btn.style.color = 'var(--success-text)'
-    setTimeout(() => {
-      btn.innerText = originalText
-      btn.style.color = '#06b6d4'
-    }, 2000)
+    setCopiedUTR(utr)
+    toast.success('UTR copied to clipboard!')
+    setTimeout(() => setCopiedUTR(null), 2000)
   }
 
-  // Derived State
+  const handleMarkPaymentReceived = async (orderId) => {
+    setProcessingId(orderId)
+    try {
+      await ownerAPI.updateOrderStatus(orderId, { payment_status: 'received' })
+      toast.success('Payment marked as received!')
+      fetchOrders()
+    } catch {
+      toast.error('Failed to update payment status')
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  // Derived filter and stats
   const filteredOrders = useMemo(() => {
     return orders.filter(o => {
-      if (filter === 'all') return true
-      if (filter === 'pending') return o.payment_status === 'pending'
-      if (filter === 'received') return o.payment_status === 'received'
-      if (filter === 'upi') return o.payment_method === 'upi'
-      if (filter === 'cash') return o.payment_method === 'cash'
-      if (filter === 'online') return o.payment_method === 'online' || o.payment_method === 'razorpay'
-      return true
+      // 1. Category Filter
+      let matchesFilter = true
+      if (filter === 'pending') matchesFilter = o.payment_status === 'pending'
+      else if (filter === 'received') matchesFilter = o.payment_status === 'received' || o.payment_status === 'completed'
+      else if (filter === 'upi') matchesFilter = o.payment_method === 'upi'
+      else if (filter === 'cash') matchesFilter = o.payment_method === 'cash'
+      else if (filter === 'online') matchesFilter = o.payment_method === 'online' || o.payment_method === 'razorpay'
+
+      if (!matchesFilter) return false
+
+      // 2. Search Filter
+      const q = searchQuery.toLowerCase().trim()
+      if (!q) return true
+      return (
+        o.order_number?.toLowerCase().includes(q) ||
+        String(o.daily_order_token).includes(q) ||
+        String(o.table_number).toLowerCase().includes(q) ||
+        o.customer_name?.toLowerCase().includes(q) ||
+        o.payment_utr?.toLowerCase().includes(q)
+      )
     })
-  }, [orders, filter])
+  }, [orders, filter, searchQuery])
 
   const stats = useMemo(() => {
     return orders.reduce((acc, order) => {
-      const amount = order.total_amount || 0
-      if (order.payment_status === 'received') {
+      const amount = Number(order.total_amount) || 0
+      if (order.payment_status === 'received' || order.payment_status === 'completed') {
         acc.totalRevenue += amount
         acc.totalTransactions += 1
         if (order.payment_method === 'upi') acc.upiRevenue += amount
@@ -69,150 +99,265 @@ const PaymentManagement = () => {
         if (order.payment_method === 'online' || order.payment_method === 'razorpay') acc.onlineRevenue += amount
       } else if (order.payment_status === 'pending') {
         acc.pendingRevenue += amount
+        acc.pendingCount += 1
       }
       return acc
-    }, { totalRevenue: 0, pendingRevenue: 0, upiRevenue: 0, cashRevenue: 0, onlineRevenue: 0, totalTransactions: 0 })
+    }, { 
+      totalRevenue: 0, 
+      pendingRevenue: 0, 
+      pendingCount: 0,
+      upiRevenue: 0, 
+      cashRevenue: 0, 
+      onlineRevenue: 0, 
+      totalTransactions: 0 
+    })
   }, [orders])
 
   return (
-    <div style={{ fontFamily: "'Inter',sans-serif", color: 'var(--text-primary)', maxWidth: 1400, margin: '0 auto' }}>
-
+    <div className="space-y-8 max-w-7xl mx-auto pb-16 font-sans">
       {/* ── Header ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 28, animation: 'fadeIn 0.4s ease' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[var(--border-medium)] pb-6">
         <div>
-          <h1 style={{ fontSize: 32, fontWeight: 900, margin: '0 0 8px', fontFamily: "'Outfit',sans-serif", color: 'var(--text-primary)' }}>
-
-            
-            Payment Management
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-2">
+            <IndianRupee className="w-3.5 h-3.5" />
+            <span>Revenue Reconciliation</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black font-heading text-[var(--text-primary)] tracking-tight">
+            Payment Management & Ledger
           </h1>
-          <p style={{ fontSize: 15, color: 'var(--text-secondary)', margin: 0 }}>Track revenue, verify UPI transactions, and collect cash.</p>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            Reconcile payments across Razorpay online gateway, direct UPI QR scans, and cash collected at the counter.
+          </p>
         </div>
-        <button onClick={() => { setLoading(true); fetchOrders() }}
-          style={{ padding: '10px 20px', borderRadius: 12, border: '1px solid rgba(6,182,212,0.2)', background: 'var(--cyan-bg-light)', color: '#06b6d4', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s' }}
-          onMouseEnter={e => e.currentTarget.style.background = 'var(--cyan-border-medium)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--cyan-bg-light)'}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.92-10.27l5.35 5.35" /></svg>
-          Refresh
+
+        <button
+          onClick={() => { setLoading(true); fetchOrders() }}
+          disabled={loading}
+          className="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-medium)] hover:bg-[var(--bg-card-hover)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-2 shadow-sm"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <span>Sync Payments</span>
         </button>
       </div>
 
-      {/* ── Summary Widgets ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 32, animation: 'slideUp 0.4s ease 0.1s both' }}>
-        {[
-          { label: 'Total Revenue (Received)', value: stats.totalRevenue, icon: '💰', color: '#10b981' },
-          { label: 'Pending Collections', value: stats.pendingRevenue, icon: '⏳', color: '#f59e0b' },
-          { label: 'Total Transactions', value: stats.totalTransactions, icon: '📈', color: '#3b82f6', isCount: true },
-          { label: 'Online Revenue', value: stats.onlineRevenue, icon: '💳', color: '#8b5cf6' },
-        ].map((stat, i) => (
-          <div key={i} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-medium)', borderRadius: 20, padding: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: `rgba(${parseInt(stat.color.slice(1, 3), 16)},${parseInt(stat.color.slice(3, 5), 16)},${parseInt(stat.color.slice(5, 7), 16)},0.1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-              {stat.icon}
-            </div>
-            <div>
-              <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5, margin: '0 0 4px' }}>{stat.label}</p>
-              <p style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: 0, fontFamily: "'Outfit',sans-serif" }}>{stat.isCount ? '' : '₹'}{stat.value.toLocaleString()}</p>
+      {/* ── Summary KPI Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] shadow-sm">
+          <div className="flex items-center justify-between text-[var(--text-secondary)] mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider">Settled Revenue</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
-        ))}
+          <div className="text-2xl font-black font-heading text-emerald-400">
+            ₹{stats.totalRevenue.toLocaleString()}
+          </div>
+          <div className="text-xs text-[var(--text-secondary)] mt-1">
+            {stats.totalTransactions} verified orders
+          </div>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] shadow-sm">
+          <div className="flex items-center justify-between text-[var(--text-secondary)] mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider">Pending Collections</span>
+            <div className="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center">
+              <Clock className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-black font-heading text-amber-400">
+            ₹{stats.pendingRevenue.toLocaleString()}
+          </div>
+          <div className="text-xs text-[var(--text-secondary)] mt-1">
+            {stats.pendingCount} unpaid tickets
+          </div>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] shadow-sm">
+          <div className="flex items-center justify-between text-[var(--text-secondary)] mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider">Online / UPI Total</span>
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/15 text-indigo-400 flex items-center justify-center">
+              <CreditCard className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-black font-heading text-[var(--text-primary)]">
+            ₹{(stats.onlineRevenue + stats.upiRevenue).toLocaleString()}
+          </div>
+          <div className="text-xs text-[var(--text-secondary)] mt-1">
+            ₹{stats.onlineRevenue.toLocaleString()} Gateway • ₹{stats.upiRevenue.toLocaleString()} Direct UPI
+          </div>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] shadow-sm">
+          <div className="flex items-center justify-between text-[var(--text-secondary)] mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider">Cash at Counter</span>
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/15 text-cyan-400 flex items-center justify-center">
+              <Banknote className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-black font-heading text-[var(--text-primary)]">
+            ₹{stats.cashRevenue.toLocaleString()}
+          </div>
+          <div className="text-xs text-[var(--text-secondary)] mt-1">
+            Physical cash drawer total
+          </div>
+        </div>
       </div>
 
-      {/* ── Filters ── */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24, overflowX: 'auto', paddingBottom: 8, animation: 'slideUp 0.4s ease 0.2s both' }}>
-        {FILTERS.map(f => (
-          <button
-            key={f} onClick={() => setFilter(f)}
-            style={{
-              padding: '8px 16px', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600, textTransform: 'capitalize', whiteSpace: 'nowrap', transition: 'all 0.2s',
-              border: filter === f ? `1px solid rgba(6,182,212,0.4)` : '1px solid var(--border-medium)',
-              background: filter === f ? 'var(--cyan-bg-light)' : 'var(--bg-input)',
-              color: filter === f ? '#06b6d4' : 'var(--text-secondary)'
-            }}
-          >
-            {f}
-          </button>
-        ))}
+      {/* ── Filters & Search ── */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-[var(--bg-card)] border border-[var(--border-medium)] p-3 rounded-2xl">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          {FILTERS.map(f => (
+            <button
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                filter === f.id
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-medium)]'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative min-w-[240px]">
+          <Search className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search token, table, guest, or UTR..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-1.5 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-xs text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-indigo-500 transition-colors"
+          />
+        </div>
       </div>
 
-      {/* ── Data Table ── */}
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-medium)', borderRadius: 24, overflow: 'hidden', animation: 'slideUp 0.4s ease 0.3s both' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: 800 }}>
+      {/* ── Ledger Table ── */}
+      <div className="rounded-3xl bg-[var(--bg-card)] border border-[var(--border-medium)] overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-medium)' }}>
-                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>Order ID</th>
-                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>Customer</th>
-                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>Amount</th>
-                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>Method</th>
-                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>Transaction ID (UTR)</th>
-                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>Date & Time</th>
-                <th style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>Status</th>
-                
+              <tr className="border-b border-[var(--border-medium)] bg-[var(--bg-input)] text-xs uppercase font-bold text-[var(--text-secondary)]">
+                <th className="py-3.5 px-5">Order / Token</th>
+                <th className="py-3.5 px-5">Guest & Table</th>
+                <th className="py-3.5 px-5">Amount</th>
+                <th className="py-3.5 px-5">Method</th>
+                <th className="py-3.5 px-5">Transaction ID / UTR</th>
+                <th className="py-3.5 px-5">Timestamp</th>
+                <th className="py-3.5 px-5">Status</th>
+                <th className="py-3.5 px-5 text-right">Action</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-[var(--border-medium)]">
               {loading ? (
                 <tr>
-                  <td colSpan="7" style={{ padding: 40, textAlign: 'center', color: 'var(--text-secondary)' }}>Loading payments...</td>
+                  <td colSpan="8" className="py-12 text-center text-[var(--text-secondary)]">
+                    <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    <span>Loading payment transactions...</span>
+                  </td>
                 </tr>
               ) : filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ padding: 40, textAlign: 'center', color: 'var(--text-secondary)' }}>
-                    <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
-                    No payments found for this filter.
+                  <td colSpan="8" className="py-16 text-center text-[var(--text-secondary)]">
+                    <AlertCircle className="w-8 h-8 text-[var(--text-tertiary)] mx-auto mb-2" />
+                    <div className="font-bold text-[var(--text-primary)]">No payment records match this filter</div>
+                    <div className="text-xs text-[var(--text-tertiary)] mt-1">Try switching to another tab or clearing search</div>
                   </td>
                 </tr>
               ) : (
                 filteredOrders.map(order => {
-                  const sc = STATUS_COLORS[order.payment_status] || STATUS_COLORS.pending
-                  const isPaid = order.payment_status === 'received'
+                  const isReceived = order.payment_status === 'received' || order.payment_status === 'completed'
+                  const isCash = order.payment_method === 'cash'
+                  const isUPI = order.payment_method === 'upi'
 
                   return (
-                    <tr key={order._id} style={{ borderBottom: '1px solid var(--border-medium)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                      <td style={{ padding: '16px 24px', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{order.order_number}</td>
-                      <td style={{ padding: '16px 24px' }}>
-                        <p style={{ margin: 0, fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>{order.customer_name || 'Guest'}</p>
-                        {order.customer_phone && <p style={{ margin: 0, fontSize: 12, color: 'var(--text-tertiary)' }}>{order.customer_phone}</p>}
+                    <tr key={order._id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
+                      <td className="py-3.5 px-5">
+                        <span className="font-bold text-indigo-400 font-heading">
+                          #{order.daily_order_token || order.order_number?.slice(-3)}
+                        </span>
+                        <span className="text-[11px] text-[var(--text-tertiary)] block font-mono">
+                          #{order.order_number}
+                        </span>
                       </td>
-                      <td style={{ padding: '16px 24px', fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>₹{order.total_amount}</td>
-                      <td style={{ padding: '16px 24px', fontSize: 13, color: 'var(--text-primary)', textTransform: 'uppercase', fontWeight: 600 }}>
-                        {order.payment_method_details ? (
-                          <span style={{ color: order.payment_method_details.toLowerCase().includes('upi') || order.payment_method_details.toLowerCase().includes('wallet') ? '#3b82f6' : '#10b981' }}>
-                            {order.payment_method_details.toLowerCase().includes('upi') || order.payment_method_details.toLowerCase().includes('wallet') || order.payment_method_details.toLowerCase().includes('pay') ? '📱' : '💳'} {order.payment_method_details}
-                          </span>
-                        ) : order.payment_method === 'online' || order.payment_method === 'razorpay' ? (
-                          <span style={{ color: '#10b981' }}>💳 Online</span>
-                        ) : order.payment_method === 'upi' ? (
-                          <span style={{ color: '#3b82f6' }}>📱 UPI</span>
-                        ) : (
-                          <span style={{ color: '#8b5cf6' }}>💵 Cash</span>
-                        )}
+
+                      <td className="py-3.5 px-5">
+                        <div className="font-semibold text-[var(--text-primary)]">
+                          Table {order.table_number || 'Takeaway'}
+                        </div>
+                        <div className="text-xs text-[var(--text-secondary)]">
+                          {order.customer_name || 'Walk-in'}
+                        </div>
                       </td>
-                      <td style={{ padding: '16px 24px' }}>
-                        {order.payment_transaction_id && order.payment_transaction_id !== 'null' ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <code style={{ background: 'var(--border-light)', padding: '4px 8px', borderRadius: 6, fontSize: 13, color: 'var(--text-secondary)', border: '1px solid var(--border-medium)' }}>
-                              {order.payment_transaction_id}
-                            </code>
-                            <button onClick={(e) => handleCopyUTR(order.payment_transaction_id, e)} style={{ background: 'none', border: 'none', color: '#06b6d4', fontSize: 11, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>
-                              Copy
+
+                      <td className="py-3.5 px-5 font-black font-heading text-base text-emerald-400">
+                        ₹{order.total_amount}
+                      </td>
+
+                      <td className="py-3.5 px-5">
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg border ${
+                          isCash 
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
+                            : isUPI 
+                            ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' 
+                            : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+                        }`}>
+                          {isCash ? <Banknote className="w-3.5 h-3.5" /> : <CreditCard className="w-3.5 h-3.5" />}
+                          <span className="capitalize">{order.payment_method || 'Online'}</span>
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-5">
+                        {order.payment_utr ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-xs text-[var(--text-primary)] bg-[var(--bg-input)] px-2 py-0.5 rounded border border-[var(--border-medium)]">
+                              {order.payment_utr}
+                            </span>
+                            <button
+                              onClick={() => handleCopyUTR(order.payment_utr)}
+                              title="Copy UTR number"
+                              className="p-1 rounded text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                            >
+                              {copiedUTR === order.payment_utr ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
                             </button>
                           </div>
                         ) : (
-                          <span style={{ color: 'var(--text-tertiary)', fontSize: 13 }}>N/A</span>
+                          <span className="text-xs text-[var(--text-tertiary)]">—</span>
                         )}
                       </td>
-                      <td style={{ padding: '16px 24px', fontSize: 13, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                        {new Date(order.created_at).toLocaleString('en-IN', {
-                          day: '2-digit', month: 'short', year: 'numeric',
-                          hour: '2-digit', minute: '2-digit', hour12: true
+
+                      <td className="py-3.5 px-5 text-xs text-[var(--text-secondary)]">
+                        {new Date(order.created_at).toLocaleString([], {
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                         })}
                       </td>
-                      <td style={{ padding: '16px 24px' }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                          {order.payment_status}
+
+                      <td className="py-3.5 px-5">
+                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                          isReceived
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        }`}>
+                          {isReceived ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                          <span className="capitalize">{isReceived ? 'Received' : 'Pending'}</span>
                         </span>
                       </td>
-                      <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                        {/* Manual override removed for automated payment flow */}
+
+                      <td className="py-3.5 px-5 text-right">
+                        {!isReceived && (
+                          <button
+                            onClick={() => handleMarkPaymentReceived(order._id)}
+                            disabled={processingId === order._id}
+                            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-50"
+                          >
+                            Mark Paid
+                          </button>
+                        )}
                       </td>
                     </tr>
                   )
@@ -227,11 +372,3 @@ const PaymentManagement = () => {
 }
 
 export default PaymentManagement
- 
-
- 
-
- 
-
- 
-

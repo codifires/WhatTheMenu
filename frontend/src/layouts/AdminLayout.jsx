@@ -2,240 +2,116 @@ import { useState } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import NotificationBell from '../components/NotificationBell'
+import ThemeToggle from '../components/ThemeToggle'
+import { 
+  LayoutDashboard, Store, TrendingUp, Crown, CreditCard, 
+  Settings, Sparkles, Image, HelpCircle, Terminal, 
+  Menu, X, LogOut, ChevronRight, Shield
+} from 'lucide-react'
 
 const NAV_LINKS = [
-  {
-    to: '/admin',
-    end: true,
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-      </svg>
-    ),
-    label: 'Dashboard',
-  },
-  {
-    to: '/admin/cafes',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-      </svg>
-    ),
-    label: 'Cafés',
-  },
-  {
-    to: '/admin/revenue',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="1" x2="12" y2="23"></line>
-        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-      </svg>
-    ),
-    label: 'Revenue',
-  },
-  {
-    to: '/admin/subscriptions',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
-      </svg>
-    ),
-    label: 'Subscriptions',
-  },
-  {
-    to: '/admin/payments',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="5" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/>
-      </svg>
-    ),
-    label: 'Payments',
-  },
-  {
-    to: '/admin/settings',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-      </svg>
-    ),
-    label: 'Settings',
-  },
-  {
-    to: '/admin/services',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
-      </svg>
-    ),
-    label: 'Plan Services',
-  },
-  {
-    to: '/admin/media',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-      </svg>
-    ),
-    label: 'Media Library',
-  },
-  {
-    to: '/admin/support',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-      </svg>
-    ),
-    label: 'Support Tickets',
-  },
-  {
-    to: '/admin/logs',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2l9 4-9 4-9-4 9-4z" />
-        <path d="M21 15l-9 4-9-4" />
-        <path d="M21 10l-9 4-9-4" />
-      </svg>
-    ),
-    label: 'System Logs',
-  },
+  { to: '/admin', end: true, icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/admin/cafes', icon: Store, label: 'Café Accounts' },
+  { to: '/admin/revenue', icon: TrendingUp, label: 'Platform Revenue' },
+  { to: '/admin/subscriptions', icon: Crown, label: 'Subscriptions' },
+  { to: '/admin/payments', icon: CreditCard, label: 'Payment Logs' },
+  { to: '/admin/services', icon: Sparkles, label: 'Plan Features' },
+  { to: '/admin/media', icon: Image, label: 'Media Library' },
+  { to: '/admin/support', icon: HelpCircle, label: 'Support Desk' },
+  { to: '/admin/logs', icon: Terminal, label: 'System Logs' },
+  { to: '/admin/settings', icon: Settings, label: 'Platform Config' },
 ]
 
-const S = {
-  // layout
-  shell: {
-    display: 'flex', minHeight: '100vh',
-    background: 'var(--bg-shell)',
-    fontFamily: "'Inter', system-ui, sans-serif",
-    color: 'var(--text-primary)',
-  },
-  // sidebar
-  overlay: {
-    position: 'fixed', inset: 0, background: 'var(--overlay-bg)',
-    zIndex: 200, backdropFilter: 'blur(4px)',
-  },
-  sidebar: (open) => ({
-    position: 'fixed', top: 0, left: 0, bottom: 0,
-    width: 256, zIndex: 300,
-    background: 'rgba(10,13,24,0.98)',
-    borderRight: '1px solid rgba(124,58,237,0.12)',
-    backdropFilter: 'blur(20px)',
-    display: 'flex', flexDirection: 'column',
-    transform: open ? 'translateX(0)' : 'translateX(-100%)',
-    transition: 'transform 0.3s cubic-bezier(.4,0,.2,1)',
-    boxShadow: open ? '4px 0 40px rgba(0,0,0,0.5)' : 'none',
-  }),
-  sidebarDesktop: {
-    transform: 'none',
-    width: 256, flexShrink: 0,
-    background: 'rgba(10,13,24,0.95)',
-    borderRight: '1px solid rgba(124,58,237,0.1)',
-    display: 'flex', flexDirection: 'column',
-    height: '100vh', position: 'sticky', top: 0,
-  },
-  logo: {
-    padding: '24px 20px', borderBottom: '1px solid rgba(124,58,237,0.1)',
-    display: 'flex', alignItems: 'center', gap: 12,
-  },
-  logoIcon: {
-    width: 38, height: 38, borderRadius: 12,
-    background: 'linear-gradient(135deg,#7c3aed,#4f46e5)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    boxShadow: '0 4px 16px rgba(124,58,237,0.35)',
-    flexShrink: 0,
-  },
-  nav: { flex: 1, padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto' },
-  navLabel: { fontSize: 10, fontWeight: 700, color: 'var(--border-hover)', letterSpacing: 2, textTransform: 'uppercase', padding: '12px 12px 6px' },
-  // topbar
-  topbar: {
-    height: 64, display: 'flex', alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0 24px',
-    background: 'rgba(10,13,24,0.85)',
-    backdropFilter: 'blur(16px)',
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
-    position: 'sticky', top: 0, zIndex: 100,
-  },
-  main: { flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: '100vh' },
-  content: { flex: 1, padding: '28px 28px', overflowX: 'hidden' },
-}
-
 function NavItem({ link, onClick }) {
+  const Icon = link.icon
   return (
     <NavLink
       to={link.to}
       end={link.end}
       onClick={onClick}
-      style={({ isActive }) => ({
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '10px 14px', borderRadius: 12,
-        textDecoration: 'none', fontSize: 14, fontWeight: 500,
-        transition: 'all 0.15s',
-        color: isActive ? '#c4b5fd' : 'var(--text-tertiary)',
-        background: isActive ? 'rgba(124,58,237,0.12)' : 'transparent',
-        border: isActive ? '1px solid rgba(124,58,237,0.2)' : '1px solid transparent',
-      })}
-      onMouseEnter={e => { if (!e.currentTarget.style.background.includes('124')) { e.currentTarget.style.background = 'var(--bg-card-hover)'; e.currentTarget.style.color = 'var(--text-primary)' }}}
-      onMouseLeave={e => { if (!e.currentTarget.style.background.includes('124')) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-tertiary)' }}}
+      className={({ isActive }) => `
+        flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all
+        ${isActive 
+          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25 ring-1 ring-white/10' 
+          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]'
+        }
+      `}
     >
-      {link.icon}
-      {link.label}
+      <Icon className="w-4 h-4 flex-shrink-0" />
+      <span>{link.label}</span>
     </NavLink>
   )
 }
 
 function SidebarContent({ user, onLogout, onClose }) {
   return (
-    <>
-      {/* Logo */}
-      <div style={S.logo}>
-        <div style={S.logoIcon}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM17 17h4M17 21v-4M21 14h-4v4"/></svg>
+    <div className="flex flex-col h-full bg-[var(--bg-card)] border-r border-[var(--border-medium)] select-none">
+      {/* Brand Header */}
+      <div className="p-5 border-b border-[var(--border-medium)] flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25">
+            <Shield className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="font-extrabold text-sm text-[var(--text-primary)] font-heading tracking-tight leading-tight">
+              WhatThe<span className="text-cyan-400">Menu</span>
+            </div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-indigo-400">
+              Super Admin
+            </div>
+          </div>
         </div>
-        <div>
-          <p style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: 0, fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.3px' }}>QRMenu</p>
-          <p style={{ fontSize: 11, color: '#7c3aed', margin: 0, fontWeight: 600, letterSpacing: 1 }}>ADMIN PANEL</p>
-        </div>
+
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-input)]"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
-      {/* Navigation */}
-      <nav style={S.nav}>
-        <p style={S.navLabel}>Main Menu</p>
+      {/* Nav List */}
+      <div className="flex-1 p-3.5 space-y-1 overflow-y-auto scrollbar-none">
+        <div className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-tertiary)] px-3 py-2">
+          Platform Operations
+        </div>
         {NAV_LINKS.map(link => (
           <NavItem key={link.to} link={link} onClick={onClose} />
         ))}
-      </nav>
+      </div>
 
-      {/* User footer */}
-      <div style={{ padding: '16px 12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        {/* User info */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: 'var(--bg-input)', marginBottom: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', flexShrink: 0 }}>
+      {/* Admin Profile Footer */}
+      <div className="p-3.5 border-t border-[var(--border-medium)] bg-[var(--bg-input)]/40">
+        <div className="flex items-center gap-3 p-2 rounded-xl mb-2">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
             {user?.name?.charAt(0)?.toUpperCase() || 'A'}
           </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</p>
-            <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-bold text-[var(--text-primary)] truncate">
+              {user?.name || 'Administrator'}
+            </div>
+            <div className="text-[11px] text-[var(--text-secondary)] truncate">
+              {user?.email || 'admin@whatthemenu.com'}
+            </div>
           </div>
         </div>
-        {/* Logout */}
+
         <button
           onClick={onLogout}
-          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, background: 'none', border: '1px solid transparent', width: '100%', cursor: 'pointer', fontSize: 14, fontWeight: 500, color: 'var(--text-tertiary)', transition: 'all 0.15s' }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--danger-light)'; e.currentTarget.style.color = 'var(--danger-text)'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.2)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.borderColor = 'transparent' }}
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl border border-rose-500/20 text-rose-400 hover:bg-rose-500/10 text-xs font-semibold transition-colors"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-          Sign Out
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Sign Out Admin</span>
         </button>
       </div>
-    </>
+    </div>
   )
 }
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [notifsOpen, setNotifsOpen] = useState(false)
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -245,93 +121,69 @@ const AdminLayout = ({ children }) => {
     navigate('/admin/codifires')
   }
 
-  // Current page title from path
-  const pageTitle = NAV_LINKS.find(l => l.end ? location.pathname === l.to : location.pathname.startsWith(l.to))?.label || 'Admin'
+  const currentRoute = NAV_LINKS.find(l => 
+    l.end ? location.pathname === l.to : location.pathname.startsWith(l.to)
+  )
+  const pageTitle = currentRoute?.label || 'Super Admin'
 
   return (
-    <div style={S.shell}>
-      {/* ── Mobile Overlay ── */}
+    <div className="min-h-screen bg-[var(--bg-shell)] text-[var(--text-primary)] flex font-sans">
+      {/* Mobile Drawer Overlay */}
       {sidebarOpen && (
-        <div style={S.overlay} onClick={() => setSidebarOpen(false)} />
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden animate-fadeIn"
+        />
       )}
 
-      {/* ── Sidebar (mobile: drawer) ── */}
-      <aside style={S.sidebar(sidebarOpen)} className="admin-sidebar-mobile">
-        <button
-          onClick={() => setSidebarOpen(false)}
-          style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: 4 }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+      {/* Mobile Drawer */}
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-72 lg:hidden transform transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
         <SidebarContent user={user} onLogout={handleLogout} onClose={() => setSidebarOpen(false)} />
+      </div>
+
+      {/* Desktop Sticky Sidebar */}
+      <aside className="hidden lg:block w-64 h-screen sticky top-0 flex-shrink-0 z-30">
+        <SidebarContent user={user} onLogout={handleLogout} />
       </aside>
 
-      {/* ── Sidebar (desktop: static) ── */}
-      <aside style={S.sidebarDesktop} className="admin-sidebar-desktop">
-        <SidebarContent user={user} onLogout={handleLogout} onClose={() => {}} />
-      </aside>
+      {/* Main Content Viewport */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Topbar */}
+        <header className="h-16 border-b border-[var(--border-medium)] bg-[var(--bg-shell)]/80 backdrop-blur-xl px-4 sm:px-8 flex items-center justify-between sticky top-0 z-20">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-medium)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
-      {/* ── Main Area ── */}
-      <div style={S.main}>
-        {/* Top bar */}
-        <header style={S.topbar}>
-          {/* Hamburger (mobile) */}
-          <button
-            onClick={() => setSidebarOpen(true)}
-            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 6, borderRadius: 8, display: 'none' }}
-            className="admin-hamburger"
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-          </button>
-
-          {/* Breadcrumb */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontWeight: 500 }}>Admin</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
-            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{pageTitle}</span>
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
+              <span>Super Admin</span>
+              <ChevronRight className="w-3 h-3 text-[var(--text-tertiary)]" />
+              <span className="font-semibold text-[var(--text-primary)]">{pageTitle}</span>
+            </div>
           </div>
 
-          {/* Right actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {/* Real-Time Live Notification Bell */}
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
             <NotificationBell role="admin" />
-
-            {/* User avatar */}
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
               {user?.name?.charAt(0)?.toUpperCase() || 'A'}
             </div>
           </div>
         </header>
 
-        {/* Page content */}
-        <main style={S.content} className="admin-content">
+        {/* Page Children Body */}
+        <main className="flex-1 p-4 sm:p-8 overflow-x-hidden">
           {children}
         </main>
       </div>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap');
-        * { box-sizing: border-box; }
-        body { margin: 0; }
-
-        /* Desktop: hide mobile sidebar, show desktop sidebar */
-        .admin-sidebar-mobile { display: none !important; }
-        .admin-sidebar-desktop { display: flex; }
-        .admin-hamburger { display: none !important; }
-        .admin-content { padding: 28px !important; }
-
-        @media (max-width: 1024px) {
-          .admin-sidebar-mobile { display: flex !important; }
-          .admin-sidebar-desktop { display: none !important; }
-          .admin-hamburger { display: flex !important; }
-          .admin-content { padding: 16px !important; }
-        }
-
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.3); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.5); }
-      `}</style>
     </div>
   )
 }

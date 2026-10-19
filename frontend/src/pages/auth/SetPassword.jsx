@@ -1,17 +1,17 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import ThemeToggle from '../../components/ThemeToggle';
-import { Utensils, Lock, ArrowRight, CheckCircle } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { Coffee, Lock, KeyRound, CheckCircle2, ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import ThemeToggle from '../../components/ThemeToggle'
 import api from '../../services/api'
 
 export default function SetPassword() {
   const { token } = useParams()
   const navigate = useNavigate()
-  const { login } = useAuth() // Or we just redirect them to /owner/login after
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -24,141 +24,154 @@ export default function SetPassword() {
       return setError('Passwords do not match')
     }
     if (password.length < 6) {
-      return setError('Password must be at least 6 characters')
+      return setError('Password must be at least 6 characters long')
     }
 
     setLoading(true)
     try {
       const res = await api.post(`/auth/set-password/${token}`, { password })
-      // The API returns the token and user data, logging them in!
-      localStorage.setItem('token', res.data.data.token)
-      localStorage.setItem('user', JSON.stringify(res.data.data.user))
+      if (res.data?.data?.token) {
+        localStorage.setItem('token', res.data.data.token)
+        localStorage.setItem('user', JSON.stringify(res.data.data.user))
+      }
       
       setSuccess(true)
       setTimeout(() => {
-        // Hard reload to initialize auth context properly
         window.location.href = '/owner'
-      }, 1500)
+      }, 1600)
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid or expired link. Please contact the administrator.')
+      setError(err.response?.data?.message || 'Invalid or expired setup link. Please contact your administrator.')
     } finally {
       setLoading(false)
     }
   }
 
-  const inputStyle = {
-    width: '100%',
-    padding: '12px 14px 12px 42px',
-    borderRadius: 12,
-    border: '1px solid rgba(255,255,255,0.1)',
-    background: 'var(--border-light)',
-    color: 'var(--text-primary)',
-    fontSize: 14,
-    outline: 'none',
-    boxSizing: 'border-box',
-    transition: 'border-color 0.2s',
-  }
-  const focus = e => e.target.style.borderColor = 'rgba(79,70,229,0.6)'
-  const blur  = e => e.target.style.borderColor = 'var(--border-hover)'
-  const labelStyle = { fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 8 }
-  const iconStyle  = { position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16 }
-
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-shell)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '40px 20px', fontFamily: "'Inter', sans-serif", position: 'relative', overflow: 'hidden' }}>
-      
-      {/* Background Effects */}
-      <div style={{ position: 'fixed', top: '10%', left: '20%', transform: 'translate(-50%,-50%)', width: 400, height: 400, background: 'radial-gradient(circle, rgba(79,70,229,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'fixed', bottom: '10%', right: '10%', transform: 'translate(50%,50%)', width: 400, height: 400, background: 'radial-gradient(circle, rgba(6,182,212,0.15) 0%, transparent 70%)', pointerEvents: 'none' }} />
+    <div className="min-h-screen bg-[var(--bg-shell)] text-[var(--text-primary)] flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden font-sans">
+      {/* Background Ambience */}
+      <div className="absolute top-1/4 -left-20 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div style={{ width: '100%', maxWidth: 440, position: 'relative', zIndex: 10 }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 64, height: 64, borderRadius: 16, background: 'linear-gradient(135deg,#4f46e5,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 8px 32px rgba(79,70,229,0.4)' }}>
-            <span style={{ fontSize: 32 }}>☕</span>
+      {/* Theme Toggle in Top Right */}
+      <div className="absolute top-6 right-6 z-20">
+        <ThemeToggle />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
+        {/* Logo & Heading */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/25 ring-1 ring-white/20">
+            <Coffee className="w-8 h-8 text-white" />
           </div>
-          <h2 style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 8px', fontFamily: "'Outfit',sans-serif" }}>
-            Welcome to QRMenu
-          </h2>
-          <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
-            Set a secure password to access your Owner Dashboard
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-heading">
+            Set Your Password
+          </h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-2">
+            Create a secure password to activate your WhatTheMenu owner dashboard
           </p>
         </div>
 
         {/* Card */}
-        <div style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: 32, backdropFilter: 'blur(10px)' }}>
+        <div className="bg-[var(--bg-card)] border border-[var(--border-medium)] rounded-2xl p-6 sm:p-8 shadow-xl backdrop-blur-xl">
           {success ? (
-            <div style={{ textAlign: 'center', padding: '20px 0' }}>
-              <div style={{ width: 64, height: 64, background: 'rgba(52,211,153,0.15)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <span style={{ fontSize: 32 }}>✅</span>
+            <div className="text-center py-6">
+              <div className="w-16 h-16 bg-emerald-500/15 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20 animate-bounce">
+                <CheckCircle2 className="w-9 h-9" />
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 8px' }}>Password Set Successfully!</h3>
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>Logging you into your dashboard...</p>
+              <h2 className="text-xl font-bold mb-2">Password Set Successfully!</h2>
+              <p className="text-sm text-[var(--text-secondary)]">
+                Redirecting you to your owner dashboard...
+              </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
-                <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: 12, textAlign: 'center' }}>
-                  <p style={{ fontSize: 13, color: 'var(--danger-text)', margin: 0 }}>{error}</p>
+                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-start gap-2.5">
+                  <ShieldCheck className="w-5 h-5 flex-shrink-0 text-rose-400 mt-0.5" />
+                  <span>{error}</span>
                 </div>
               )}
 
               <div>
-                <label style={labelStyle}>New Password</label>
-                <div style={{ position: 'relative' }}>
-                  <span style={iconStyle}>🔒</span>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
+                  New Password
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    style={inputStyle}
-                    onFocus={focus} onBlur={blur}
                     placeholder="Min. 6 characters"
+                    className="w-full pl-10 pr-11 py-3 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
               <div>
-                <label style={labelStyle}>Confirm Password</label>
-                <div style={{ position: 'relative' }}>
-                  <span style={iconStyle}>🔑</span>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <KeyRound className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
-                    type="password"
+                    type={showConfirm ? 'text' : 'password'}
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    style={inputStyle}
-                    onFocus={focus} onBlur={blur}
-                    placeholder="Re-enter password"
+                    placeholder="Re-enter your password"
+                    className="w-full pl-10 pr-11 py-3 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
+                    aria-label={showConfirm ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                style={{
-                  width: '100%', padding: '14px', borderRadius: 12, border: 'none',
-                  cursor: loading ? 'not-allowed' : 'pointer', fontSize: 15, fontWeight: 700,
-                  color: 'var(--text-primary)', background: 'linear-gradient(135deg,#4f46e5,#06b6d4)',
-                  opacity: loading ? 0.7 : 1, boxShadow: '0 8px 24px rgba(79,70,229,0.35)',
-                  marginTop: 8, transition: 'transform 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
-                }}
-                onMouseEnter={e => { if(!loading) e.currentTarget.style.transform = 'translateY(-2px)' }}
-                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-semibold text-sm shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/35 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 mt-2"
               >
-                {loading ? 'Saving...' : 'Save & Login →'}
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Saving Password...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Save & Access Dashboard</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </form>
           )}
+
+          <div className="mt-6 pt-5 border-t border-[var(--border-medium)] text-center">
+            <Link
+              to="/owner/login"
+              className="text-xs text-[var(--text-secondary)] hover:text-[var(--accent-primary)] font-medium transition-colors"
+            >
+              Remember your password? Sign in instead
+            </Link>
+          </div>
         </div>
       </div>
-      
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap');
-        * { box-sizing: border-box; }
-        input::placeholder { color: #4b5563; }
-      `}</style>
     </div>
   )
 }

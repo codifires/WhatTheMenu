@@ -1,41 +1,46 @@
 import { useState, useEffect } from 'react'
 import { ownerAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { 
+  HelpCircle, MessageSquare, Phone, Mail, FileText, 
+  ChevronDown, ChevronUp, Plus, Send, CheckCircle2, 
+  Clock, AlertCircle, Sparkles, MessageCircle, ArrowRight
+} from 'lucide-react'
 
 const CATEGORIES = [
-  { value: 'payment_upi', label: '💳 Payment & UPI Settlement', desc: 'Queries regarding UPI ID, transactions or customer payments' },
-  { value: 'menu_qr', label: '📋 Menu & Table QR Codes', desc: 'Help with item creation, categories or QR code standees' },
-  { value: 'live_orders', label: '⚡ Live Orders & KDS Alerts', desc: 'Audio notifications, live order board or status transitions' },
-  { value: 'subscription', label: '💎 Subscription & Plan Billing', desc: 'Upgrades, plan renewals or billing questions' },
-  { value: 'other', label: '💡 General Inquiry & Feature Request', desc: 'Any other questions, feedback or platform suggestions' }
+  { value: 'payment_upi', label: 'Payment & UPI Settlement', desc: 'Queries regarding Razorpay, UPI ID, or customer settlements' },
+  { value: 'menu_qr', label: 'Menu & Table QR Codes', desc: 'Help with item creation, categories or table QR standees' },
+  { value: 'live_orders', label: 'Live Orders & Audio Chimes', desc: 'Notification sound, kitchen display, or order status sync' },
+  { value: 'subscription', label: 'Subscription & Plan Billing', desc: 'Upgrades, plan renewals, or invoice billing questions' },
+  { value: 'other', label: 'General Inquiry & Suggestions', desc: 'Feedback, feature requests, or technical assistance' }
 ]
 
 const DEFAULT_FAQS = [
   {
     q: 'How do I configure my UPI ID to receive direct payments?',
-    a: 'Go to Owner Settings > Payment Settings. Enter your active UPI VPA (e.g., cafe@okhdfcbank or 9876543210@ybl) and click Save. All customer orders paid via UPI will settle instantly to your bank account with 0% gateway commission.'
+    a: 'Go to Owner Settings > Payment Settings. Enter your active UPI VPA (e.g., cafe@okhdfcbank or 9876543210@ybl) and click Save. All customer orders paid via UPI will settle instantly with 0% gateway commission.'
   },
   {
     q: 'How do I download and print high-resolution Table QR Codes?',
-    a: 'Navigate to QR Code in your sidebar. Select your desired table number or download the master QR. Click "Download High-Res QR" or "Print Standee" to place on dining tables.'
+    a: 'Navigate to QR Code in your sidebar. Choose either "General Menu" or "Table Specific", enter your table number, and click "Download PNG Standee" or "Print Table Standee" directly.'
   },
   {
     q: 'Why didn’t I hear the audio chime when a new order arrived?',
-    a: 'Modern browsers block automatic audio until you interact with the page. Ensure your browser tab is unmuted, click anywhere on the Live Orders screen once after logging in, and keep the tab open.'
+    a: 'Modern browsers block automatic audio until you interact with the page. Ensure your browser tab is unmuted, click anywhere on the Live Kitchen screen once after logging in, and keep the tab open.'
   },
   {
     q: 'How does upgrading to the Pro Plus Plan work?',
-    a: 'Go to Subscription in your sidebar and select "Upgrade to Pro". A dynamic UPI payment QR will appear. Scan and pay via GPay, PhonePe, or Paytm, and your Pro features will activate immediately within seconds.'
+    a: 'Go to Subscription in your sidebar and select "Upgrade to Pro Plus". Complete the secure Razorpay checkout. Your account will automatically activate all Pro Plus features without any downtime.'
   },
   {
     q: 'How do I temporarily mark an item as out of stock?',
-    a: 'Go to Menu Management, find the item, and toggle the availability switch to "Unavailable". It will instantly disappear from your customer menu in real time.'
+    a: 'Go to Menu Management, locate the item, and toggle its availability switch to Off. It will immediately show an "Unavailable" badge on the customer menu so guests cannot order it.'
   }
 ]
 
 const DEFAULT_INFO = {
-  platform_name: 'QRMenu SaaS',
-  contact_email: 'support@qrmenu.com',
+  platform_name: 'WhatTheMenu SaaS',
+  contact_email: 'support@whatthemenu.com',
   support_phone: '+91 98765 43210',
   support_whatsapp: '919876543210',
   support_hours: 'Mon - Sun, 9:00 AM - 10:00 PM IST',
@@ -45,14 +50,13 @@ const DEFAULT_INFO = {
 }
 
 export default function OwnerSupport() {
-  const [activeTab, setActiveTab] = useState('contact') // 'contact' | 'tickets' | 'faqs'
+  const [activeTab, setActiveTab] = useState('tickets') // 'tickets' | 'new_ticket' | 'contact' | 'faqs'
   const [loading, setLoading] = useState(true)
   const [info, setInfo] = useState(DEFAULT_INFO)
   const [tickets, setTickets] = useState([])
   const [submitting, setSubmitting] = useState(false)
   const [expandedFaq, setExpandedFaq] = useState(null)
 
-  // Form State
   const [form, setForm] = useState({
     subject: '',
     category: 'payment_upi',
@@ -71,18 +75,14 @@ export default function OwnerSupport() {
         if (infoRes.data?.data) {
           setInfo(infoRes.data.data)
         }
-      } catch (e) {
-        console.warn('Backend server needs restart for /api/support routes:', e.message)
-      }
+      } catch (e) {}
 
       try {
         const ticketsRes = await ownerAPI.getSupportTickets()
         if (ticketsRes.data?.data) {
           setTickets(ticketsRes.data.data)
         }
-      } catch (e) {
-        console.warn('Could not fetch existing tickets:', e.message)
-      }
+      } catch (e) {}
     } finally {
       setLoading(false)
     }
@@ -100,14 +100,13 @@ export default function OwnerSupport() {
     try {
       setSubmitting(true)
       const res = await ownerAPI.createSupportTicket(form)
-      toast.success(res.data?.message || 'Support ticket submitted!')
+      toast.success(res.data?.message || 'Support ticket submitted successfully!')
       setForm({ subject: '', category: 'payment_upi', description: '' })
-      // Refresh tickets & switch to tickets tab
       const ticketsRes = await ownerAPI.getSupportTickets()
       setTickets(ticketsRes.data?.data || [])
       setActiveTab('tickets')
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to submit support ticket. Please restart the backend server.')
+      toast.error(err.response?.data?.message || 'Failed to submit support ticket.')
     } finally {
       setSubmitting(false)
     }
@@ -116,558 +115,347 @@ export default function OwnerSupport() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'open':
-        return { bg: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: 'rgba(56, 189, 248, 0.3)', label: 'Open' }
+        return { 
+          bg: 'bg-blue-500/15 text-blue-400 border-blue-500/25', 
+          icon: AlertCircle, 
+          label: 'Open' 
+        }
       case 'in_progress':
-        return { bg: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.3)', label: 'In Progress' }
+        return { 
+          bg: 'bg-amber-500/15 text-amber-400 border-amber-500/25', 
+          icon: Clock, 
+          label: 'In Progress' 
+        }
       case 'resolved':
-        return { bg: 'rgba(16, 185, 129, 0.15)', color: 'var(--success-text)', border: 'rgba(16, 185, 129, 0.3)', label: 'Resolved' }
+        return { 
+          bg: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25', 
+          icon: CheckCircle2, 
+          label: 'Resolved' 
+        }
       case 'closed':
-        return { bg: 'rgba(100, 116, 139, 0.15)', color: 'var(--text-secondary)', border: 'rgba(100, 116, 139, 0.3)', label: 'Closed' }
+        return { 
+          bg: 'bg-slate-700/50 text-slate-400 border-slate-700', 
+          icon: CheckCircle2, 
+          label: 'Closed' 
+        }
       default:
-        return { bg: 'var(--border-hover)', color: 'var(--text-primary)', border: 'var(--border-hover)', label: status }
+        return { 
+          bg: 'bg-slate-700/50 text-slate-400 border-slate-700', 
+          icon: AlertCircle, 
+          label: status 
+        }
     }
   }
 
-  const getCategoryLabel = (cat) => {
-    const found = CATEGORIES.find(c => c.value === cat)
-    return found ? found.label : cat
-  }
-
   const displayInfo = info || DEFAULT_INFO
-  const isPro = displayInfo.is_pro
   const faqsList = displayInfo.faqs?.length ? displayInfo.faqs : DEFAULT_FAQS
 
   return (
-    <div style={{ padding: '28px 24px', maxWidth: 1200, margin: '0 auto' }}>
-      
-      {/* ── Page Header ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 28 }}>
+    <div className="space-y-8 max-w-6xl mx-auto pb-16 font-sans">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[var(--border-medium)] pb-6">
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 6px', fontFamily: "'Outfit', sans-serif" }}>
-            🎧 Help & Support Center
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-2">
+            <HelpCircle className="w-3.5 h-3.5" />
+            <span>Dedicated Owner Desk</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black font-heading text-[var(--text-primary)] tracking-tight">
+            Help & Customer Support
           </h1>
-          <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
-            Instant help for menu setup, 0% UPI payments, table QR codes, and kitchen orders.
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            Track inquiries, submit priority support tickets, or chat directly via WhatsApp.
           </p>
         </div>
 
-        {/* Plan SLA Badge */}
-        <div style={{
-          padding: '10px 18px',
-          borderRadius: 14,
-          background: isPro 
-            ? 'linear-gradient(135deg, rgba(147, 51, 234, 0.18), rgba(79, 70, 229, 0.18))' 
-            : 'var(--border-light)',
-          border: isPro ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid var(--border-medium)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          boxShadow: isPro ? '0 0 20px rgba(168, 85, 247, 0.15)' : 'none'
-        }}>
-          <span style={{ fontSize: 20 }}>{isPro ? '⚡' : '🛡️'}</span>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 800, color: isPro ? '#c084fc' : 'var(--text-primary)' }}>
-              {isPro ? 'Pro Priority Support Active' : 'Standard Support Tier'}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
-              {displayInfo.sla || 'Fast assistance for all café partners'}
-            </div>
-          </div>
-        </div>
+        <button
+          onClick={() => setActiveTab('new_ticket')}
+          className="py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-500/25 active:scale-[0.99] transition-all flex items-center gap-2 self-start sm:self-auto"
+        >
+          <Plus className="w-4 h-4" />
+          <span>New Support Ticket</span>
+        </button>
       </div>
 
-      {/* ── Quick Channels Cards ── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-        gap: 16,
-        marginBottom: 32
-      }}>
-        {/* WhatsApp Channel */}
+      {/* ── Quick Contact Cards Row ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <a
-          href={`https://wa.me/${String(displayInfo.support_whatsapp || '919876543210').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi Support, I am ${displayInfo.cafe_info?.name || 'Café Owner'} (${displayInfo.cafe_info?.email || ''}). I need assistance with my QR Menu account.`)}`}
+          href={`https://wa.me/${displayInfo.support_whatsapp}?text=Hello%20WhatTheMenu%20Support`}
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            padding: '20px 22px',
-            borderRadius: 18,
-            background: 'var(--success-light)',
-            border: '1px solid rgba(34, 197, 94, 0.25)',
-            textDecoration: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
-            transition: 'all 0.2s ease',
-            cursor: 'pointer'
-          }}
-          onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-          onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+          className="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] hover:border-emerald-500/40 transition-all flex items-center gap-4 group"
         >
-          <div style={{
-            width: 48,
-            height: 48,
-            borderRadius: 14,
-            background: 'rgba(34, 197, 94, 0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 24,
-            flexShrink: 0
-          }}>
-            💬
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+            <MessageCircle className="w-6 h-6" />
           </div>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#4ade80', marginBottom: 2 }}>
-              WhatsApp Instant Chat
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 block">
+              WhatsApp Support
+            </span>
+            <div className="text-sm font-bold text-[var(--text-primary)]">
+              +{displayInfo.support_whatsapp}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-              Direct message our technical support team
+            <div className="text-xs text-[var(--text-tertiary)] mt-0.5">
+              Typical reply: &lt; 15 mins
             </div>
           </div>
         </a>
 
-        {/* Email Support */}
         <a
-          href={`mailto:${displayInfo.contact_email || 'support@qrmenu.com'}?subject=Support Request - ${encodeURIComponent(displayInfo.cafe_info?.name || '')}`}
-          style={{
-            padding: '20px 22px',
-            borderRadius: 18,
-            background: 'var(--cyan-bg-light)',
-            border: '1px solid rgba(56, 189, 248, 0.25)',
-            textDecoration: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
-            transition: 'all 0.2s ease',
-            cursor: 'pointer'
-          }}
-          onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-          onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+          href={`mailto:${displayInfo.contact_email}`}
+          className="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] hover:border-indigo-500/40 transition-all flex items-center gap-4 group"
         >
-          <div style={{
-            width: 48,
-            height: 48,
-            borderRadius: 14,
-            background: 'rgba(56, 189, 248, 0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 24,
-            flexShrink: 0
-          }}>
-            ✉️
+          <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+            <Mail className="w-6 h-6" />
           </div>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#38bdf8', marginBottom: 2 }}>
-              Email Support
+            <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 block">
+              Email Desk
+            </span>
+            <div className="text-sm font-bold text-[var(--text-primary)] truncate max-w-[180px]">
+              {displayInfo.contact_email}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-              {displayInfo.contact_email || 'support@qrmenu.com'}
+            <div className="text-xs text-[var(--text-tertiary)] mt-0.5">
+              Available 24/7
             </div>
           </div>
         </a>
 
-        {/* Operating Hours */}
-        <div style={{
-          padding: '20px 22px',
-          borderRadius: 18,
-          background: 'var(--bg-elevated)',
-          border: '1px solid var(--border-medium)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16
-        }}>
-          <div style={{
-            width: 48,
-            height: 48,
-            borderRadius: 14,
-            background: 'rgba(245, 158, 11, 0.15)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 24,
-            flexShrink: 0
-          }}>
-            ⏰
+        <a
+          href={`tel:${displayInfo.support_phone}`}
+          className="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] hover:border-cyan-500/40 transition-all flex items-center gap-4 group"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+            <Phone className="w-6 h-6" />
           </div>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#fbbf24', marginBottom: 2 }}>
-              Helpline & Hours
+            <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 block">
+              Phone Helpline
+            </span>
+            <div className="text-sm font-bold text-[var(--text-primary)]">
+              {displayInfo.support_phone}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-              {displayInfo.support_hours || 'Mon - Sun, 9:00 AM - 10:00 PM'}
+            <div className="text-xs text-[var(--text-tertiary)] mt-0.5">
+              {displayInfo.support_hours}
             </div>
           </div>
-        </div>
+        </a>
       </div>
 
-      {/* ── Navigation Tabs ── */}
-      <div style={{ display: 'flex', gap: 10, borderBottom: '1px solid var(--border-medium)', paddingBottom: 12, marginBottom: 28 }}>
-        <button
-          onClick={() => setActiveTab('contact')}
-          style={{
-            padding: '10px 18px',
-            borderRadius: 12,
-            border: 'none',
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: 'pointer',
-            background: activeTab === 'contact' ? '#2563eb' : 'transparent',
-            color: activeTab === 'contact' ? 'var(--text-primary)' : '#94a3b8',
-            transition: 'all 0.15s ease'
-          }}
-        >
-          📝 Submit New Ticket
-        </button>
-
+      {/* ── Tab Switcher ── */}
+      <div className="flex items-center gap-2 border-b border-[var(--border-medium)] pb-3">
         <button
           onClick={() => setActiveTab('tickets')}
-          style={{
-            padding: '10px 18px',
-            borderRadius: 12,
-            border: 'none',
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: 'pointer',
-            background: activeTab === 'tickets' ? '#2563eb' : 'transparent',
-            color: activeTab === 'tickets' ? 'var(--text-primary)' : '#94a3b8',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            transition: 'all 0.15s ease'
-          }}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'tickets'
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-card)] border border-[var(--border-medium)]'
+          }`}
         >
-          <span>🎫 My Tickets</span>
-          {tickets.length > 0 && (
-            <span style={{
-              background: 'var(--border-hover)',
-              padding: '2px 8px',
-              borderRadius: 20,
-              fontSize: 11,
-              fontWeight: 800
-            }}>
-              {tickets.length}
-            </span>
-          )}
+          My Tickets ({tickets.length})
         </button>
-
+        <button
+          onClick={() => setActiveTab('new_ticket')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'new_ticket'
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-card)] border border-[var(--border-medium)]'
+          }`}
+        >
+          Create New Ticket
+        </button>
         <button
           onClick={() => setActiveTab('faqs')}
-          style={{
-            padding: '10px 18px',
-            borderRadius: 12,
-            border: 'none',
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: 'pointer',
-            background: activeTab === 'faqs' ? '#2563eb' : 'transparent',
-            color: activeTab === 'faqs' ? 'var(--text-primary)' : '#94a3b8',
-            transition: 'all 0.15s ease'
-          }}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'faqs'
+              ? 'bg-indigo-600 text-white shadow-sm'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-card)] border border-[var(--border-medium)]'
+          }`}
         >
-          📚 FAQs & Setup Guides
+          Knowledgebase FAQs
         </button>
       </div>
 
-      {/* ── TAB 1: SUBMIT TICKET ── */}
-      {activeTab === 'contact' && (
-        <div style={{
-          background: 'var(--bg-elevated)',
-          border: '1px solid var(--border-medium)',
-          borderRadius: 20,
-          padding: '28px 24px',
-          boxShadow: '0 8px 32px var(--overlay-bg)'
-        }}>
-          <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px' }}>
-            Open a Support Request
-          </h2>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 24px' }}>
-            Fill out the details below. Pro Plus Plan tickets receive instant high-priority routing.
-          </p>
-
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {/* Category Grid */}
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>
-                Select Issue Category:
-              </label>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: 10
-              }}>
-                {CATEGORIES.map(cat => (
+      {/* ── TAB 1: Existing Tickets ── */}
+      {activeTab === 'tickets' && (
+        <div className="space-y-4 animate-fadeIn">
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-28 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] animate-pulse" />
+              ))}
+            </div>
+          ) : tickets.length > 0 ? (
+            <div className="space-y-3">
+              {tickets.map(ticket => {
+                const badge = getStatusBadge(ticket.status)
+                const BadgeIcon = badge.icon
+                const catObj = CATEGORIES.find(c => c.value === ticket.category)
+                return (
                   <div
-                    key={cat.value}
-                    onClick={() => setForm(f => ({ ...f, category: cat.value }))}
-                    style={{
-                      padding: '14px 16px',
-                      borderRadius: 12,
-                      background: form.category === cat.value ? 'rgba(37, 99, 235, 0.18)' : 'var(--bg-card)',
-                      border: form.category === cat.value ? '1px solid #3b82f6' : '1px solid var(--border-light)',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease'
-                    }}
+                    key={ticket._id}
+                    className="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] shadow-sm space-y-3"
                   >
-                    <div style={{ fontSize: 13, fontWeight: 700, color: form.category === cat.value ? '#60a5fa' : 'var(--text-primary)', marginBottom: 3 }}>
-                      {cat.label}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-bold text-sm text-[var(--text-primary)]">
+                          {ticket.subject}
+                        </span>
+                        <span className="text-xs px-2 py-0.5 rounded-md bg-[var(--bg-input)] border border-[var(--border-medium)] text-[var(--text-secondary)]">
+                          {catObj?.label || ticket.category}
+                        </span>
+                      </div>
+
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${badge.bg}`}>
+                        <BadgeIcon className="w-3.5 h-3.5" />
+                        <span>{badge.label}</span>
+                      </span>
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.3 }}>
-                      {cat.desc}
+
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                      {ticket.description}
+                    </p>
+
+                    {ticket.admin_reply && (
+                      <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300">
+                        <strong className="block text-indigo-200 font-semibold mb-1">
+                          Administrator Response:
+                        </strong>
+                        {ticket.admin_reply}
+                      </div>
+                    )}
+
+                    <div className="text-[11px] text-[var(--text-tertiary)] pt-2 border-t border-[var(--border-medium)] flex items-center justify-between">
+                      <span>Ticket ID: {ticket._id?.slice(-8)}</span>
+                      <span>Created {new Date(ticket.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                     </div>
                   </div>
-                ))}
+                )
+              })}
+            </div>
+          ) : (
+            <div className="py-16 text-center rounded-3xl bg-[var(--bg-card)] border border-[var(--border-medium)] p-8">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 className="w-7 h-7" />
               </div>
+              <h3 className="text-base font-bold text-[var(--text-primary)] font-heading mb-1">
+                No Support Tickets Filed
+              </h3>
+              <p className="text-xs text-[var(--text-secondary)] max-w-sm mx-auto mb-4">
+                Have an inquiry about table QR codes, custom themes, or settlements? Open a new ticket anytime.
+              </p>
+              <button
+                onClick={() => setActiveTab('new_ticket')}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors"
+              >
+                Create Your First Ticket
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── TAB 2: Create Ticket ── */}
+      {activeTab === 'new_ticket' && (
+        <div className="max-w-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] rounded-3xl p-6 sm:p-8 shadow-sm animate-fadeIn">
+          <h2 className="text-lg font-bold font-heading text-[var(--text-primary)] mb-1">
+            Submit a New Support Ticket
+          </h2>
+          <p className="text-xs text-[var(--text-secondary)] mb-6">
+            Our engineering and operational teams review tickets promptly during restaurant operating hours.
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+                Issue Category *
+              </label>
+              <select
+                value={form.category}
+                onChange={e => setForm({ ...form, category: e.target.value })}
+                className="w-full px-4 py-2.5 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-sm text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
+              >
+                {CATEGORIES.map(cat => (
+                  <option key={cat.value} value={cat.value} className="bg-[var(--bg-card)]">
+                    {cat.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Subject */}
             <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
-                Subject / Brief Summary:
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+                Subject Line *
               </label>
               <input
                 type="text"
+                required
                 value={form.subject}
-                onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
-                placeholder="e.g., Need help updating UPI ID for table #4"
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  padding: '12px 16px',
-                  borderRadius: 12,
-                  background: 'var(--bg-card-hover)',
-                  border: '1px solid var(--border-medium)',
-                  color: 'var(--text-primary)',
-                  fontSize: 14,
-                  outline: 'none'
-                }}
-              />
+                onChange={e => setForm({ ...form, subject: e.target.value })}
+                placeholder="e.g. Need assistance setting up UPI QR for Table 5"
+                className="w-full px-4 py-2.5 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-sm text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
+              >
+              </input>
             </div>
 
-            {/* Description */}
             <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
-                Detailed Description:
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+                Detailed Description *
               </label>
               <textarea
-                rows={5}
+                rows={4}
+                required
                 value={form.description}
-                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                placeholder="Please describe what happened, steps to reproduce, or any questions..."
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  padding: '12px 16px',
-                  borderRadius: 12,
-                  background: 'var(--bg-card-hover)',
-                  border: '1px solid var(--border-medium)',
-                  color: 'var(--text-primary)',
-                  fontSize: 14,
-                  outline: 'none',
-                  resize: 'vertical',
-                  fontFamily: 'inherit'
-                }}
+                onChange={e => setForm({ ...form, description: e.target.value })}
+                placeholder="Please describe your question or issue with as much detail as possible..."
+                className="w-full px-4 py-2.5 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-sm text-[var(--text-primary)] focus:outline-none focus:border-indigo-500 resize-none"
               />
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+            <div className="pt-2 flex gap-3">
               <button
                 type="submit"
                 disabled={submitting}
-                style={{
-                  padding: '12px 28px',
-                  borderRadius: 12,
-                  background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
-                  color: 'var(--text-primary)',
-                  fontSize: 14,
-                  fontWeight: 800,
-                  border: 'none',
-                  cursor: submitting ? 'not-allowed' : 'pointer',
-                  opacity: submitting ? 0.7 : 1,
-                  boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)',
-                  transition: 'all 0.15s ease'
-                }}
+                className="py-2.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-500/25 active:scale-[0.99] disabled:opacity-50 transition-all flex items-center justify-center gap-2"
               >
-                {submitting ? 'Submitting Ticket...' : '🚀 Submit Support Ticket'}
+                <Send className="w-4 h-4" />
+                <span>{submitting ? 'Submitting...' : 'Send Ticket'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('tickets')}
+                className="py-2.5 px-4 rounded-xl border border-[var(--border-medium)] bg-[var(--bg-input)] hover:bg-[var(--bg-card-hover)] text-xs font-semibold text-[var(--text-secondary)]"
+              >
+                Cancel
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* ── TAB 2: MY TICKETS ── */}
-      {activeTab === 'tickets' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {tickets.length === 0 ? (
-            <div style={{
-              padding: '60px 20px',
-              textAlign: 'center',
-              background: 'var(--bg-elevated)',
-              borderRadius: 20,
-              border: '1px solid var(--border-medium)'
-            }}>
-              <span style={{ fontSize: 42, display: 'block', marginBottom: 12 }}>🎫</span>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 6px' }}>No Support Tickets Yet</h3>
-              <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 16px' }}>
-                You have not opened any support requests yet.
-              </p>
-              <button
-                onClick={() => setActiveTab('contact')}
-                style={{
-                  padding: '10px 20px',
-                  borderRadius: 12,
-                  background: '#2563eb',
-                  color: 'var(--text-primary)',
-                  border: 'none',
-                  fontWeight: 700,
-                  fontSize: 13,
-                  cursor: 'pointer'
-                }}
-              >
-                + Create First Ticket
-              </button>
-            </div>
-          ) : (
-            tickets.map(t => {
-              const badge = getStatusBadge(t.status)
-              return (
-                <div
-                  key={t._id}
-                  style={{
-                    padding: '22px 24px',
-                    borderRadius: 18,
-                    background: 'var(--bg-elevated)',
-                    border: '1px solid var(--border-medium)',
-                    boxShadow: '0 4px 20px var(--overlay-bg)'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: '#60a5fa', fontFamily: 'monospace' }}>
-                          {t.ticket_number}
-                        </span>
-                        <span style={{
-                          padding: '2px 8px',
-                          borderRadius: 6,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          background: t.priority === 'urgent' ? 'rgba(239, 68, 68, 0.15)' : 'var(--border-light)',
-                          color: t.priority === 'urgent' ? 'var(--danger-text)' : '#94a3b8',
-                          border: t.priority === 'urgent' ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border-medium)'
-                        }}>
-                          {t.priority === 'urgent' ? '⚡ Priority' : 'Standard'}
-                        </span>
-                      </div>
-                      <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 4px' }}>
-                        {t.subject}
-                      </h3>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                        {getCategoryLabel(t.category)} • Opened on {new Date(t.created_at).toLocaleDateString()} at {new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-
-                    <div style={{
-                      padding: '4px 12px',
-                      borderRadius: 20,
-                      fontSize: 12,
-                      fontWeight: 800,
-                      background: badge.bg,
-                      color: badge.color,
-                      border: `1px solid ${badge.border}`
-                    }}>
-                      {badge.label}
-                    </div>
-                  </div>
-
-                  {/* Description Box */}
-                  <div style={{
-                    padding: '12px 14px',
-                    borderRadius: 10,
-                    background: 'var(--bg-input)',
-                    border: '1px solid var(--border-medium)',
-                    fontSize: 13,
-                    color: '#cbd5e1',
-                    lineHeight: 1.5,
-                    marginBottom: t.admin_reply ? 14 : 0
-                  }}>
-                    {t.description}
-                  </div>
-
-                  {/* Admin Reply Box */}
-                  {t.admin_reply && (
-                    <div style={{
-                      padding: '14px 16px',
-                      borderRadius: 12,
-                      background: 'rgba(16, 185, 129, 0.08)',
-                      border: '1px solid rgba(16, 185, 129, 0.25)',
-                      marginTop: 12
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                        <span style={{ fontSize: 14 }}>💬</span>
-                        <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--success-text)' }}>
-                          Support Team Response:
-                        </span>
-                      </div>
-                      <p style={{ fontSize: 13, color: 'var(--text-primary)', margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
-                        {t.admin_reply}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )
-            })
-          )}
-        </div>
-      )}
-
-      {/* ── TAB 3: FAQS & GUIDES ── */}
+      {/* ── TAB 3: FAQs Accordion ── */}
       {activeTab === 'faqs' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="space-y-3 animate-fadeIn">
           {faqsList.map((faq, idx) => {
             const isExpanded = expandedFaq === idx
             return (
               <div
                 key={idx}
-                style={{
-                  borderRadius: 16,
-                  background: 'var(--bg-elevated)',
-                  border: isExpanded ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid var(--border-light)',
-                  overflow: 'hidden',
-                  transition: 'all 0.2s ease'
-                }}
+                className="rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] overflow-hidden transition-all shadow-sm"
               >
                 <button
+                  type="button"
                   onClick={() => setExpandedFaq(isExpanded ? null : idx)}
-                  style={{
-                    width: '100%',
-                    padding: '18px 22px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    background: 'transparent',
-                    border: 'none',
-                    textAlign: 'left',
-                    color: isExpanded ? '#38bdf8' : 'var(--text-primary)',
-                    fontSize: 15,
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
+                  className="w-full p-4 text-left flex items-center justify-between gap-4 font-bold text-sm text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] transition-colors"
                 >
                   <span>{faq.q}</span>
-                  <span style={{ fontSize: 16, transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
-                    ▼
-                  </span>
+                  {isExpanded ? (
+                    <ChevronUp className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-[var(--text-tertiary)] flex-shrink-0" />
+                  )}
                 </button>
-
                 {isExpanded && (
-                  <div style={{
-                    padding: '0 22px 18px',
-                    fontSize: 13,
-                    color: 'var(--text-secondary)',
-                    lineHeight: 1.6,
-                    borderTop: '1px solid var(--border-medium)'
-                  }}>
+                  <div className="p-4 pt-1 text-xs text-[var(--text-secondary)] leading-relaxed border-t border-[var(--border-medium)] bg-[var(--bg-input)]">
                     {faq.a}
                   </div>
                 )}

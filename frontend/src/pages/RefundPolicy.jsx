@@ -1,18 +1,22 @@
 import { Link } from 'react-router-dom'
+import { Coffee, ArrowLeft, Mail, Globe } from 'lucide-react'
 
 const RefundPolicy = () => {
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0f', color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-shell, #090d16)', color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif" }}>
       
       {/* Header */}
-      <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '20px 24px' }}>
+      <div style={{ background: 'var(--bg-card, #131b2e)', borderBottom: '1px solid var(--border-medium)', padding: '16px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <img src="/logo.png" alt="WTM Logo" style={{ height: 40, width: 40, objectFit: 'cover', borderRadius: '50%' }} />
-            <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.5px', fontFamily: "'Outfit', sans-serif", color: 'var(--text-primary)' }}>WTM</span>
+          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #4f46e5, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff' }}>
+              <Coffee size={18} />
+            </div>
+            <span style={{ fontSize: 20, fontWeight: 950, letterSpacing: '-0.3px', fontFamily: "'Outfit', sans-serif", color: 'var(--text-primary)' }}>WhatTheMenu</span>
           </Link>
-          <Link to="/" style={{ fontSize: 14, color: 'var(--text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
-            ← Back to Home
+          <Link to="/" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <ArrowLeft size={16} />
+            <span>Back to Home</span>
           </Link>
         </div>
       </div>
@@ -77,18 +81,24 @@ const RefundPolicy = () => {
 
           <Section title="6. Contact Us">
             <p>If you have any questions regarding this Refund Policy, please reach out to us:</p>
-            <ul style={{ paddingLeft: 20, listStyle: 'none' }}>
-              <li>📧 Email: <a href="mailto:codifires@gmail.com" style={{ color: '#f59e0b' }}>codifires@gmail.com</a></li>
-              <li>🌐 Website: <a href="https://whatthemanu.vercel.app" style={{ color: '#f59e0b' }}>whatthemanu.vercel.app</a></li>
-            </ul>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Mail size={16} color="#06b6d4" />
+                <span>Email: <a href="mailto:codifires@gmail.com" style={{ color: '#06b6d4', textDecoration: 'none' }}>codifires@gmail.com</a></span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Globe size={16} color="#06b6d4" />
+                <span>Website: <a href="https://whatthemanu.vercel.app" style={{ color: '#06b6d4', textDecoration: 'none' }}>whatthemanu.vercel.app</a></span>
+              </div>
+            </div>
           </Section>
 
         </div>
       </div>
 
       {/* Footer */}
-      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '24px', textAlign: 'center' }}>
-        <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>© 2026 WTM. All rights reserved.</p>
+      <div style={{ borderTop: '1px solid var(--border-medium)', padding: '24px', textAlign: 'center' }}>
+        <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>© {new Date().getFullYear()} WhatTheMenu. All rights reserved.</p>
       </div>
 
       <style>{`

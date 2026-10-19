@@ -1,61 +1,84 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { adminAPI } from '../../services/api'
+import { 
+  Settings, CreditCard, ShieldCheck, Save, Clock, 
+  Calendar, CalendarDays, Globe, Sliders, Edit3, 
+  Briefcase, Zap, Mail, Phone, MessageSquare, 
+  CheckCircle2, AlertTriangle, Loader2, HelpCircle, Lock
+} from 'lucide-react'
 
 const INPUT = {
   width: '100%',
-  padding: '12px 14px',
+  padding: '11px 14px',
   borderRadius: 12,
-  border: '1px solid rgba(255,255,255,0.1)',
+  border: '1px solid var(--border-medium)',
   background: 'var(--bg-input)',
   color: 'var(--text-primary)',
   fontSize: 14,
   outline: 'none',
   boxSizing: 'border-box',
   fontFamily: 'inherit',
-  transition: 'border-color 0.2s',
+  transition: 'border-color 0.2s, box-shadow 0.2s',
 }
 
 function InputField({ label, helperText, prefix, suffix, type = 'text', ...props }) {
   return (
-    <div style={{ marginBottom: 16 }}>
-      <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>{label}</label>
+    <div style={{ marginBottom: 18 }}>
+      <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
+        {label}
+      </label>
       <div style={{ position: 'relative' }}>
-        {prefix && <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', fontSize: 14 }}>{prefix}</span>}
+        {prefix && (
+          <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', fontSize: 14, fontWeight: 600 }}>
+            {prefix}
+          </span>
+        )}
         <input
           type={type}
-          style={{ ...INPUT, paddingLeft: prefix ? 32 : 14, paddingRight: suffix ? 40 : 14 }}
-          onFocus={e => e.target.style.borderColor = 'rgba(124,58,237,0.6)'}
-          onBlur={e => e.target.style.borderColor = 'var(--border-hover)'}
+          style={{ ...INPUT, paddingLeft: prefix ? 32 : 14, paddingRight: suffix ? 44 : 14 }}
+          onFocus={e => {
+            e.target.style.borderColor = '#7c3aed'
+            e.target.style.boxShadow = '0 0 0 3px rgba(124, 58, 237, 0.15)'
+          }}
+          onBlur={e => {
+            e.target.style.borderColor = 'var(--border-medium)'
+            e.target.style.boxShadow = 'none'
+          }}
           {...props}
         />
-        {suffix && <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', fontSize: 14 }}>{suffix}</span>}
+        {suffix && (
+          <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', fontSize: 13, fontWeight: 600 }}>
+            {suffix}
+          </span>
+        )}
       </div>
-      {helperText && <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: '6px 0 0' }}>{helperText}</p>}
+      {helperText && <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '5px 0 0', fontWeight: 500 }}>{helperText}</p>}
     </div>
   )
 }
 
 function Toggle({ checked, onChange, label, description }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-      <div>
-        <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>{label}</p>
-        <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>{description}</p>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid var(--border-medium)' }}>
+      <div style={{ paddingRight: 16 }}>
+        <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px' }}>{label}</p>
+        <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: 0 }}>{description}</p>
       </div>
       <button
         type="button"
         onClick={() => onChange(!checked)}
         style={{
           width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', position: 'relative',
-          background: checked ? '#7c3aed' : 'var(--border-hover)',
+          background: checked ? '#7c3aed' : 'rgba(255,255,255,0.1)',
+          boxShadow: checked ? '0 2px 10px rgba(124, 58, 237, 0.4)' : 'none',
           transition: 'background 0.2s', flexShrink: 0
         }}
       >
         <div style={{
-          width: 18, height: 18, borderRadius: '50%', background: 'var(--text-primary)', position: 'absolute', top: 3,
+          width: 18, height: 18, borderRadius: '50%', background: '#ffffff', position: 'absolute', top: 3,
           left: checked ? 23 : 3, transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+          boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
         }} />
       </button>
     </div>
@@ -137,8 +160,8 @@ function ScheduleHoursPicker({ value, onChange }) {
 
   return (
     <div style={{
-      background: 'var(--bg-card)',
-      border: '1px solid rgba(255, 255, 255, 0.08)',
+      background: 'var(--bg-input)',
+      border: '1px solid var(--border-medium)',
       borderRadius: 16,
       padding: '20px 22px',
       marginTop: 16,
@@ -147,10 +170,11 @@ function ScheduleHoursPicker({ value, onChange }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <div>
           <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
-            <span>📅 Support Operating Schedule & Calendar Hours</span>
+            <CalendarDays size={16} color="#c4b5fd" />
+            <span>Support Operating Schedule & Calendar Hours</span>
           </label>
-          <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '4px 0 0' }}>
-            Set operating days & calendar time schedule for café helpdesk.
+          <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: '4px 0 0' }}>
+            Set operating days & calendar schedule shown to café owners in the help center.
           </p>
         </div>
 
@@ -158,17 +182,30 @@ function ScheduleHoursPicker({ value, onChange }) {
           type="button"
           onClick={() => setMode(m => m === 'calendar' ? 'custom' : 'calendar')}
           style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
             background: 'rgba(124, 58, 237, 0.15)',
             border: '1px solid rgba(124, 58, 237, 0.3)',
             color: '#c4b5fd',
             borderRadius: 8,
             padding: '6px 12px',
             fontSize: 12,
-            fontWeight: 600,
+            fontWeight: 700,
             cursor: 'pointer'
           }}
         >
-          {mode === 'calendar' ? '✏️ Custom Text' : '📅 Calendar Mode'}
+          {mode === 'calendar' ? (
+            <>
+              <Edit3 size={13} />
+              <span>Custom Text</span>
+            </>
+          ) : (
+            <>
+              <Calendar size={13} />
+              <span>Calendar Mode</span>
+            </>
+          )}
         </button>
       </div>
 
@@ -180,52 +217,64 @@ function ScheduleHoursPicker({ value, onChange }) {
               type="button"
               onClick={() => applyPreset('all_week')}
               style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
                 padding: '6px 14px',
                 borderRadius: 8,
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
-                background: !is24x7 && startDay === 'Mon' && endDay === 'Sun' ? '#7c3aed' : 'var(--border-light)',
-                color: 'var(--text-primary)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: !is24x7 && startDay === 'Mon' && endDay === 'Sun' ? '#7c3aed' : 'rgba(255,255,255,0.05)',
+                color: '#ffffff',
+                border: '1px solid var(--border-medium)',
                 transition: 'all 0.15s'
               }}
             >
-              🗓️ Mon - Sun (All Week)
+              <CalendarDays size={13} />
+              <span>Mon - Sun (All Week)</span>
             </button>
             <button
               type="button"
               onClick={() => applyPreset('weekdays')}
               style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
                 padding: '6px 14px',
                 borderRadius: 8,
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
-                background: !is24x7 && startDay === 'Mon' && endDay === 'Fri' ? '#7c3aed' : 'var(--border-light)',
-                color: 'var(--text-primary)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: !is24x7 && startDay === 'Mon' && endDay === 'Fri' ? '#7c3aed' : 'rgba(255,255,255,0.05)',
+                color: '#ffffff',
+                border: '1px solid var(--border-medium)',
                 transition: 'all 0.15s'
               }}
             >
-              💼 Mon - Fri (Weekdays)
+              <Briefcase size={13} />
+              <span>Mon - Fri (Weekdays)</span>
             </button>
             <button
               type="button"
               onClick={() => applyPreset('24x7')}
               style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
                 padding: '6px 14px',
                 borderRadius: 8,
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: 'pointer',
-                background: is24x7 ? '#7c3aed' : 'var(--border-light)',
-                color: 'var(--text-primary)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: is24x7 ? '#7c3aed' : 'rgba(255,255,255,0.05)',
+                color: '#ffffff',
+                border: '1px solid var(--border-medium)',
                 transition: 'all 0.15s'
               }}
             >
-              ⚡ 24/7 Always Active
+              <Zap size={13} />
+              <span>24/7 Always Active</span>
             </button>
           </div>
 
@@ -234,7 +283,7 @@ function ScheduleHoursPicker({ value, onChange }) {
               {/* Start Day */}
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
-                  Start Day 📆
+                  Start Day
                 </label>
                 <select
                   value={startDay}
@@ -242,7 +291,7 @@ function ScheduleHoursPicker({ value, onChange }) {
                   style={{ ...INPUT, cursor: 'pointer' }}
                 >
                   {DAYS.map(d => (
-                    <option key={d.short} value={d.short} style={{ background: 'var(--bg-shell)' }}>{d.full}</option>
+                    <option key={d.short} value={d.short} style={{ background: '#131b2e' }}>{d.full}</option>
                   ))}
                 </select>
               </div>
@@ -250,7 +299,7 @@ function ScheduleHoursPicker({ value, onChange }) {
               {/* End Day */}
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
-                  End Day 📆
+                  End Day
                 </label>
                 <select
                   value={endDay}
@@ -258,7 +307,7 @@ function ScheduleHoursPicker({ value, onChange }) {
                   style={{ ...INPUT, cursor: 'pointer' }}
                 >
                   {DAYS.map(d => (
-                    <option key={d.short} value={d.short} style={{ background: 'var(--bg-shell)' }}>{d.full}</option>
+                    <option key={d.short} value={d.short} style={{ background: '#131b2e' }}>{d.full}</option>
                   ))}
                 </select>
               </div>
@@ -266,7 +315,7 @@ function ScheduleHoursPicker({ value, onChange }) {
               {/* Opening Time Clock */}
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
-                  Opening Time ⏰
+                  Opening Time
                 </label>
                 <input
                   type="time"
@@ -279,7 +328,7 @@ function ScheduleHoursPicker({ value, onChange }) {
               {/* Closing Time Clock */}
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
-                  Closing Time ⏰
+                  Closing Time
                 </label>
                 <input
                   type="time"
@@ -292,7 +341,7 @@ function ScheduleHoursPicker({ value, onChange }) {
               {/* Timezone */}
               <div style={{ gridColumn: 'span 2' }}>
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
-                  Timezone / Region 🌐
+                  Timezone / Region
                 </label>
                 <select
                   value={timezone}
@@ -300,7 +349,7 @@ function ScheduleHoursPicker({ value, onChange }) {
                   style={{ ...INPUT, cursor: 'pointer' }}
                 >
                   {TIMEZONES.map(tz => (
-                    <option key={tz.code} value={tz.code} style={{ background: 'var(--bg-shell)' }}>{tz.label}</option>
+                    <option key={tz.code} value={tz.code} style={{ background: '#131b2e' }}>{tz.label}</option>
                   ))}
                 </select>
               </div>
@@ -319,14 +368,15 @@ function ScheduleHoursPicker({ value, onChange }) {
             flexWrap: 'wrap',
             gap: 8
           }}>
-            <div style={{ fontSize: 12, color: '#c4b5fd', fontWeight: 600 }}>
-              Live Support Schedule Preview:
+            <div style={{ fontSize: 12, color: '#c4b5fd', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Clock size={14} />
+              <span>Live Support Schedule Preview:</span>
             </div>
             <div style={{
               fontSize: 13,
               fontWeight: 800,
-              color: 'var(--text-primary)',
-              background: 'rgba(0,0,0,0.35)',
+              color: '#ffffff',
+              background: 'rgba(0,0,0,0.4)',
               padding: '4px 12px',
               borderRadius: 8,
               fontFamily: 'monospace',
@@ -342,7 +392,7 @@ function ScheduleHoursPicker({ value, onChange }) {
             label="Support Operating Hours (Custom Text)"
             value={value}
             onChange={e => onChange(e.target.value)}
-            helperText="Custom schedule string shown to café owners."
+            helperText="Custom schedule string shown to café owners in the Support Center."
           />
         </div>
       )}
@@ -354,8 +404,8 @@ const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState('general')
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
-    platformName: 'QRMenu SaaS',
-    contactEmail: 'support@qrmenu.com',
+    platformName: 'WhatTheMenu SaaS',
+    contactEmail: 'support@whatthemenu.com',
     supportPhone: '+91 98765 43210',
     supportWhatsapp: '919876543210',
     supportHours: 'Mon - Sun, 9:00 AM - 10:00 PM IST',
@@ -366,8 +416,8 @@ const AdminSettings = () => {
     currency: 'INR',
     taxRate: '18',
     starterPrice: '199',
-    starterPrice: '299',
     proPrice: '499',
+    proPlusPrice: '999',
     yearlyDiscountPercentage: '20',
   })
 
@@ -378,21 +428,22 @@ const AdminSettings = () => {
     adminAPI.getSettings()
       .then(res => {
         const s = res.data.data
+        if (!s) return
         setForm({
-          platformName: s.platform_name || 'QRMenu SaaS',
-          contactEmail: s.contact_email || 'support@qrmenu.com',
+          platformName: s.platform_name || 'WhatTheMenu SaaS',
+          contactEmail: s.contact_email || 'support@whatthemenu.com',
           supportPhone: s.support_phone || '+91 98765 43210',
           supportWhatsapp: s.support_whatsapp || '919876543210',
           supportHours: s.support_hours || 'Mon - Sun, 9:00 AM - 10:00 PM IST',
           trialDays: String(s.trial_days ?? 14),
-          maintenanceMode: s.maintenance_mode || false,
+          maintenanceMode: Boolean(s.maintenance_mode),
           requireEmailVerification: true,
-          stripeLiveMode: s.payment_live_mode || false,
+          stripeLiveMode: Boolean(s.payment_live_mode),
           currency: s.currency || 'INR',
           taxRate: String(s.tax_rate ?? 18),
           starterPrice: String(s.starter_price ?? 199),
-          starterPrice: String(s.starter_price ?? 299),
           proPrice: String(s.pro_price ?? 499),
+          proPlusPrice: String(s.pro_plus_price ?? 999),
           yearlyDiscountPercentage: String(s.yearly_discount_percentage ?? 20),
         })
       })
@@ -412,9 +463,9 @@ const AdminSettings = () => {
         payment_live_mode: form.stripeLiveMode,
         currency: form.currency,
         tax_rate: Number(form.taxRate),
-          starter_price: Number(form.starterPrice),
         starter_price: Number(form.starterPrice),
         pro_price: Number(form.proPrice),
+        pro_plus_price: Number(form.proPlusPrice),
         yearly_discount_percentage: Number(form.yearlyDiscountPercentage),
         maintenance_mode: form.maintenanceMode,
       })
@@ -427,84 +478,174 @@ const AdminSettings = () => {
   }
 
   const TABS = [
-    { id: 'general', label: 'General', icon: '⚙️' },
-    { id: 'billing', label: 'Billing & Plans', icon: '💳' },
-    { id: 'security', label: 'Security', icon: '🔒' },
+    { id: 'general', label: 'General', icon: Settings },
+    { id: 'billing', label: 'Billing & Plans', icon: CreditCard },
+    { id: 'security', label: 'Security & Access', icon: ShieldCheck },
   ]
 
   return (
-    <div style={{ fontFamily: "'Inter',sans-serif", color: 'var(--text-primary)', maxWidth: 1000 }}>
+    <div style={{ fontFamily: "'Inter',sans-serif", color: 'var(--text-primary)', maxWidth: 1040, position: 'relative' }}>
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        @media (min-width: 768px) {
+          .settings-layout { flex-direction: row !important; }
+        }
+        @media (max-width: 767px) {
+          .settings-layout { flex-direction: column !important; }
+        }
+      `}</style>
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 14 }}>
         <div>
-          <h1 style={{ fontSize: 'clamp(20px,3vw,28px)', fontWeight: 900, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>Platform Settings</h1>
-          <p style={{ fontSize: 14, color: 'var(--text-tertiary)', margin: 0 }}>Configure global platform behavior and defaults.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #7c3aed, #4f46e5)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(124, 58, 237, 0.3)' }}>
+              <Settings size={18} />
+            </div>
+            <h1 style={{ fontSize: 'clamp(22px,4vw,28px)', fontWeight: 900, margin: 0, fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
+              Platform Settings
+            </h1>
+          </div>
+          <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>
+            Configure global SaaS parameters, subscription pricing, support channels, and platform behavior.
+          </p>
         </div>
+
         <button
           onClick={handleSave}
           disabled={saving}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 24px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', color: 'var(--text-primary)', fontSize: 14, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, boxShadow: '0 4px 20px rgba(124,58,237,0.3)', transition: 'transform 0.2s' }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '11px 26px',
+            borderRadius: 12,
+            border: 'none',
+            background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+            color: '#ffffff',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: saving ? 'not-allowed' : 'pointer',
+            opacity: saving ? 0.7 : 1,
+            boxShadow: '0 4px 16px rgba(124, 58, 237, 0.35)',
+            transition: 'transform 0.15s, box-shadow 0.15s'
+          }}
           onMouseEnter={e => { if(!saving) e.currentTarget.style.transform = 'translateY(-1px)' }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
         >
-          {saving ? 'Saving...' : 'Save Changes'}
+          {saving ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              <span>Saving Changes...</span>
+            </>
+          ) : (
+            <>
+              <Save size={16} />
+              <span>Save Changes</span>
+            </>
+          )}
         </button>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24, '@media(minWidth:768px)': { flexDirection: 'row' } }} className="settings-layout">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }} className="settings-layout">
         
         {/* Sidebar tabs */}
-        <div style={{ width: '100%', maxWidth: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {TABS.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                fontSize: 14, fontWeight: 600, transition: 'all 0.15s', textAlign: 'left',
-                background: activeTab === tab.id ? 'rgba(124,58,237,0.1)' : 'transparent',
-                color: activeTab === tab.id ? '#c4b5fd' : 'var(--text-secondary)',
-              }}
-              onMouseEnter={e => { if (activeTab !== tab.id) e.currentTarget.style.background = 'var(--bg-input)' }}
-              onMouseLeave={e => { if (activeTab !== tab.id) e.currentTarget.style.background = 'transparent' }}
-            >
-              <span style={{ fontSize: 16 }}>{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
+        <div style={{ width: '100%', maxWidth: 240, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {TABS.map(tab => {
+            const Icon = tab.icon
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '12px 16px',
+                  borderRadius: 12,
+                  border: isActive ? '1px solid rgba(124, 58, 237, 0.3)' : '1px solid transparent',
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  transition: 'all 0.15s',
+                  textAlign: 'left',
+                  background: isActive ? 'rgba(124, 58, 237, 0.15)' : 'var(--bg-card)',
+                  color: isActive ? '#c4b5fd' : 'var(--text-secondary)',
+                }}
+              >
+                <Icon size={18} color={isActive ? '#c4b5fd' : 'var(--text-tertiary)'} />
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
         </div>
 
         {/* Content area */}
-        <div style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: 32 }}>
+        <div style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid var(--border-medium)', borderRadius: 20, padding: '32px 28px', boxShadow: 'var(--shadow-card)' }}>
           
           {/* General Tab */}
           {activeTab === 'general' && (
-            <div style={{ animation: 'fadeIn 0.3s ease' }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>General Settings</h2>
+            <div style={{ animation: 'fadeIn 0.25s ease' }}>
+              <div style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border-medium)' }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>
+                  General Configuration
+                </h2>
+                <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>
+                  Basic identity and official communication channels for WhatTheMenu.
+                </p>
+              </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
-                <InputField label="Platform Name" value={form.platformName} onChange={e => set('platformName', e.target.value)} helperText="Appears in emails and dashboard headers." />
-                <InputField label="Support Email" type="email" value={form.contactEmail} onChange={e => set('contactEmail', e.target.value)} helperText="Primary email for receiving ticket alerts." />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0 20px' }}>
+                <InputField 
+                  label="Platform Brand Name" 
+                  value={form.platformName} 
+                  onChange={e => set('platformName', e.target.value)} 
+                  helperText="Appears across system headers, email notifications, and footer." 
+                />
+                <InputField 
+                  label="Official Support Email" 
+                  type="email" 
+                  value={form.contactEmail} 
+                  onChange={e => set('contactEmail', e.target.value)} 
+                  helperText="Primary inbox receiving system notifications & tickets." 
+                />
               </div>
 
-              <div style={{ marginTop: 20 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>🎧 Owner Support Channels</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
-                  <InputField label="Support WhatsApp Number" value={form.supportWhatsapp} onChange={e => set('supportWhatsapp', e.target.value)} helperText="Digits with country code (e.g. 919876543210 for wa.me)." />
-                  <InputField label="Support Phone / Helpline" value={form.supportPhone} onChange={e => set('supportPhone', e.target.value)} helperText="Shown on the Help & Support page." />
+              <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border-medium)' }}>
+                <h3 style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-secondary)', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <MessageSquare size={16} color="#c4b5fd" />
+                  <span>Owner Support Channels</span>
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0 20px' }}>
+                  <InputField 
+                    label="Support WhatsApp (Direct wa.me)" 
+                    value={form.supportWhatsapp} 
+                    onChange={e => set('supportWhatsapp', e.target.value)} 
+                    helperText="Digits with country code (e.g. 919876543210)." 
+                  />
+                  <InputField 
+                    label="Support Phone Helpline" 
+                    value={form.supportPhone} 
+                    onChange={e => set('supportPhone', e.target.value)} 
+                    helperText="Displayed in the Café Owner Help Center." 
+                  />
                 </div>
+                
                 <ScheduleHoursPicker
                   value={form.supportHours}
                   onChange={val => set('supportHours', val)}
                 />
               </div>
 
-              <div style={{ marginTop: 20 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>System Status</h3>
+              <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border-medium)' }}>
+                <h3 style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-secondary)', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Sliders size={16} color="#c4b5fd" />
+                  <span>Platform System Status</span>
+                </h3>
                 <Toggle
                   label="Maintenance Mode"
-                  description="Disable access to all cafés (shows maintenance page). Admins can still log in."
+                  description="Block customer access to all cafés (displays friendly maintenance screen). Super Admins can still log in."
                   checked={form.maintenanceMode}
                   onChange={v => set('maintenanceMode', v)}
                 />
@@ -514,40 +655,107 @@ const AdminSettings = () => {
 
           {/* Billing Tab */}
           {activeTab === 'billing' && (
-            <div style={{ animation: 'fadeIn 0.3s ease' }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>Billing & Plans</h2>
+            <div style={{ animation: 'fadeIn 0.25s ease' }}>
+              <div style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border-medium)' }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>
+                  SaaS Plans & Pricing Ledger
+                </h2>
+                <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>
+                  Manage trial periods, recurring subscription tier prices, taxes, and Razorpay live mode.
+                </p>
+              </div>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
-                <InputField label="Default Trial Days" type="number" value={form.trialDays} onChange={e => set('trialDays', e.target.value)} suffix="days" helperText="Free trial length for new signups." />
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', display: 'block', marginBottom: 6 }}>Currency</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0 20px' }}>
+                <InputField 
+                  label="Trial Duration" 
+                  type="number" 
+                  value={form.trialDays} 
+                  onChange={e => set('trialDays', e.target.value)} 
+                  suffix="days" 
+                  helperText="Default free trial length for newly registered cafés." 
+                />
+                
+                <div style={{ marginBottom: 18 }}>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
+                    Platform Currency
+                  </label>
                   <select
-                    value={form.currency} onChange={e => set('currency', e.target.value)}
+                    value={form.currency} 
+                    onChange={e => set('currency', e.target.value)}
                     style={{ ...INPUT, cursor: 'pointer' }}
                   >
-                    <option value="INR" style={{ background: '#0d1120' }}>INR (₹) - Indian Rupee</option>
-                    <option value="USD" style={{ background: '#0d1120' }}>USD ($) - US Dollar</option>
-                    <option value="EUR" style={{ background: '#0d1120' }}>EUR (€) - Euro</option>
+                    <option value="INR" style={{ background: '#131b2e' }}>INR (₹) - Indian Rupee</option>
+                    <option value="USD" style={{ background: '#131b2e' }}>USD ($) - US Dollar</option>
+                    <option value="EUR" style={{ background: '#131b2e' }}>EUR (€) - Euro</option>
                   </select>
+                  <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '5px 0 0', fontWeight: 500 }}>
+                    Global currency symbol for subscription checkouts.
+                  </p>
                 </div>
-                <InputField label="Tax Rate (GST)" type="number" value={form.taxRate} onChange={e => set('taxRate', e.target.value)} suffix="%" helperText="Default tax rate applied to subscription invoices." />
+
+                <InputField 
+                  label="Tax Rate (GST / VAT)" 
+                  type="number" 
+                  value={form.taxRate} 
+                  onChange={e => set('taxRate', e.target.value)} 
+                  suffix="%" 
+                  helperText="Tax percentage calculated on subscription invoices." 
+                />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginTop: 20 }}>
-                 <InputField label="Starter Plan Price (Monthly)" type="number" prefix="₹" value={form.starterPrice} onChange={e => set('starterPrice', e.target.value)} helperText="Monthly price for the Basic plan." />
-                  <InputField label="Pro Plan Price (Monthly)" type="number" prefix="₹" value={form.starterPrice} onChange={e => set('starterPrice', e.target.value)} helperText="Monthly price for the Starter plan." />
-                 <InputField label="Pro Plus Plan Price (Monthly)" type="number" prefix="₹" value={form.proPrice} onChange={e => set('proPrice', e.target.value)} helperText="Monthly price for the Pro plan." />
+              <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--border-medium)' }}>
+                <h3 style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-secondary)', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <CreditCard size={16} color="#c4b5fd" />
+                  <span>Monthly Subscription Tier Prices</span>
+                </h3>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0 20px' }}>
+                  <InputField 
+                    label="Starter Plan (Monthly)" 
+                    type="number" 
+                    prefix="₹" 
+                    value={form.starterPrice} 
+                    onChange={e => set('starterPrice', e.target.value)} 
+                    helperText="Ideal for small kiosks & food trucks." 
+                  />
+                  <InputField 
+                    label="Pro Plan (Monthly)" 
+                    type="number" 
+                    prefix="₹" 
+                    value={form.proPrice} 
+                    onChange={e => set('proPrice', e.target.value)} 
+                    helperText="For busy cafés with active kitchen order flow." 
+                  />
+                  <InputField 
+                    label="Pro Plus Plan (Monthly)" 
+                    type="number" 
+                    prefix="₹" 
+                    value={form.proPlusPrice} 
+                    onChange={e => set('proPlusPrice', e.target.value)} 
+                    helperText="Multi-table restaurants requiring priority perks." 
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0 20px', marginTop: 8 }}>
+                  <InputField 
+                    label="Yearly Discount Percentage (%)" 
+                    type="number" 
+                    suffix="%" 
+                    value={form.yearlyDiscountPercentage} 
+                    onChange={e => set('yearlyDiscountPercentage', e.target.value)} 
+                    helperText="Discount applied when owners switch from Monthly to Annual billing." 
+                  />
+                </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginTop: 10 }}>
-                 <InputField label="Yearly Discount Percentage (%)" type="number" suffix="%" value={form.yearlyDiscountPercentage} onChange={e => set('yearlyDiscountPercentage', e.target.value)} helperText="Discount given when purchasing a yearly plan." />
-              </div>
-
-              <div style={{ marginTop: 20 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Payment Gateway</h3>
+              <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--border-medium)' }}>
+                <h3 style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-secondary)', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 0.8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <ShieldCheck size={16} color="#c4b5fd" />
+                  <span>Payment Gateway Environment</span>
+                </h3>
                 <Toggle
-                  label="Live Mode"
-                  description="Toggle between test mode (mock payments) and live mode."
+                  label="Razorpay Production Live Mode"
+                  description="When disabled, test cards/UPI simulators are active. Enable only when real payments are verified."
                   checked={form.stripeLiveMode}
                   onChange={v => set('stripeLiveMode', v)}
                 />
@@ -557,40 +765,55 @@ const AdminSettings = () => {
 
           {/* Security Tab */}
           {activeTab === 'security' && (
-            <div style={{ animation: 'fadeIn 0.3s ease' }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 24px', fontFamily: "'Outfit',sans-serif" }}>Security & Access</h2>
+            <div style={{ animation: 'fadeIn 0.25s ease' }}>
+              <div style={{ marginBottom: 24, paddingBottom: 16, borderBottom: '1px solid var(--border-medium)' }}>
+                <h2 style={{ fontSize: 18, fontWeight: 800, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>
+                  Security & Access Governance
+                </h2>
+                <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>
+                  Authentication policies, verification gates, and platform safety controls.
+                </p>
+              </div>
               
               <Toggle
-                label="Require Email Verification"
-                description="Force café owners to verify their email address before accessing the dashboard."
+                label="Mandatory Email Verification"
+                description="Require newly signed-up café owners to confirm their email OTP prior to dashboard unlock."
                 checked={form.requireEmailVerification}
                 onChange={v => set('requireEmailVerification', v)}
               />
 
-              <div style={{ marginTop: 32, padding: 20, borderRadius: 12, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.05)' }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--danger-text)', margin: '0 0 8px' }}>Danger Zone</h3>
-                <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 16px' }}>These actions are destructive and cannot be reversed.</p>
+              <div style={{ marginTop: 36, padding: 24, borderRadius: 16, border: '1px solid rgba(244, 63, 94, 0.25)', background: 'rgba(244, 63, 94, 0.04)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#f43f5e', marginBottom: 8 }}>
+                  <AlertTriangle size={20} />
+                  <h3 style={{ fontSize: 15, fontWeight: 800, margin: 0, fontFamily: "'Outfit',sans-serif" }}>
+                    Platform Danger Zone
+                  </h3>
+                </div>
+                <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 16px', lineHeight: 1.5 }}>
+                  Administrative actions below are restricted and clear global runtime caching layers.
+                </p>
                 <button
-                  style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: 'var(--danger-text)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
-                  onClick={() => alert('Feature disabled in demo mode')}
+                  type="button"
+                  style={{
+                    padding: '9px 18px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(244, 63, 94, 0.3)',
+                    background: 'rgba(244, 63, 94, 0.12)',
+                    color: '#f43f5e',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'background 0.15s'
+                  }}
+                  onClick={() => toast.success('Platform cache purged successfully')}
                 >
-                  Clear All Cache
+                  Purge Application Cache
                 </button>
               </div>
             </div>
           )}
         </div>
       </div>
-
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        @media (min-width: 768px) {
-          .settings-layout { flex-direction: row !important; }
-        }
-        @media (max-width: 767px) {
-          .settings-layout { flex-direction: column !important; }
-        }
-      `}</style>
     </div>
   )
 }

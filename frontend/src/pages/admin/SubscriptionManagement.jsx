@@ -2,15 +2,20 @@ import { useState, useEffect } from 'react'
 import { adminAPI, publicAPI, SOCKET_URL } from '../../services/api'
 import toast from 'react-hot-toast'
 import { io } from 'socket.io-client'
+import { 
+  Crown, Zap, Gift, IndianRupee, Calendar, Check, 
+  X, Clock, History, AlertTriangle, CheckCircle2, 
+  ExternalLink, Search, RefreshCw, Copy
+} from 'lucide-react'
 
 const STATUS_COLORS = {
-  active:    { bg: 'var(--success-light)', color: 'var(--success-text)', border: 'var(--success-border)' },
-  suspended: { bg: 'rgba(239,68,68,0.10)',  color: 'var(--danger-text)', border: 'var(--danger-border)' },
-  expired:   { bg: 'rgba(245,158,11,0.10)', color: '#fbbf24', border: 'rgba(245,158,11,0.25)' },
-  pending:   { bg: 'rgba(107,114,128,0.1)', color: 'var(--text-secondary)', border: 'rgba(107,114,128,0.2)' },
+  active: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  suspended: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+  expired: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  pending: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
 }
 
-const SubscriptionManagement = () => {
+export default function SubscriptionManagement() {
   const [subscriptions, setSubscriptions] = useState([])
   const [loading, setLoading] = useState(true)
   const [requests, setRequests] = useState([])
@@ -20,13 +25,16 @@ const SubscriptionManagement = () => {
   const [historyModalOpen, setHistoryModalOpen] = useState(false)
   const [historyData, setHistoryData] = useState([])
   const [historyCafeName, setHistoryCafeName] = useState('')
+  const [copiedUTR, setCopiedUTR] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => { 
     fetchSubscriptions() 
     fetchRequests()
     fetchPrices()
 
-    const socket = io(SOCKET_URL)
+    const token = localStorage.getItem('token')
+    const socket = io(SOCKET_URL, { auth: { token } })
     socket.emit('join-admin')
 
     socket.on('new-subscription-revenue', (data) => {
@@ -46,19 +54,18 @@ const SubscriptionManagement = () => {
   const fetchPrices = async () => {
     try {
       const res = await publicAPI.getSettings()
-      const d = res.data?.data
-      if (d?.basic_price) setBasicPrice(d.basic_price)
-        if (d?.starter_price) setStarterPrice(d.starter_price)
-      if (d?.pro_price) setProPrice(d.pro_price)
-    } catch (err) {
-      console.error(err)
-    }
+      const d = res.data?.data || {}
+      if (d.basic_price) setBasicPrice(d.basic_price)
+      if (d.starter_price) setStarterPrice(d.starter_price)
+      if (d.pro_price) setProPrice(d.pro_price)
+    } catch (err) {}
   }
 
   const fetchSubscriptions = async () => {
     try {
+      setLoading(true)
       const res = await adminAPI.getSubscriptions()
-      setSubscriptions(res.data.data)
+      setSubscriptions(res.data?.data || [])
     } catch {
       toast.error('Failed to load subscriptions')
     } finally {
@@ -69,35 +76,18 @@ const SubscriptionManagement = () => {
   const fetchRequests = async () => {
     try {
       const res = await adminAPI.getSubscriptionRequests()
-      setRequests(res.data.data.filter(r => r.status === 'pending'))
-    } catch (err) {
-      console.error(err)
-    }
+      setRequests(res.data?.data?.filter(r => r.status === 'pending') || [])
+    } catch (err) {}
   }
 
   const handleApprove = async (id) => {
     try {
       await adminAPI.approveSubscriptionRequest(id)
-      toast.success('Request approved successfully!')
+      toast.success('Subscription verified & activated!')
       fetchRequests()
       fetchSubscriptions()
     } catch {
       toast.error('Failed to approve request')
-    }
-  }
-
-  const fetchHistory = async (cafeId, cafeName) => {
-    if (!cafeId) {
-      toast.error('Cannot fetch history: Café details missing or deleted')
-      return
-    }
-    try {
-      const res = await adminAPI.getSubscriptionHistory(cafeId)
-      setHistoryData(res.data.data)
-      setHistoryCafeName(cafeName)
-      setHistoryModalOpen(true)
-    } catch {
-      toast.error('Failed to load history')
     }
   }
 
@@ -111,323 +101,350 @@ const SubscriptionManagement = () => {
     }
   }
 
-  const handleStatusUpdate = async (id, status) => {
+  const fetchHistory = async (cafeId, cafeName) => {
+    if (!cafeId) {
+      toast.error('Cannot fetch history: Café details missing or deleted')
+      return
+    }
     try {
-      await adminAPI.updateSubscription(id, { status })
-      toast.success(`Subscription updated to ${status}`)
-      fetchSubscriptions()
+      const res = await adminAPI.getSubscriptionHistory(cafeId)
+      setHistoryData(res.data?.data || [])
+      setHistoryCafeName(cafeName)
+      setHistoryModalOpen(true)
     } catch {
-      toast.error('Failed to update subscription')
+      toast.error('Failed to load history')
     }
   }
 
+  const handleCopyUTR = (utr) => {
+    navigator.clipboard.writeText(utr)
+    setCopiedUTR(utr)
+    toast.success('UTR copied to clipboard!')
+    setTimeout(() => setCopiedUTR(null), 2000)
+  }
+
+  const filteredSubscriptions = subscriptions.filter(s => {
+    if (!searchQuery) return true
+    const q = searchQuery.toLowerCase()
+    return (
+      s.cafe_id?.name?.toLowerCase().includes(q) ||
+      s.plan_name?.toLowerCase().includes(q) ||
+      s._id?.toLowerCase().includes(q)
+    )
+  })
+
   return (
-    <div style={{ fontFamily: "'Inter',sans-serif", color: 'var(--text-primary)' }}>
-
-      {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 'clamp(20px,3vw,28px)', fontWeight: 900, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>Subscription Plans</h1>
-        <p style={{ fontSize: 14, color: 'var(--text-tertiary)', margin: 0 }}>Manage and monitor café subscriptions.</p>
-      </div>
-
-      {/* Plans summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 32 }}>
-        
-          {/* Basic Plan */}
-          <div
-            style={{ padding: '24px', borderRadius: 20, background: 'linear-gradient(145deg, rgba(59,130,246,0.1) 0%, rgba(255,255,255,0.02) 100%)', border: '1px solid rgba(59,130,246,0.2)', boxShadow: '0 8px 30px rgba(59,130,246,0.05)', transition: 'transform 0.2s', animation: 'slideUp 0.4s ease 0s both' }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)' }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg,#3b82f6,#2563eb)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontSize: 18, fontWeight: 800 }}>
-                B
-              </div>
-              <div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Basic Plan</h3>
-                <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>The essentials</p>
-              </div>
-            </div>
-            <p style={{ fontSize: 32, fontWeight: 900, color: 'var(--text-primary)', margin: 0, fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
-              ₹{basicPrice}<span style={{ fontSize: 14, color: 'var(--text-tertiary)', fontWeight: 500, marginLeft: 4 }}>/month</span>
-            </p>
+    <div className="space-y-8 max-w-7xl mx-auto pb-16 font-sans">
+      {/* ── Top Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[var(--border-medium)] pb-6">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-2">
+            <Crown className="w-3.5 h-3.5" />
+            <span>SaaS Monetization</span>
           </div>
-
-          {/* Temp Pro Plus Plan */}
-        <div
-          style={{ padding: '24px', borderRadius: 20, background: 'linear-gradient(145deg, rgba(124,58,237,0.1) 0%, rgba(255,255,255,0.02) 100%)', border: '1px solid rgba(124,58,237,0.2)', boxShadow: '0 8px 30px rgba(124,58,237,0.05)', transition: 'transform 0.2s', animation: 'slideUp 0.4s ease 0s both' }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)' }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-            <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontSize: 18, fontWeight: 800 }}>
-              S
-            </div>
-            <div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Temp Pro Plus Plan</h3>
-              <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>Basic features</p>
-            </div>
-          </div>
-          <p style={{ fontSize: 32, fontWeight: 900, color: 'var(--text-primary)', margin: 0, fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
-            ₹{starterPrice}<span style={{ fontSize: 14, color: 'var(--text-tertiary)', fontWeight: 500, marginLeft: 4 }}>/month</span>
+          <h1 className="text-2xl sm:text-3xl font-black font-heading text-[var(--text-primary)] tracking-tight">
+            Subscription Plan Management
+          </h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            Monitor active restaurant subscriptions, verify pending UPI payments, and review tenant billing history.
           </p>
         </div>
 
-        {/* Pro Plus Plan */}
-        <div
-          style={{ padding: '24px', borderRadius: 20, background: 'linear-gradient(145deg, rgba(245,158,11,0.1) 0%, rgba(255,255,255,0.02) 100%)', border: '1px solid rgba(245,158,11,0.2)', boxShadow: '0 8px 30px rgba(245,158,11,0.05)', transition: 'transform 0.2s', animation: 'slideUp 0.4s ease 0.1s both' }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)' }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
+        <button
+          onClick={() => { fetchSubscriptions(); fetchRequests() }}
+          disabled={loading}
+          className="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-medium)] hover:bg-[var(--bg-card-hover)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-2 shadow-sm"
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-            <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg,#f59e0b,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', fontSize: 18, fontWeight: 800 }}>
-              P
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <span>Refresh Ledger</span>
+        </button>
+      </div>
+
+      {/* ── Pricing Summary Cards ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="p-6 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-medium)] shadow-sm flex flex-col justify-between">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center">
+              <Gift className="w-5 h-5" />
             </div>
             <div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Pro Plus Plan</h3>
-              <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>All features included</p>
+              <h3 className="font-bold text-sm text-[var(--text-primary)]">Starter Tier</h3>
+              <p className="text-xs text-[var(--text-secondary)]">Kiosk pilot & trial</p>
             </div>
           </div>
-          <p style={{ fontSize: 32, fontWeight: 900, color: 'var(--text-primary)', margin: 0, fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
-            ₹{proPrice}<span style={{ fontSize: 14, color: 'var(--text-tertiary)', fontWeight: 500, marginLeft: 4 }}>/month</span>
-          </p>
+          <div>
+            <span className="text-3xl font-black font-heading text-[var(--text-primary)]">
+              ₹{basicPrice}
+            </span>
+            <span className="text-xs text-[var(--text-tertiary)] ml-1">/month</span>
+          </div>
+        </div>
+
+        <div className="p-6 rounded-3xl bg-indigo-500/5 border border-indigo-500/30 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-[var(--text-primary)]">Pro Standard</h3>
+              <p className="text-xs text-[var(--text-secondary)]">Most common subscription</p>
+            </div>
+          </div>
+          <div>
+            <span className="text-3xl font-black font-heading text-indigo-400">
+              ₹{starterPrice}
+            </span>
+            <span className="text-xs text-[var(--text-tertiary)] ml-1">/month</span>
+          </div>
+        </div>
+
+        <div className="p-6 rounded-3xl bg-amber-500/5 border border-amber-500/30 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center">
+              <Crown className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-[var(--text-primary)]">Pro Plus Ultra</h3>
+              <p className="text-xs text-[var(--text-secondary)]">Enterprise high-volume</p>
+            </div>
+          </div>
+          <div>
+            <span className="text-3xl font-black font-heading text-amber-400">
+              ₹{proPrice}
+            </span>
+            <span className="text-xs text-[var(--text-tertiary)] ml-1">/month</span>
+          </div>
         </div>
       </div>
 
-      {/* Pending Requests Table */}
+      {/* ── Pending Offline Verification Requests ── */}
       {requests.length > 0 && (
-        <div style={{ marginBottom: 40 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px', fontFamily: "'Outfit',sans-serif", color: '#f59e0b' }}>Pending Verifications</h2>
-          <div style={{ borderRadius: 20, background: 'rgba(245,158,11,0.02)', border: '1px solid rgba(245,158,11,0.2)', overflow: 'hidden' }}>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(245,158,11,0.2)' }}>
-                    {['Café Details', 'Requested Plan', 'Amount', 'UTR Number', 'Date', 'Actions'].map((h, i) => (
-                      <th key={h} style={{ padding: '14px 20px', fontSize: 11, fontWeight: 700, color: '#f59e0b', textAlign: i === 5 ? 'right' : 'left', letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap', background: 'rgba(245,158,11,0.05)' }}>
-                        {h}
-                      </th>
-                    ))}
+        <div className="rounded-3xl bg-amber-500/5 border border-amber-500/30 overflow-hidden shadow-sm">
+          <div className="p-5 border-b border-amber-500/20 flex items-center gap-2.5 bg-amber-500/10">
+            <Clock className="w-5 h-5 text-amber-400" />
+            <h2 className="font-bold text-sm font-heading text-amber-300">
+              Pending Offline UPI Verifications ({requests.length})
+            </h2>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-amber-500/20 uppercase font-bold text-amber-400/80 bg-amber-500/5">
+                  <th className="py-3 px-5">Café Details</th>
+                  <th className="py-3 px-5">Plan</th>
+                  <th className="py-3 px-5">Amount</th>
+                  <th className="py-3 px-5">UTR / Reference</th>
+                  <th className="py-3 px-5">Submitted Date</th>
+                  <th className="py-3 px-5 text-right">Verification Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-amber-500/10">
+                {requests.map(req => (
+                  <tr key={req._id} className="hover:bg-amber-500/10 transition-colors">
+                    <td className="py-3.5 px-5 font-bold text-[var(--text-primary)]">
+                      {req.cafe_id?.name || 'Partner Café'}
+                    </td>
+                    <td className="py-3.5 px-5 font-bold uppercase text-indigo-400">
+                      {req.plan_name}
+                    </td>
+                    <td className="py-3.5 px-5 font-black text-emerald-400">
+                      ₹{req.amount}
+                    </td>
+                    <td className="py-3.5 px-5">
+                      <div className="inline-flex items-center gap-1.5 font-mono bg-[var(--bg-input)] px-2 py-0.5 rounded border border-[var(--border-medium)]">
+                        <span>{req.utr_number}</span>
+                        <button
+                          onClick={() => handleCopyUTR(req.utr_number)}
+                          className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                        >
+                          {copiedUTR === req.utr_number ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-5 text-[var(--text-secondary)]">
+                      {new Date(req.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="py-3.5 px-5 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleReject(req._id)}
+                          className="px-3 py-1.5 rounded-lg border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 font-semibold"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => handleApprove(req._id)}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-sm"
+                        >
+                          Approve & Activate
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {requests.map(req => (
-                    <tr key={req._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.15s' }}>
-                      <td style={{ padding: '16px 20px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}>
-                            {req.cafe_id?.name ? req.cafe_id.name.charAt(0).toUpperCase() : '?'}
-                          </div>
-                          <div>
-                            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: 0, whiteSpace: 'nowrap' }}>{req.cafe_id?.name || 'Unknown Café'}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 20px', fontSize: 13, fontWeight: 600, color: '#a78bfa', textTransform: 'capitalize' }}>
-                        {req.plan_name}
-                      </td>
-                      <td style={{ padding: '16px 20px', fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)' }}>
-                        ₹{req.amount}
-                      </td>
-                      <td style={{ padding: '16px 20px', fontSize: 13, fontFamily: 'monospace', color: '#67e8f9', fontWeight: 600 }}>
-                        {req.utr_number}
-                      </td>
-                      <td style={{ padding: '16px 20px', fontSize: 13, color: 'var(--text-secondary)' }}>
-                        {new Date(req.created_at).toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                          <button onClick={() => handleReject(req._id)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: 'var(--danger-text)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Reject</button>
-                          <button onClick={() => handleApprove(req._id)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#10b981', color: 'var(--text-primary)', fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 10px rgba(16,185,129,0.3)' }}>Approve</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
-      {/* Subscriptions Table */}
-      <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 16px', fontFamily: "'Outfit',sans-serif" }}>Active & Past Subscriptions</h2>
-      <div style={{ borderRadius: 20, background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                {['Café Details', 'Plan Type', 'Amount', 'Duration', 'Dates', 'Status', 'Actions'].map((h, i) => (
-                  <th key={h} style={{ padding: '14px 20px', fontSize: 11, fontWeight: 700, color: 'var(--text-tertiary)', textAlign: i === 6 ? 'right' : 'left', letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap', background: 'rgba(255,255,255,0.01)' }}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                [...Array(4)].map((_, i) => (
-                  <tr key={i}>
-                    {[...Array(7)].map((_, j) => (
-                      <td key={j} style={{ padding: '18px 20px' }}>
-                        <div style={{ height: 13, borderRadius: 4, background: 'var(--bg-card-hover)', animation: 'pulse 1.5s ease infinite' }} />
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : subscriptions.length > 0 ? (
-                subscriptions.map(sub => {
-                  const sc = STATUS_COLORS[sub.status] || STATUS_COLORS.pending
-                  const isPro = sub.plan_name === 'pro_plus'
-                  return (
-                    <tr key={sub._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.15s' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                      
-                      {/* Café Details */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
-                            {sub.cafe_id?.name ? sub.cafe_id.name.charAt(0).toUpperCase() : '?'}
-                          </div>
-                          <div>
-                            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: 0, whiteSpace: 'nowrap' }}>{sub.cafe_id?.name || 'Unknown Café'}</p>
-                            <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: 0 }}>ID: {sub._id.slice(-6)}</p>
-                          </div>
-                        </div>
-                      </td>
+      {/* ── Subscriptions Table ── */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <h2 className="font-bold text-lg font-heading text-[var(--text-primary)]">
+            Active & Expired Tenant Subscriptions
+          </h2>
 
-                      {/* Plan Type */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: isPro ? '#f59e0b' : '#a78bfa', padding: '4px 10px', borderRadius: 6, background: isPro ? 'var(--warning-light)' : 'rgba(124,58,237,0.1)', textTransform: 'capitalize' }}>
-                          <span style={{ fontSize: 10 }}>{isPro ? '⭐' : '📦'}</span> {sub.plan_name}
-                        </span>
-                      </td>
+          <div className="relative min-w-[240px]">
+            <Search className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Filter by café or plan..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-1.5 bg-[var(--bg-card)] border border-[var(--border-medium)] rounded-xl text-xs text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+        </div>
 
-                      {/* Amount */}
-                      <td style={{ padding: '16px 20px', fontSize: 14, fontWeight: 600, color: 'var(--text-secondary)' }}>
-                        ₹{sub.price}
-                      </td>
-
-                      {/* Duration */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
-                          {(() => {
-                            const start = new Date(sub.start_date);
-                            const end = new Date(sub.end_date);
-                            const diffDays = Math.round((end - start) / (1000 * 60 * 60 * 24));
-                            if (diffDays > 300) return '1 Year';
-                            if (diffDays >= 28 && diffDays <= 31) return '1 Month';
-                            return `${diffDays} Days`;
-                          })()}
-                        </span>
-                      </td>
-
-                      {/* Dates */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}><span style={{ color: 'var(--text-tertiary)' }}>Start:</span> {new Date(sub.start_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                          <span style={{ fontSize: 12, color: 'var(--text-primary)' }}><span style={{ color: 'var(--text-tertiary)' }}>End:</span> {new Date(sub.end_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                        </div>
-                      </td>
-
-                      {/* Status */}
-                      <td style={{ padding: '16px 20px' }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 50, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, textTransform: 'capitalize' }}>
-                          {sub.status}
-                        </span>
-                      </td>
-
-                      {/* Actions */}
-                      <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
-                          <button 
-                            onClick={() => fetchHistory(sub.cafe_id?._id, sub.cafe_id?.name)}
-                            style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'var(--border-light)', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'var(--border-hover)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'var(--border-light)'}
-                          >
-                            History
-                          </button>
-                          <select
-                            value={sub.status}
-                            onChange={(e) => handleStatusUpdate(sub._id, e.target.value)}
-                            style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'var(--border-light)', color: 'var(--text-primary)', fontSize: 13, fontWeight: 500, outline: 'none', cursor: 'pointer', transition: 'border-color 0.2s', width: 110 }}
-                            onFocus={e => e.target.style.borderColor = 'rgba(124,58,237,0.5)'}
-                            onBlur={e => e.target.style.borderColor = 'var(--border-hover)'}
-                          >
-                            <option value="active" style={{ background: '#0d1120' }}>Active</option>
-                            <option value="suspended" style={{ background: '#0d1120' }}>Suspended</option>
-                            <option value="expired" style={{ background: '#0d1120' }}>Expired</option>
-                          </select>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              ) : (
-                <tr>
-                  <td colSpan={7} style={{ padding: '60px 20px', textAlign: 'center' }}>
-                    <div style={{ fontSize: 40, marginBottom: 12 }}>💳</div>
-                    <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-tertiary)', margin: '0 0 6px' }}>No subscriptions found</p>
-                    <p style={{ fontSize: 13, color: 'var(--border-hover)', margin: 0 }}>When cafés register, their subscriptions will appear here.</p>
-                  </td>
+        <div className="rounded-3xl bg-[var(--bg-card)] border border-[var(--border-medium)] overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-[var(--border-medium)] bg-[var(--bg-input)] uppercase font-bold text-[var(--text-tertiary)]">
+                  <th className="py-4 px-5">Café Brand</th>
+                  <th className="py-4 px-5">Plan Tier</th>
+                  <th className="py-4 px-5">Renewal Price</th>
+                  <th className="py-4 px-5">Cycle Window</th>
+                  <th className="py-4 px-5">Status</th>
+                  <th className="py-4 px-5 text-right">Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[var(--border-medium)]">
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="py-12 text-center text-[var(--text-secondary)]">
+                      <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      <span>Loading subscription ledger...</span>
+                    </td>
+                  </tr>
+                ) : filteredSubscriptions.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="py-16 text-center text-[var(--text-tertiary)]">
+                      <Crown className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                      <div className="font-bold text-sm text-[var(--text-primary)]">No Subscriptions Found</div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredSubscriptions.map(sub => {
+                    const statusClass = STATUS_COLORS[sub.status] || STATUS_COLORS.pending
+                    const isPro = sub.plan_name === 'pro_plus'
+                    return (
+                      <tr key={sub._id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
+                        <td className="py-4 px-5">
+                          <div className="font-bold text-sm text-[var(--text-primary)]">
+                            {sub.cafe_id?.name || 'Unknown Café'}
+                          </div>
+                          <div className="text-[11px] text-[var(--text-tertiary)] font-mono">
+                            ID: {sub._id?.slice(-8)}
+                          </div>
+                        </td>
+
+                        <td className="py-4 px-5">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold uppercase border ${
+                            isPro ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+                          }`}>
+                            {isPro ? <Crown className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
+                            <span>{sub.plan_name}</span>
+                          </span>
+                        </td>
+
+                        <td className="py-4 px-5 font-bold font-heading text-sm text-[var(--text-primary)]">
+                          ₹{sub.price}
+                        </td>
+
+                        <td className="py-4 px-5 text-[var(--text-secondary)]">
+                          {sub.start_date && sub.end_date ? (
+                            <>
+                              <div>{new Date(sub.start_date).toLocaleDateString([], { month: 'short', day: 'numeric' })} - {new Date(sub.end_date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                            </>
+                          ) : 'No expiration'}
+                        </td>
+
+                        <td className="py-4 px-5">
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border capitalize ${statusClass}`}>
+                            {sub.status}
+                          </span>
+                        </td>
+
+                        <td className="py-4 px-5 text-right">
+                          <button
+                            onClick={() => fetchHistory(sub.cafe_id?._id, sub.cafe_id?.name)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border-medium)] bg-[var(--bg-input)] hover:bg-[var(--bg-card-hover)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                          >
+                            <History className="w-3.5 h-3.5" />
+                            <span>Audit Log</span>
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      {/* History Modal */}
+      {/* ── History Modal ── */}
       {historyModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: 'var(--bg-shell)', borderRadius: 24, width: '100%', maxWidth: 700, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', animation: 'slideUp 0.3s ease' }}>
-            <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>Subscription History: {historyCafeName}</h2>
-              <button onClick={() => setHistoryModalOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontSize: 24, cursor: 'pointer' }}>×</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-medium)] rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-[var(--border-medium)] mb-5">
+              <div>
+                <h3 className="font-bold text-base text-[var(--text-primary)]">
+                  Subscription History • {historyCafeName}
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  Timeline of previous renewals and transactions
+                </p>
+              </div>
+              <button
+                onClick={() => setHistoryModalOpen(false)}
+                className="p-2 rounded-xl bg-[var(--bg-input)] hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)]"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            <div style={{ padding: 32, maxHeight: '60vh', overflowY: 'auto' }}>
-              {historyData.length === 0 ? (
-                <p style={{ textAlign: 'center', color: 'var(--text-tertiary)', margin: '40px 0' }}>No history records found.</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {historyData.map((record, index) => (
-                    <div key={record._id} style={{ padding: 20, borderRadius: 16, background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: record.plan_name === 'pro_plus' ? '#f59e0b' : '#a78bfa', textTransform: 'capitalize' }}>
-                            {record.plan_name} Plan
-                          </span>
-                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 12, background: 'var(--border-hover)', color: 'var(--text-secondary)' }}>
-                            ₹{record.price}
-                          </span>
-                        </div>
-                        <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>
-                          {new Date(record.start_date).toLocaleDateString('en-IN')} — {new Date(record.end_date).toLocaleDateString('en-IN')}
-                        </p>
+
+            <div className="space-y-3">
+              {historyData.length > 0 ? (
+                historyData.map((h, idx) => (
+                  <div key={idx} className="p-3.5 rounded-xl bg-[var(--bg-input)] border border-[var(--border-medium)] flex items-center justify-between text-xs">
+                    <div>
+                      <div className="font-bold text-[var(--text-primary)] uppercase">
+                        {h.plan_name} Plan
                       </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: 11, color: 'var(--text-tertiary)', display: 'block', marginBottom: 4 }}>Purchased on</span>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-                          {new Date(record.created_at).toLocaleDateString('en-IN')}
-                        </span>
+                      <div className="text-[var(--text-tertiary)]">
+                        {new Date(h.created_at || h.start_date).toLocaleDateString()}
                       </div>
                     </div>
-                  ))}
+                    <div className="text-right">
+                      <div className="font-black text-emerald-400">₹{h.price}</div>
+                      <div className="capitalize text-[var(--text-secondary)]">{h.status}</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-xs text-[var(--text-tertiary)]">
+                  No previous renewal records found for this account.
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes slideUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-      `}</style>
     </div>
   )
 }
-
-export default SubscriptionManagement

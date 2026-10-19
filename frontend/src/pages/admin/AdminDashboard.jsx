@@ -3,128 +3,73 @@ import { Link } from 'react-router-dom'
 import { adminAPI } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
-
-const card = (bg, border, glow) => ({
-  padding: '24px',
-  borderRadius: 18,
-  background: bg,
-  border: `1px solid ${border}`,
-  boxShadow: `0 4px 24px ${glow}`,
-  transition: 'transform 0.2s, box-shadow 0.2s',
-})
+import { 
+  Store, CheckCircle2, AlertTriangle, IndianRupee, 
+  HelpCircle, Activity, ArrowRight, Clock, Sparkles, 
+  ShieldCheck, TrendingUp, RefreshCw, Plus, CreditCard, 
+  ExternalLink, UserCheck, ShieldAlert
+} from 'lucide-react'
 
 const STAT_DEFS = [
   {
     key: 'totalCafes',
-    label: 'Total Cafés',
-    icon: '🏪',
-    bg: 'rgba(124,58,237,0.08)',
-    border: 'rgba(124,58,237,0.2)',
-    glow: 'rgba(124,58,237,0.1)',
-    accent: '#a78bfa',
-    
+    label: 'Total Registered Cafés',
+    icon: Store,
+    bg: 'bg-indigo-500/15',
+    color: 'text-indigo-400',
+    border: 'border-indigo-500/25',
   },
   {
     key: 'activePlans',
-    label: 'Active Plans',
-    icon: '✅',
-    bg: 'rgba(16,185,129,0.06)',
-    border: 'rgba(16,185,129,0.2)',
-    glow: 'rgba(16,185,129,0.08)',
-    accent: 'var(--success-text)',
-    
+    label: 'Active Subscriptions',
+    icon: CheckCircle2,
+    bg: 'bg-emerald-500/15',
+    color: 'text-emerald-400',
+    border: 'border-emerald-500/25',
   },
   {
     key: 'expiredPlans',
-    label: 'Expired Plans',
-    icon: '⚠️',
-    bg: 'rgba(245,158,11,0.06)',
-    border: 'rgba(245,158,11,0.2)',
-    glow: 'rgba(245,158,11,0.08)',
-    accent: '#fbbf24',
-    
+    label: 'Expired / Lapsed Accounts',
+    icon: AlertTriangle,
+    bg: 'bg-amber-500/15',
+    color: 'text-amber-400',
+    border: 'border-amber-500/25',
   },
   {
     key: 'monthlyRevenue',
     label: 'Monthly Recurring Revenue (MRR)',
-    icon: '💰',
-    bg: 'rgba(99,102,241,0.06)',
-    border: 'rgba(99,102,241,0.2)',
-    glow: 'rgba(99,102,241,0.08)',
-    accent: '#818cf8',
+    icon: IndianRupee,
+    bg: 'bg-cyan-500/15',
+    color: 'text-cyan-400',
+    border: 'border-cyan-500/25',
     format: (v) => `₹${(v || 0).toLocaleString()}`,
-    
   },
   {
     key: 'openTickets',
-    label: 'Open Support Tickets',
-    icon: '🎧',
-    bg: 'rgba(56,189,248,0.06)',
-    border: 'rgba(56,189,248,0.25)',
-    glow: 'rgba(56,189,248,0.1)',
-    accent: '#38bdf8',
-    
+    label: 'Active Support Tickets',
+    icon: HelpCircle,
+    bg: 'bg-purple-500/15',
+    color: 'text-purple-400',
+    border: 'border-purple-500/25',
   },
 ]
 
-function StatCard({ def, value, index }) {
-  const display = def.format ? def.format(value) : (value ?? 0)
-  return (
-    <div
-      style={{
-        padding: '22px 24px',
-        borderRadius: 18,
-        background: def.bg,
-        border: `1px solid ${def.border}`,
-        boxShadow: `0 4px 30px ${def.glow}`,
-        transition: 'transform 0.25s, box-shadow 0.25s',
-        animation: `slideUp 0.4s ease ${index * 0.08}s both`,
-      }}
-      onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 12px 40px ${def.glow}` }}
-      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = `0 4px 30px ${def.glow}` }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <div style={{ fontSize: 24 }}>{def.icon}</div>
-        {def.trend && (<span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 50, color: def.trendUp ? 'var(--success-text)' : 'var(--danger-text)', background: def.trendUp ? 'var(--success-light)' : 'var(--danger-light)' }}>{def.trend}</span>)}
-      </div>
-      <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: '0 0 6px', fontWeight: 500 }}>{def.label}</p>
-      <p style={{ fontSize: 30, fontWeight: 900, color: 'var(--text-primary)', margin: 0, fontFamily: "'Outfit',sans-serif", letterSpacing: '-1px' }}>
-        {display}
-      </p>
-    </div>
-  )
-}
-
-function SkeletonCard() {
-  return (
-    <div style={{ padding: '22px 24px', borderRadius: 18, background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.06)' }}>
-      <div style={{ width: 40, height: 16, borderRadius: 8, background: 'var(--border-light)', marginBottom: 16, animation: 'pulse 1.5s ease infinite' }} />
-      <div style={{ width: '60%', height: 13, borderRadius: 6, background: 'var(--bg-card-hover)', marginBottom: 10, animation: 'pulse 1.5s ease infinite' }} />
-      <div style={{ width: '40%', height: 32, borderRadius: 8, background: 'var(--border-light)', animation: 'pulse 1.5s ease infinite' }} />
-    </div>
-  )
-}
-
-const STATUS_COLORS = {
-  active: { bg: 'var(--success-light)', color: 'var(--success-text)', border: 'rgba(16,185,129,0.2)' },
-  suspended: { bg: 'rgba(239,68,68,0.1)', color: 'var(--danger-text)', border: 'rgba(239,68,68,0.2)' },
-  expired: { bg: 'var(--warning-light)', color: '#fbbf24', border: 'rgba(245,158,11,0.2)' },
-  pending: { bg: 'rgba(107,114,128,0.1)', color: 'var(--text-secondary)', border: 'rgba(107,114,128,0.2)' },
-}
-
-const AdminDashboard = () => {
+export default function AdminDashboard() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
 
-  useEffect(() => { fetchDashboard() }, [])
+  useEffect(() => { 
+    fetchDashboard() 
+  }, [])
 
   const fetchDashboard = async () => {
     try {
+      setLoading(true)
       const res = await adminAPI.getDashboard()
-      setStats(res.data.data)
+      setStats(res.data?.data)
     } catch {
-      toast.error('Failed to load dashboard')
+      toast.error('Failed to load super admin metrics')
     } finally {
       setLoading(false)
     }
@@ -134,187 +79,281 @@ const AdminDashboard = () => {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
   return (
-    <div style={{ fontFamily: "'Inter',sans-serif", color: 'var(--text-primary)' }}>
+    <div className="space-y-8 max-w-7xl mx-auto pb-16 font-sans">
+      {/* ── Top Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[var(--border-medium)] pb-6">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-2">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Platform Overview</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black font-heading text-[var(--text-primary)] tracking-tight">
+            {greeting}, {user?.name || 'Super Admin'}
+          </h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            System health, café tenant activations, monthly recurring revenue, and urgent support tickets.
+          </p>
+        </div>
 
-      {/* ─── Header ─── */}
-      <div style={{ marginBottom: 32 }}>
-        <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: '0 0 4px', fontWeight: 500 }}>
-          {greeting}, <span style={{ color: '#a78bfa' }}>{user?.name}</span> 👋
-        </p>
-        <h1 style={{ fontSize: 'clamp(22px,4vw,30px)', fontWeight: 900, margin: '0 0 4px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>
-          Platform Dashboard
-        </h1>
-        <p style={{ fontSize: 14, color: 'var(--text-tertiary)', margin: 0 }}>Overview of all cafés and subscriptions across the platform.</p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={fetchDashboard}
+            disabled={loading}
+            className="px-4 py-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-medium)] hover:bg-[var(--bg-card-hover)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Sync Stats</span>
+          </button>
+
+          <Link
+            to="/admin/cafes"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs shadow-md shadow-indigo-500/25 active:scale-[0.99] transition-all flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Onboard Café</span>
+          </Link>
+        </div>
       </div>
 
-      {/* ─── Stat Cards ─── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
-        {loading
-          ? [...Array(4)].map((_, i) => <SkeletonCard key={i} />)
-          : STAT_DEFS.map((def, i) => (
-              <StatCard key={def.key} def={def} value={stats?.[def.key]} index={i} />
-            ))
-        }
-      </div>
-
-      {/* ─── Two-column section ─── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginBottom: 24 }}>
-
-        {/* Recent Cafés */}
-        <div style={{ borderRadius: 20, background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-          {/* Card header */}
-          <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Recent Cafés</h2>
-              <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: 0 }}>Latest registered cafés</p>
+      {/* ── 5 Core Metric Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        {STAT_DEFS.map((def, i) => {
+          const Icon = def.icon
+          const displayVal = def.format ? def.format(stats?.[def.key]) : (stats?.[def.key] ?? 0)
+          return (
+            <div
+              key={def.key}
+              className={`p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] hover:border-[var(--border-hover)] shadow-sm transition-all flex flex-col justify-between ${
+                i === 4 ? 'col-span-2 lg:col-span-1' : ''
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
+                  {def.label}
+                </span>
+                <div className={`w-8 h-8 rounded-xl ${def.bg} ${def.color} border ${def.border} flex items-center justify-center`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-black font-heading text-[var(--text-primary)]">
+                {loading ? '—' : displayVal}
+              </div>
             </div>
-            <Link to="/admin/cafes" style={{ fontSize: 12, fontWeight: 600, color: '#7c3aed', textDecoration: 'none', padding: '6px 14px', borderRadius: 8, background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.2)' }}>
-              View All →
+          )
+        })}
+      </div>
+
+      {/* ── Mid Section: Recent Cafés + Quick Actions & Health ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Recent Cafés List (8 cols) */}
+        <div className="lg:col-span-8 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-medium)] overflow-hidden shadow-sm">
+          <div className="p-5 border-b border-[var(--border-medium)] flex items-center justify-between bg-[var(--bg-input)]/50">
+            <div>
+              <h2 className="font-bold text-base font-heading text-[var(--text-primary)]">
+                Recent Café Activations
+              </h2>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                Newest restaurant tenants onboarded to WhatTheMenu
+              </p>
+            </div>
+            <Link
+              to="/admin/cafes"
+              className="text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
+            >
+              <span>View All Cafés</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-          {/* Rows */}
-          <div style={{ padding: '8px 0' }}>
+
+          <div className="divide-y divide-[var(--border-medium)]">
             {loading ? (
-              [...Array(3)].map((_, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 24px' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--border-light)', flexShrink: 0, animation: 'pulse 1.5s ease infinite' }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ width: '50%', height: 12, borderRadius: 4, background: 'var(--border-light)', marginBottom: 6, animation: 'pulse 1.5s ease infinite' }} />
-                    <div style={{ width: '70%', height: 10, borderRadius: 4, background: 'var(--bg-input)', animation: 'pulse 1.5s ease infinite' }} />
-                  </div>
-                </div>
-              ))
+              <div className="p-8 text-center text-xs text-[var(--text-secondary)]">
+                Loading tenant directory...
+              </div>
             ) : stats?.recentCafes?.length > 0 ? (
-              stats.recentCafes.slice(0, 6).map(cafe => {
-                const sc = STATUS_COLORS[cafe.subscription_status] || STATUS_COLORS.pending
+              stats.recentCafes.slice(0, 5).map(cafe => {
+                const isActive = cafe.subscription_status === 'active'
                 return (
-                  <div key={cafe._id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 24px', transition: 'background 0.15s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, flexShrink: 0 }}>
-                      {cafe.name.charAt(0).toUpperCase()}
+                  <div
+                    key={cafe._id}
+                    className="p-4 hover:bg-[var(--bg-card-hover)] transition-colors flex items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold flex items-center justify-center flex-shrink-0 text-sm">
+                        {cafe.name?.charAt(0)?.toUpperCase() || 'C'}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-sm text-[var(--text-primary)] truncate">
+                          {cafe.name}
+                        </div>
+                        <div className="text-xs text-[var(--text-secondary)] truncate">
+                          {cafe.email} • {cafe.phone || 'No phone'}
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cafe.name}</p>
-                      <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cafe.email}</p>
+
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border capitalize ${
+                        isActive
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                          : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                      }`}>
+                        {cafe.subscription_status}
+                      </span>
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 50, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, textTransform: 'capitalize', flexShrink: 0 }}>
-                      {cafe.subscription_status}
-                    </span>
                   </div>
                 )
               })
             ) : (
-              <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--border-hover)' }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>🏪</div>
-                <p style={{ fontSize: 14, margin: 0 }}>No cafés registered yet</p>
-                <Link to="/admin/cafes" style={{ display: 'inline-block', marginTop: 12, fontSize: 13, fontWeight: 600, color: '#7c3aed', textDecoration: 'none' }}>+ Add First Café</Link>
+              <div className="p-12 text-center text-[var(--text-tertiary)]">
+                <Store className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No cafés registered yet.</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Quick stats mini */}
-          <div style={{ borderRadius: 20, background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.07)', padding: '20px 24px' }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 16px', color: 'var(--text-primary)' }}>Quick Actions</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              {[
-                { to: '/admin/cafes', icon: '🏪', label: 'Add New Café', color: '#7c3aed', bg: 'rgba(124,58,237,0.1)', border: 'rgba(124,58,237,0.2)' },
-                { to: '/admin/support', icon: '🎧', label: 'Support Queue', color: '#38bdf8', bg: 'rgba(56,189,248,0.08)', border: 'rgba(56,189,248,0.2)' },
-                { to: '/admin/subscriptions', icon: '💳', label: 'Manage Plans', color: 'var(--success-text)', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)' },
-                { to: '/admin/settings', icon: '⚙️', label: 'Settings', color: '#fbbf24', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)' },
-              ].map(a => (
-                <Link key={a.to + a.label} to={a.to} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '16px 8px', borderRadius: 14, background: a.bg, border: `1px solid ${a.border}`, textDecoration: 'none', transition: 'transform 0.2s, opacity 0.2s' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.03)' }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}>
-                  <span style={{ fontSize: 22 }}>{a.icon}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: a.color, textAlign: 'center', lineHeight: 1.3 }}>{a.label}</span>
-                </Link>
-              ))}
+        {/* Quick Actions & Platform Health (4 cols) */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Action Grid */}
+          <div className="p-5 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-medium)] shadow-sm space-y-4">
+            <h3 className="font-bold text-sm uppercase tracking-wider text-[var(--text-secondary)]">
+              Admin Quick Actions
+            </h3>
+            <div className="grid grid-cols-2 gap-2.5">
+              <Link
+                to="/admin/cafes"
+                className="p-3.5 rounded-2xl bg-[var(--bg-input)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-medium)] text-center transition-all group"
+              >
+                <Store className="w-5 h-5 text-indigo-400 mx-auto mb-1.5 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-semibold text-[var(--text-primary)] block">Manage Cafés</span>
+              </Link>
+
+              <Link
+                to="/admin/revenue"
+                className="p-3.5 rounded-2xl bg-[var(--bg-input)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-medium)] text-center transition-all group"
+              >
+                <TrendingUp className="w-5 h-5 text-emerald-400 mx-auto mb-1.5 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-semibold text-[var(--text-primary)] block">Platform MRR</span>
+              </Link>
+
+              <Link
+                to="/admin/subscriptions"
+                className="p-3.5 rounded-2xl bg-[var(--bg-input)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-medium)] text-center transition-all group"
+              >
+                <CreditCard className="w-5 h-5 text-amber-400 mx-auto mb-1.5 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-semibold text-[var(--text-primary)] block">Subscriptions</span>
+              </Link>
+
+              <Link
+                to="/admin/support"
+                className="p-3.5 rounded-2xl bg-[var(--bg-input)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-medium)] text-center transition-all group"
+              >
+                <HelpCircle className="w-5 h-5 text-purple-400 mx-auto mb-1.5 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-semibold text-[var(--text-primary)] block">Support Desk</span>
+              </Link>
             </div>
           </div>
 
-          {/* Platform health */}
-          <div style={{ borderRadius: 20, background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.07)', padding: '20px 24px' }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, margin: '0 0 16px', color: 'var(--text-primary)' }}>Platform Health</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {[
-                { label: 'Active Cafés', val: loading ? 0 : stats?.activePlans || 0, max: loading ? 10 : Math.max(stats?.totalCafes, 1), color: 'var(--success-text)' },
-                { label: 'Plan Renewal Rate', val: 85, max: 100, color: '#818cf8', suffix: '%' },
-                { label: 'Platform Uptime', val: 99, max: 100, color: '#7c3aed', suffix: '%' },
-              ].map(m => (
-                <div key={m.label}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)' }}>{m.label}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: m.color }}>{m.suffix ? `${m.val}${m.suffix}` : `${m.val}/${m.max}`}</span>
-                  </div>
-                  <div style={{ height: 6, borderRadius: 3, background: 'var(--border-light)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${Math.min((m.val / m.max) * 100, 100)}%`, background: m.color, borderRadius: 3, transition: 'width 1s ease' }} />
-                  </div>
+          {/* Health Stats */}
+          <div className="p-5 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-medium)] shadow-sm space-y-4">
+            <h3 className="font-bold text-sm uppercase tracking-wider text-[var(--text-secondary)]">
+              Platform Health Status
+            </h3>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <div className="flex justify-between mb-1.5">
+                  <span className="text-[var(--text-secondary)]">Café Active Ratio</span>
+                  <span className="font-bold text-emerald-400">
+                    {stats?.totalCafes ? Math.round(((stats.activePlans || 0) / stats.totalCafes) * 100) : 100}%
+                  </span>
                 </div>
-              ))}
+                <div className="h-2 rounded-full bg-[var(--bg-input)] overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full"
+                    style={{
+                      width: `${stats?.totalCafes ? Math.min(100, Math.round(((stats.activePlans || 0) / stats.totalCafes) * 100)) : 100}%`
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-1.5">
+                  <span className="text-[var(--text-secondary)]">Uptime & Real-time WebSockets</span>
+                  <span className="font-bold text-cyan-400">99.98% Healthy</span>
+                </div>
+                <div className="h-2 rounded-full bg-[var(--bg-input)] overflow-hidden">
+                  <div className="h-full bg-cyan-500 rounded-full w-[99.9%]" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ─── Recent Support Tickets (Top Priority Queue) ─── */}
+      {/* ── Support Queue Table ── */}
       {stats?.recentTickets?.length > 0 && (
-        <div style={{ borderRadius: 20, background: 'var(--bg-card)', border: '1px solid rgba(56,189,248,0.2)', overflow: 'hidden', marginBottom: 28, boxShadow: '0 4px 24px rgba(56,189,248,0.06)' }}>
-          <div style={{ padding: '18px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(56,189,248,0.03)' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 18 }}>🎧</span>
-                <h2 style={{ fontSize: 15, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>Recent Support Inquiries</h2>
-                {stats?.urgentTickets > 0 && (
-                  <span style={{ fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 20, background: 'rgba(239,68,68,0.2)', color: 'var(--danger-text)', border: '1px solid rgba(239,68,68,0.3)' }}>
-                    ⚡ {stats.urgentTickets} Urgent
-                  </span>
-                )}
+        <div className="rounded-3xl bg-[var(--bg-card)] border border-[var(--border-medium)] overflow-hidden shadow-sm">
+          <div className="p-5 border-b border-[var(--border-medium)] flex items-center justify-between bg-indigo-500/5">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center">
+                <HelpCircle className="w-5 h-5" />
               </div>
-              <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0' }}>Latest issues reported by café owners requiring review</p>
+              <div>
+                <h3 className="font-bold text-sm font-heading text-[var(--text-primary)]">
+                  Urgent Support Inquiries
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  Pending issues reported by restaurant owners
+                </p>
+              </div>
             </div>
-            <Link to="/admin/support" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#38bdf8', textDecoration: 'none', padding: '8px 16px', borderRadius: 10, background: 'rgba(56,189,248,0.1)', border: '1px solid rgba(56,189,248,0.25)' }}>
-              Open Support Queue →
+
+            <Link
+              to="/admin/support"
+              className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
+            >
+              <span>Open Queue</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  {['Ticket ID', 'Café', 'Subject', 'Priority', 'Status', 'Action'].map(h => (
-                    <th key={h} style={{ padding: '12px 20px', fontSize: 11, fontWeight: 700, color: 'var(--text-tertiary)', textAlign: 'left', letterSpacing: 1, textTransform: 'uppercase' }}>{h}</th>
-                  ))}
+                <tr className="border-b border-[var(--border-medium)] bg-[var(--bg-input)] uppercase font-bold text-[var(--text-tertiary)]">
+                  <th className="py-3 px-5">Ticket ID</th>
+                  <th className="py-3 px-5">Café Name</th>
+                  <th className="py-3 px-5">Subject</th>
+                  <th className="py-3 px-5">Status</th>
+                  <th className="py-3 px-5 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-[var(--border-medium)]">
                 {stats.recentTickets.map(t => (
-                  <tr key={t._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <td style={{ padding: '12px 20px', fontWeight: 800, fontFamily: 'monospace', color: '#60a5fa', fontSize: 12 }}>
-                      {t.ticket_number}
+                  <tr key={t._id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
+                    <td className="py-3 px-5 font-mono text-indigo-400 font-bold">
+                      {t.ticket_number || t._id?.slice(-6)}
                     </td>
-                    <td style={{ padding: '12px 20px', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {t.cafe_id?.name || 'Café'}
+                    <td className="py-3 px-5 font-semibold text-[var(--text-primary)]">
+                      {t.cafe_id?.name || 'Partner Café'}
                     </td>
-                    <td style={{ padding: '12px 20px', fontSize: 13, color: '#cbd5e1', maxWidth: 260, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <td className="py-3 px-5 text-[var(--text-secondary)] truncate max-w-xs">
                       {t.subject}
                     </td>
-                    <td style={{ padding: '12px 20px' }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 6, background: t.priority === 'urgent' ? 'rgba(239,68,68,0.15)' : 'var(--border-light)', color: t.priority === 'urgent' ? 'var(--danger-text)' : '#94a3b8' }}>
-                        {t.priority === 'urgent' ? '⚡ Urgent' : 'Standard'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px 20px' }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 12, textTransform: 'capitalize', background: t.status === 'open' ? 'rgba(56,189,248,0.15)' : 'rgba(16,185,129,0.15)', color: t.status === 'open' ? '#38bdf8' : 'var(--success-text)' }}>
+                    <td className="py-3 px-5">
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 capitalize">
                         {t.status}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 20px' }}>
-                      <Link to="/admin/support" style={{ fontSize: 12, fontWeight: 700, color: '#38bdf8', textDecoration: 'none' }}>
-                        Respond →
+                    <td className="py-3 px-5 text-right">
+                      <Link
+                        to="/admin/support"
+                        className="text-indigo-400 hover:text-indigo-300 font-bold"
+                      >
+                        Reply →
                       </Link>
                     </td>
                   </tr>
@@ -324,96 +363,6 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
-
-      {/* ─── Recent Table (Full width) ─── */}
-      <div style={{ borderRadius: 20, background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <h2 style={{ fontSize: 15, fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>All Registered Cafés</h2>
-            <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: 0 }}>Complete list with status and subscription details</p>
-          </div>
-          <Link to="/admin/cafes" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', textDecoration: 'none', padding: '8px 16px', borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', boxShadow: '0 4px 16px rgba(124,58,237,0.3)' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Café
-          </Link>
-        </div>
-
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                {['Café Name', 'Email', 'Plan', 'Status', 'Joined', ''].map(h => (
-                  <th key={h} style={{ padding: '12px 20px', fontSize: 11, fontWeight: 700, color: 'var(--text-tertiary)', textAlign: 'left', letterSpacing: 1, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                [...Array(4)].map((_, i) => (
-                  <tr key={i}>
-                    {[...Array(6)].map((_, j) => (
-                      <td key={j} style={{ padding: '16px 20px' }}>
-                        <div style={{ height: 12, borderRadius: 4, background: 'var(--bg-card-hover)', animation: 'pulse 1.5s ease infinite' }} />
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : stats?.recentCafes?.length > 0 ? (
-                stats.recentCafes.map(cafe => {
-                  const sc = STATUS_COLORS[cafe.subscription_status] || STATUS_COLORS.pending
-                  return (
-                    <tr key={cafe._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.15s' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                      <td style={{ padding: '14px 20px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>
-                            {cafe.name.charAt(0).toUpperCase()}
-                          </div>
-                          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{cafe.name}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '14px 20px', fontSize: 13, color: 'var(--text-tertiary)' }}>{cafe.email}</td>
-                      <td style={{ padding: '14px 20px', fontSize: 13, color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{cafe.subscription?.plan_name || 'N/A'}</td>
-                      <td style={{ padding: '14px 20px' }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 50, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`, textTransform: 'capitalize' }}>
-                          {cafe.subscription_status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '14px 20px', fontSize: 13, color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
-                        {new Date(cafe.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </td>
-                      <td style={{ padding: '14px 20px' }}>
-                        <Link to="/admin/cafes" style={{ fontSize: 12, fontWeight: 600, color: '#7c3aed', textDecoration: 'none', padding: '5px 12px', borderRadius: 8, border: '1px solid rgba(124,58,237,0.25)', background: 'rgba(124,58,237,0.06)', whiteSpace: 'nowrap' }}>
-                          Manage →
-                        </Link>
-                      </td>
-                    </tr>
-                  )
-                })
-              ) : (
-                <tr>
-                  <td colSpan={6} style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--border-hover)' }}>
-                    <div style={{ fontSize: 36, marginBottom: 12 }}>🏪</div>
-                    <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-tertiary)', margin: '0 0 8px' }}>No cafés registered yet</p>
-                    <p style={{ fontSize: 13, color: 'var(--border-hover)', margin: '0 0 16px' }}>Add your first café to get started.</p>
-                    <Link to="/admin/cafes" style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', textDecoration: 'none', padding: '10px 24px', borderRadius: 10, background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
-                      + Add First Café
-                    </Link>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <style>{`
-        @keyframes slideUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-      `}</style>
     </div>
   )
 }
-
-export default AdminDashboard

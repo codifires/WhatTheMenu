@@ -164,6 +164,7 @@ export const customerAPI = {
   // Razorpay Order Payment
   createRazorpayOrder: (data) => api.post('/orders/create-razorpay-order', data),
   verifyRazorpayPayment: (data) => api.post('/orders/verify-razorpay-payment', data),
+  triggerStaffAlert: (orderNumber, data) => api.post(`/orders/${orderNumber}/alert`, data),
 }
 
 export default api

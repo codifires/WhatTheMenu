@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react'
 import { adminAPI } from '../../services/api'
 import toast from 'react-hot-toast'
+import { 
+  HelpCircle, Search, RefreshCw, AlertCircle, Clock, 
+  CheckCircle2, MessageSquare, Send, X, Filter, 
+  ShieldCheck, ArrowUpRight, MessageCircle 
+} from 'lucide-react'
 
 const CATEGORY_NAMES = {
-  payment_upi: '💳 Payment & UPI',
-  menu_qr: '📋 Menu & QR',
-  live_orders: '⚡ Live Orders',
-  subscription: '💎 Subscription',
-  other: '💡 General Inquiry'
+  payment_upi: 'Payment & UPI',
+  menu_qr: 'Menu & QR Codes',
+  live_orders: 'Live Orders & KDS',
+  subscription: 'Subscriptions',
+  other: 'General Inquiry'
 }
 
 export default function SupportTicketManagement() {
@@ -89,501 +94,292 @@ export default function SupportTicketManagement() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'open':
-        return { bg: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: 'rgba(56, 189, 248, 0.3)', label: 'Open' }
+        return 'bg-blue-500/10 text-blue-400 border-blue-500/20'
       case 'in_progress':
-        return { bg: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.3)', label: 'In Progress' }
+        return 'bg-amber-500/10 text-amber-400 border-amber-500/20'
       case 'resolved':
-        return { bg: 'rgba(16, 185, 129, 0.15)', color: 'var(--success-text)', border: 'rgba(16, 185, 129, 0.3)', label: 'Resolved' }
+        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
       case 'closed':
-        return { bg: 'rgba(100, 116, 139, 0.15)', color: '#94a3b8', border: 'rgba(100, 116, 139, 0.3)', label: 'Closed' }
+        return 'bg-slate-700/40 text-slate-400 border-slate-700'
       default:
-        return { bg: 'var(--border-hover)', color: 'var(--text-primary)', border: 'var(--border-hover)', label: status }
+        return 'bg-slate-700/40 text-slate-400 border-slate-700'
     }
   }
 
   return (
-    <div style={{ padding: '28px 24px', maxWidth: 1300, margin: '0 auto' }}>
-      
-      {/* ── Page Header ── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 28 }}>
+    <div className="space-y-8 max-w-7xl mx-auto pb-16 font-sans">
+      {/* ── Top Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[var(--border-medium)] pb-6">
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 6px', fontFamily: "'Outfit', sans-serif" }}>
-            🎧 Café Support & Issue Tickets
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-semibold mb-2">
+            <HelpCircle className="w-3.5 h-3.5" />
+            <span>Customer Resolution</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black font-heading text-[var(--text-primary)] tracking-tight">
+            Café Support & Issue Queue
           </h1>
-          <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>
-            Manage client inquiries, troubleshoot UPI payments/KDS orders, and reply directly to café partners.
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
+            Review partner inquiries, reply to operational issues, and update ticket resolution statuses.
           </p>
         </div>
 
         <button
           onClick={fetchTickets}
-          style={{
-            padding: '10px 18px',
-            borderRadius: 12,
-            background: 'var(--border-light)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: '#e2e8f0',
-            fontSize: 13,
-            fontWeight: 700,
-            cursor: 'pointer'
-          }}
+          disabled={loading}
+          className="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-medium)] hover:bg-[var(--bg-card-hover)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors flex items-center gap-2 shadow-sm"
         >
-          🔄 Refresh Queue
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <span>Refresh Queue</span>
         </button>
       </div>
 
       {/* ── Stat Summary Cards ── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: 16,
-        marginBottom: 28
-      }}>
-        <div style={{
-          padding: '20px',
-          borderRadius: 16,
-          background: 'rgba(15, 23, 42, 0.7)',
-          border: '1px solid rgba(255, 255, 255, 0.08)'
-        }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 6 }}>
-            Total Tickets
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] shadow-sm">
+          <div className="flex items-center justify-between text-[var(--text-secondary)] mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider">Total Tickets</span>
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/15 text-indigo-400 flex items-center justify-center">
+              <MessageSquare className="w-4 h-4" />
+            </div>
           </div>
-          <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--text-primary)' }}>
+          <div className="text-2xl font-black font-heading text-[var(--text-primary)]">
             {counts.total}
           </div>
         </div>
 
-        <div style={{
-          padding: '20px',
-          borderRadius: 16,
-          background: 'rgba(56, 189, 248, 0.08)',
-          border: '1px solid rgba(56, 189, 248, 0.25)'
-        }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', marginBottom: 6 }}>
-            Open / Pending
+        <div className="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] shadow-sm">
+          <div className="flex items-center justify-between text-[var(--text-secondary)] mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider">Open / Pending</span>
+            <div className="w-8 h-8 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center">
+              <AlertCircle className="w-4 h-4" />
+            </div>
           </div>
-          <div style={{ fontSize: 26, fontWeight: 900, color: '#38bdf8' }}>
+          <div className="text-2xl font-black font-heading text-blue-400">
             {counts.open}
           </div>
         </div>
 
-        <div style={{
-          padding: '20px',
-          borderRadius: 16,
-          background: 'var(--danger-light)',
-          border: '1px solid rgba(239, 68, 68, 0.25)'
-        }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--danger-text)', textTransform: 'uppercase', marginBottom: 6 }}>
-            ⚡ Urgent / Pro Plus Plan
+        <div className="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] shadow-sm">
+          <div className="flex items-center justify-between text-[var(--text-secondary)] mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider">In Progress</span>
+            <div className="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center">
+              <Clock className="w-4 h-4" />
+            </div>
           </div>
-          <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--danger-text)' }}>
-            {counts.urgent}
+          <div className="text-2xl font-black font-heading text-amber-400">
+            {counts.in_progress}
           </div>
         </div>
 
-        <div style={{
-          padding: '20px',
-          borderRadius: 16,
-          background: 'rgba(16, 185, 129, 0.08)',
-          border: '1px solid rgba(16, 185, 129, 0.25)'
-        }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--success-text)', textTransform: 'uppercase', marginBottom: 6 }}>
-            Resolved Tickets
+        <div className="p-5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-medium)] shadow-sm">
+          <div className="flex items-center justify-between text-[var(--text-secondary)] mb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider">Resolved</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
           </div>
-          <div style={{ fontSize: 26, fontWeight: 900, color: 'var(--success-text)' }}>
+          <div className="text-2xl font-black font-heading text-emerald-400">
             {counts.resolved}
           </div>
         </div>
       </div>
 
-      {/* ── Search & Filters Bar ── */}
-      <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 12,
-        alignItems: 'center',
-        background: 'rgba(15, 23, 42, 0.6)',
-        padding: '16px 20px',
-        borderRadius: 16,
-        border: '1px solid rgba(255, 255, 255, 0.06)',
-        marginBottom: 20
-      }}>
-        {/* Search */}
-        <div style={{ flex: '1 1 250px' }}>
-          <input
-            type="text"
-            placeholder="Search by café, email, ticket ID, or subject..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              boxSizing: 'border-box',
-              padding: '10px 14px',
-              borderRadius: 10,
-              background: 'var(--bg-card-hover)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'var(--text-primary)',
-              fontSize: 13,
-              outline: 'none'
-            }}
-          />
+      {/* ── Filters & Search ── */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[var(--bg-card)] border border-[var(--border-medium)] p-3 rounded-2xl shadow-sm">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          {['all', 'open', 'in_progress', 'resolved'].map(status => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize whitespace-nowrap transition-all ${
+                statusFilter === status
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-[var(--bg-input)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-medium)]'
+              }`}
+            >
+              {status === 'all' ? 'All Statuses' : status.replace('_', ' ')}
+            </button>
+          ))}
         </div>
 
-        {/* Status Filter */}
-        <select
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-          style={{
-            padding: '10px 14px',
-            borderRadius: 10,
-            background: 'var(--bg-shell)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: 'var(--text-primary)',
-            fontSize: 13,
-            outline: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          <option value="all">All Statuses</option>
-          <option value="open">Open</option>
-          <option value="in_progress">In Progress</option>
-          <option value="resolved">Resolved</option>
-          <option value="closed">Closed</option>
-        </select>
-
-        {/* Priority Filter */}
-        <select
-          value={priorityFilter}
-          onChange={e => setPriorityFilter(e.target.value)}
-          style={{
-            padding: '10px 14px',
-            borderRadius: 10,
-            background: 'var(--bg-shell)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: 'var(--text-primary)',
-            fontSize: 13,
-            outline: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          <option value="all">All Priorities</option>
-          <option value="urgent">⚡ Urgent (Pro Plus Plan)</option>
-          <option value="normal">Standard Priority</option>
-        </select>
-
-        {/* Category Filter */}
-        <select
-          value={categoryFilter}
-          onChange={e => setCategoryFilter(e.target.value)}
-          style={{
-            padding: '10px 14px',
-            borderRadius: 10,
-            background: 'var(--bg-shell)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            color: 'var(--text-primary)',
-            fontSize: 13,
-            outline: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          <option value="all">All Categories</option>
-          <option value="payment_upi">Payment & UPI</option>
-          <option value="menu_qr">Menu & QR Codes</option>
-          <option value="live_orders">Live Orders</option>
-          <option value="subscription">Subscription</option>
-          <option value="other">Other / Inquiry</option>
-        </select>
+        <div className="relative min-w-[240px]">
+          <Search className="w-4 h-4 text-[var(--text-tertiary)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search ticket #, subject or café..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-1.5 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-xs text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-indigo-500"
+          />
+        </div>
       </div>
 
       {/* ── Tickets Table ── */}
-      <div style={{
-        background: 'rgba(15, 23, 42, 0.8)',
-        borderRadius: 18,
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        overflow: 'hidden',
-        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.2)'
-      }}>
-        {loading ? (
-          <div style={{ padding: '60px 20px', textAlign: 'center', color: '#94a3b8' }}>
-            Loading support tickets...
-          </div>
-        ) : filteredTickets.length === 0 ? (
-          <div style={{ padding: '60px 20px', textAlign: 'center', color: '#94a3b8' }}>
-            <span style={{ fontSize: 36, display: 'block', marginBottom: 8 }}>✅</span>
-            <p style={{ margin: 0, fontSize: 14 }}>No tickets matching the current filter.</p>
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
-              <thead>
-                <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                  <th style={{ padding: '14px 18px', color: '#94a3b8', fontWeight: 700 }}>Ticket ID</th>
-                  <th style={{ padding: '14px 18px', color: '#94a3b8', fontWeight: 700 }}>Café & Plan</th>
-                  <th style={{ padding: '14px 18px', color: '#94a3b8', fontWeight: 700 }}>Subject & Category</th>
-                  <th style={{ padding: '14px 18px', color: '#94a3b8', fontWeight: 700 }}>Priority</th>
-                  <th style={{ padding: '14px 18px', color: '#94a3b8', fontWeight: 700 }}>Status</th>
-                  <th style={{ padding: '14px 18px', color: '#94a3b8', fontWeight: 700 }}>Created</th>
-                  <th style={{ padding: '14px 18px', color: '#94a3b8', fontWeight: 700, textAlign: 'right' }}>Action</th>
+      <div className="rounded-3xl bg-[var(--bg-card)] border border-[var(--border-medium)] overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-[var(--border-medium)] bg-[var(--bg-input)] uppercase font-bold text-[var(--text-tertiary)]">
+                <th className="py-4 px-5">Ticket ID</th>
+                <th className="py-4 px-5">Café Partner</th>
+                <th className="py-4 px-5">Category</th>
+                <th className="py-4 px-5">Subject & Description</th>
+                <th className="py-4 px-5">Status</th>
+                <th className="py-4 px-5 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--border-medium)]">
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="py-12 text-center text-[var(--text-secondary)]">
+                    <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    <span>Loading support queue...</span>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredTickets.map(t => {
-                  const badge = getStatusBadge(t.status)
-                  const isPro = t.cafe_id?.subscription?.plan_name === 'pro_plus' || t.cafe_id?.subscription_status === 'pro_plus'
+              ) : filteredTickets.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="py-16 text-center text-[var(--text-tertiary)]">
+                    <CheckCircle2 className="w-10 h-10 mx-auto mb-2 opacity-40 text-emerald-400" />
+                    <div className="font-bold text-sm text-[var(--text-primary)]">All Support Queues Clear</div>
+                    <div className="text-xs mt-1">No pending support tickets match your current filter.</div>
+                  </td>
+                </tr>
+              ) : (
+                filteredTickets.map(t => {
+                  const statusClass = getStatusBadge(t.status)
                   return (
-                    <tr
-                      key={t._id}
-                      style={{
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
-                        transition: 'background 0.15s ease'
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-card)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <td style={{ padding: '14px 18px', fontWeight: 800, fontFamily: 'monospace', color: '#60a5fa' }}>
-                        {t.ticket_number}
+                    <tr key={t._id} className="hover:bg-[var(--bg-card-hover)] transition-colors">
+                      <td className="py-4 px-5 font-mono font-bold text-indigo-400">
+                        {t.ticket_number || t._id?.slice(-8)}
                       </td>
-                      <td style={{ padding: '14px 18px' }}>
-                        <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{t.cafe_id?.name || 'Unknown Café'}</div>
-                        <div style={{ fontSize: 11, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span>{t.cafe_id?.email}</span>
-                          {isPro && (
-                            <span style={{ background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc', padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 800 }}>
-                              💎 PRO
-                            </span>
-                          )}
+
+                      <td className="py-4 px-5">
+                        <div className="font-bold text-sm text-[var(--text-primary)]">
+                          {t.cafe_id?.name || 'Partner Café'}
+                        </div>
+                        <div className="text-[11px] text-[var(--text-tertiary)]">
+                          {t.cafe_id?.email || 'N/A'}
                         </div>
                       </td>
-                      <td style={{ padding: '14px 18px' }}>
-                        <div style={{ fontWeight: 700, color: '#e2e8f0', maxWidth: 280, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+
+                      <td className="py-4 px-5">
+                        <span className="px-2 py-0.5 rounded-md text-[11px] bg-[var(--bg-input)] border border-[var(--border-medium)] text-[var(--text-secondary)] font-medium">
+                          {CATEGORY_NAMES[t.category] || t.category}
+                        </span>
+                      </td>
+
+                      <td className="py-4 px-5 max-w-sm">
+                        <div className="font-semibold text-[var(--text-primary)] truncate">
                           {t.subject}
                         </div>
-                        <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                          {CATEGORY_NAMES[t.category] || t.category}
+                        <div className="text-[11px] text-[var(--text-tertiary)] truncate mt-0.5">
+                          {t.description}
                         </div>
                       </td>
-                      <td style={{ padding: '14px 18px' }}>
-                        <span style={{
-                          padding: '3px 8px',
-                          borderRadius: 6,
-                          fontSize: 11,
-                          fontWeight: 800,
-                          background: t.priority === 'urgent' ? 'rgba(239, 68, 68, 0.15)' : 'var(--border-light)',
-                          color: t.priority === 'urgent' ? 'var(--danger-text)' : '#94a3b8',
-                          border: t.priority === 'urgent' ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)'
-                        }}>
-                          {t.priority === 'urgent' ? '⚡ Urgent' : 'Standard'}
+
+                      <td className="py-4 px-5">
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border capitalize ${statusClass}`}>
+                          {t.status.replace('_', ' ')}
                         </span>
                       </td>
-                      <td style={{ padding: '14px 18px' }}>
-                        <span style={{
-                          padding: '3px 10px',
-                          borderRadius: 14,
-                          fontSize: 11,
-                          fontWeight: 800,
-                          background: badge.bg,
-                          color: badge.color,
-                          border: `1px solid ${badge.border}`
-                        }}>
-                          {badge.label}
-                        </span>
-                      </td>
-                      <td style={{ padding: '14px 18px', color: '#94a3b8', fontSize: 12 }}>
-                        {new Date(t.created_at).toLocaleDateString()}
-                      </td>
-                      <td style={{ padding: '14px 18px', textAlign: 'right' }}>
+
+                      <td className="py-4 px-5 text-right">
                         <button
                           onClick={() => handleOpenModal(t)}
-                          style={{
-                            padding: '6px 14px',
-                            borderRadius: 8,
-                            background: '#2563eb',
-                            color: 'var(--text-primary)',
-                            border: 'none',
-                            fontSize: 12,
-                            fontWeight: 700,
-                            cursor: 'pointer'
-                          }}
+                          className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-sm transition-colors"
                         >
-                          {t.admin_reply ? 'View / Edit' : 'Reply & Resolve'}
+                          Respond
                         </button>
                       </td>
                     </tr>
                   )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* ── REPLY / RESOLVE MODAL ── */}
+      {/* ── Reply Modal ── */}
       {selectedTicket && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 20,
-          zIndex: 999
-        }}>
-          <div style={{
-            background: 'var(--bg-shell)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: 20,
-            width: '100%',
-            maxWidth: 600,
-            padding: '24px 28px',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-medium)] rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-[var(--border-medium)] mb-4">
               <div>
-                <span style={{ fontSize: 12, fontWeight: 800, color: '#60a5fa', fontFamily: 'monospace' }}>
-                  {selectedTicket.ticket_number}
-                </span>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: '2px 0 0' }}>
-                  {selectedTicket.subject}
+                <h3 className="font-bold text-base text-[var(--text-primary)]">
+                  Reply to Ticket #{selectedTicket.ticket_number || selectedTicket._id?.slice(-8)}
                 </h3>
+                <p className="text-xs text-[var(--text-secondary)]">
+                  {selectedTicket.cafe_id?.name || 'Café Partner'}
+                </p>
               </div>
               <button
                 onClick={() => setSelectedTicket(null)}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 20, cursor: 'pointer' }}
+                className="p-2 rounded-xl bg-[var(--bg-input)] hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)]"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Café Info Banner */}
-            <div style={{
-              padding: '12px 14px',
-              borderRadius: 12,
-              background: 'var(--bg-input)',
-              border: '1px solid rgba(255, 255, 255, 0.06)',
-              marginBottom: 16,
-              fontSize: 13,
-              color: '#cbd5e1'
-            }}>
-              <div><strong>Café:</strong> {selectedTicket.cafe_id?.name} ({selectedTicket.cafe_id?.email})</div>
-              <div><strong>Category:</strong> {CATEGORY_NAMES[selectedTicket.category] || selectedTicket.category}</div>
+            <div className="space-y-4">
+              <div className="p-3.5 rounded-xl bg-[var(--bg-input)] border border-[var(--border-medium)] text-xs space-y-1">
+                <div className="font-bold text-[var(--text-primary)]">{selectedTicket.subject}</div>
+                <div className="text-[var(--text-secondary)] leading-relaxed">{selectedTicket.description}</div>
+              </div>
+
+              <form onSubmit={handleSaveReply} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+                    Ticket Resolution Status
+                  </label>
+                  <select
+                    value={modalStatus}
+                    onChange={e => setModalStatus(e.target.value)}
+                    className="w-full px-4 py-2 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-xs text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="in_progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="closed">Closed</option>
+                    <option value="open">Open</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+                    Administrator Reply Message *
+                  </label>
+                  <textarea
+                    rows={4}
+                    required
+                    value={replyText}
+                    onChange={e => setReplyText(e.target.value)}
+                    placeholder="Enter your response to the café owner..."
+                    className="w-full px-4 py-2.5 bg-[var(--bg-input)] border border-[var(--border-medium)] rounded-xl text-xs text-[var(--text-primary)] focus:outline-none focus:border-indigo-500 resize-none"
+                  />
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-500/25 active:scale-[0.99] disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>{saving ? 'Sending Reply...' : 'Save & Notify Café'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTicket(null)}
+                    className="px-4 py-2.5 rounded-xl border border-[var(--border-medium)] bg-[var(--bg-input)] hover:bg-[var(--bg-card-hover)] text-xs font-semibold text-[var(--text-secondary)]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
-
-            {/* Description */}
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#94a3b8', marginBottom: 6 }}>
-                Issue Description:
-              </label>
-              <div style={{
-                padding: '12px 14px',
-                borderRadius: 10,
-                background: 'rgba(0, 0, 0, 0.3)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
-                fontSize: 13,
-                color: '#e2e8f0',
-                maxHeight: 120,
-                overflowY: 'auto',
-                whiteSpace: 'pre-wrap',
-                lineHeight: 1.5
-              }}>
-                {selectedTicket.description}
-              </div>
-            </div>
-
-            {/* Reply & Status Form */}
-            <form onSubmit={handleSaveReply} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#e2e8f0', marginBottom: 6 }}>
-                  Admin Reply / Solution:
-                </label>
-                <textarea
-                  rows={4}
-                  value={replyText}
-                  onChange={e => setReplyText(e.target.value)}
-                  placeholder="Type your response to the café owner..."
-                  style={{
-                    width: '100%',
-                    boxSizing: 'border-box',
-                    padding: '12px 14px',
-                    borderRadius: 10,
-                    background: 'var(--bg-card-hover)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'var(--text-primary)',
-                    fontSize: 13,
-                    outline: 'none',
-                    resize: 'vertical',
-                    fontFamily: 'inherit'
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#e2e8f0', marginBottom: 6 }}>
-                  Update Ticket Status:
-                </label>
-                <select
-                  value={modalStatus}
-                  onChange={e => setModalStatus(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 14px',
-                    borderRadius: 10,
-                    background: 'var(--bg-elevated)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'var(--text-primary)',
-                    fontSize: 13,
-                    outline: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <option value="open">Open</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="resolved">Resolved (Mark as Solved)</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedTicket(null)}
-                  style={{
-                    padding: '10px 18px',
-                    borderRadius: 10,
-                    background: 'transparent',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: '#94a3b8',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  style={{
-                    padding: '10px 22px',
-                    borderRadius: 10,
-                    background: '#2563eb',
-                    border: 'none',
-                    color: 'var(--text-primary)',
-                    fontSize: 13,
-                    fontWeight: 800,
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    opacity: saving ? 0.7 : 1
-                  }}
-                >
-                  {saving ? 'Saving...' : '💾 Save & Notify Owner'}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
-
     </div>
   )
 }

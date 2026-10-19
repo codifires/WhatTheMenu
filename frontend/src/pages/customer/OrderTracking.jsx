@@ -1,74 +1,90 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { customerAPI, SOCKET_URL } from '../../services/api'
 import { io } from 'socket.io-client'
 import toast from 'react-hot-toast'
 import { playHardwareAlert } from '../../utils/hardwareAlerts'
-import BillReceipt from '../../components/BillReceipt'
 import html2canvas from 'html2canvas'
-import { jsPDF } from 'jspdf'
+import { Bell, FileText, CheckCircle2, Clock, AlertCircle, UtensilsCrossed, Receipt } from 'lucide-react'
 
 const STATUS_STEPS = [
-  { key: 'new', label: 'Placed', icon: '📝' },
-  { key: 'accepted', label: 'Accepted', icon: '👨‍🍳' },
-  { key: 'preparing', label: 'Preparing', icon: '🔥' },
-  { key: 'ready', label: 'Ready', icon: '🛍️' },
-  { key: 'completed', label: 'Done', icon: '✅' },
+  { 
+    key: 'new', 
+    label: 'Order Placed', 
+    icon: '📝', 
+    desc: 'Your order was sent to the kitchen and is awaiting confirmation.' 
+  },
+  { 
+    key: 'accepted', 
+    label: 'Accepted', 
+    icon: '👨‍🍳', 
+    desc: 'The kitchen has accepted your order and added it to the queue.' 
+  },
+  { 
+    key: 'preparing', 
+    label: 'Preparing', 
+    icon: '🔥', 
+    desc: 'The chef is cooking your meal fresh and hot.' 
+  },
+  { 
+    key: 'ready', 
+    label: 'Ready', 
+    icon: '🛍️', 
+    desc: 'Your order is ready! A server will bring it or you can collect it from the counter.' 
+  },
+  { 
+    key: 'completed', 
+    label: 'Completed', 
+    icon: '✅', 
+    desc: 'Order complete! We hope you enjoyed your meal.' 
+  },
 ]
-
-import React from 'react';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
+    super(props)
+    this.state = { hasError: false, error: null }
   }
   static getDerivedStateFromError(error) {
-    return { hasError: true, error };
+    return { hasError: true, error }
   }
   render() {
     if (this.state.hasError) {
-      return <div style={{padding: 40, color: 'red'}}><h1>Something went wrong.</h1><pre>{String(this.state.error.stack)}</pre></div>;
+      return (
+        <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-primary)' }}>
+          <h2 style={{ fontSize: 20, fontWeight: 800 }}>Something went wrong loading your order.</h2>
+          <button 
+            onClick={() => window.location.reload()} 
+            style={{ marginTop: 16, padding: '10px 20px', borderRadius: 12, background: 'var(--accent-primary)', color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' }}
+          >
+            Refresh Page
+          </button>
+        </div>
+      )
     }
-    return this.props.children;
+    return this.props.children
   }
 }
 
 const OrderTrackingContent = () => {
-  const printRef = useRef();
-  const handleDownloadPDF = async () => {
-    if (!printRef.current) return;
-    printRef.current.style.display = 'block';
-    try {
-      const canvas = await html2canvas(printRef.current, { scale: 2, backgroundColor: '#ffffff' });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Invoice_${order?.order_number || 'Order'}.pdf`);
-      toast.success('Bill downloaded successfully! 📄');
-    } catch (err) {
-      toast.error('Failed to generate PDF');
-    } finally {
-      printRef.current.style.display = 'none';
-    }
-  };
+  const printRef = useRef(null)
   const { cafeId } = useParams()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  
   const [orderNumber, setOrderNumber] = useState(searchParams.get('track') || '')
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(false)
   const [myOrders, setMyOrders] = useState([])
   const [cafeDetails, setCafeDetails] = useState(null)
+  const [alertSent, setAlertSent] = useState({ waiter: false, bill: false })
 
   useEffect(() => {
-    let saved = [];
+    let saved = []
     try {
-      saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
+      saved = JSON.parse(localStorage.getItem('myOrders') || '[]')
     } catch (e) {
-      localStorage.setItem('myOrders', '[]');
+      localStorage.setItem('myOrders', '[]')
     }
     const cafeOrders = saved.filter(o => o.cafeId === cafeId)
     setMyOrders(cafeOrders)
@@ -77,40 +93,44 @@ const OrderTrackingContent = () => {
     if (!orderNumber && cafeOrders.length > 0) {
       setOrderNumber(cafeOrders[0].orderNumber)
     }
-  }, [cafeId])
+  }, [cafeId, orderNumber])
 
   useEffect(() => {
-    if (orderNumber) trackOrder(orderNumber)
+    if (orderNumber) {
+      trackOrder(orderNumber)
+    }
   }, [orderNumber])
 
+  // Live Socket.IO Updates
   useEffect(() => {
     if (!order) return
     const socket = io(SOCKET_URL)
     socket.emit('track-order', order.order_number)
+
     socket.on('order-status-update', (data) => {
       if (data.order_number === order.order_number) {
         setOrder(prev => ({ ...prev, order_status: data.status }))
-        toast.success(`Order update: ${data.status.toUpperCase()}`, { icon: '🔔' })
+        toast.success(`Order update: ${data.status.toUpperCase()}`, { 
+          icon: '🔔',
+          style: { borderRadius: '12px', background: '#1c1917', color: '#fff', fontSize: '13px' }
+        })
+
+        if (data.status === 'ready' || data.status === 'completed') {
+          playHardwareAlert('ready')
+        }
 
         if (data.status === 'completed') {
-          // Play physical alert for customer
-          playHardwareAlert('ready')
-          
-          // Mark in localStorage so it doesn't show in tracking anymore
-          let saved = [];
           try {
-            saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
-          } catch (e) {
-            localStorage.setItem('myOrders', '[]');
-          }
-          const updated = saved.map(o => o.orderNumber === data.order_number ? { ...o, status: 'completed' } : o)
-          localStorage.setItem('myOrders', JSON.stringify(updated))
+            const saved = JSON.parse(localStorage.getItem('myOrders') || '[]')
+            const updated = saved.map(o => o.orderNumber === data.order_number ? { ...o, status: 'completed' } : o)
+            localStorage.setItem('myOrders', JSON.stringify(updated))
+          } catch (e) {}
 
-          toast.success('Your order is complete! Please leave a review.')
-          setTimeout(() => navigate(`/${cafeId}/menu/feedback`), 2000)
+          toast.success('Your order is complete! We would love your feedback.', { duration: 5000 })
         }
       }
     })
+
     return () => socket.disconnect()
   }, [order?.order_number])
 
@@ -119,54 +139,30 @@ const OrderTrackingContent = () => {
     try {
       const res = await customerAPI.trackOrder(num)
       if (!cafeDetails) {
-        customerAPI.getCafeMenu(cafeId).then(cRes => setCafeDetails(cRes.data.data.cafe)).catch(()=>{})
-      }
-
-      if (res.data.data.order_status === 'RAZORPAY - FAILED' || res.data.data.order_status === 'PAYMENT_PENDING') {
-        let saved = [];
-        try {
-          saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
-        } catch (e) {
-          localStorage.setItem('myOrders', '[]');
-        }
-        const updated = saved.filter(o => o.orderNumber !== num);
-        localStorage.setItem('myOrders', JSON.stringify(updated));
-        setMyOrders(updated);
-        if (orderNumber === num) setOrderNumber('');
-        setOrder(null);
-        return;
+        customerAPI.getCafeMenu(cafeId).then(cRes => setCafeDetails(cRes.data.data.cafe)).catch(() => {})
       }
 
       setOrder(res.data.data)
 
       if (res.data.data.order_status === 'completed') {
-        let saved = [];
         try {
-          saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
-        } catch (e) {
-          localStorage.setItem('myOrders', '[]');
-        }
-        const updated = saved.map(o => o.orderNumber === res.data.data.order_number ? { ...o, status: 'completed' } : o)
-        localStorage.setItem('myOrders', JSON.stringify(updated))
-
-        toast.success('Your order is complete! Please leave a review.')
-        setTimeout(() => navigate(`/${cafeId}/menu/feedback`), 2000)
+          const saved = JSON.parse(localStorage.getItem('myOrders') || '[]')
+          const updated = saved.map(o => o.orderNumber === res.data.data.order_number ? { ...o, status: 'completed' } : o)
+          localStorage.setItem('myOrders', JSON.stringify(updated))
+        } catch (e) {}
       }
     } catch (error) {
       if (error.response?.status === 404) {
-        toast.error('Order not found');
-        let saved = [];
+        toast.error('Order not found.')
         try {
-          saved = JSON.parse(localStorage.getItem('myOrders') || '[]');
-        } catch (e) {
-          localStorage.setItem('myOrders', '[]');
-        }
-        const updated = saved.filter(o => o.orderNumber !== num);
-        localStorage.setItem('myOrders', JSON.stringify(updated));
-        setMyOrders(updated);
-        if (orderNumber === num) setOrderNumber('');
+          const saved = JSON.parse(localStorage.getItem('myOrders') || '[]')
+          const updated = saved.filter(o => o.orderNumber !== num)
+          localStorage.setItem('myOrders', JSON.stringify(updated))
+          setMyOrders(updated)
+          if (orderNumber === num) setOrderNumber('')
+        } catch (e) {}
       } else {
-        toast.error('Error tracking order');
+        toast.error('Error fetching order status.')
       }
       setOrder(null)
     } finally {
@@ -174,239 +170,499 @@ const OrderTrackingContent = () => {
     }
   }
 
-  const handleRetryPayment = () => {
-    toast.error("Retry payment is not available yet. Please place a new order.");
-    setTimeout(() => navigate(`/${cafeId}/menu`), 2000);
+  // Staff assistance alert
+  const handleStaffAlert = async (type) => {
+    if (!order?.order_number) return
+    try {
+      await customerAPI.triggerStaffAlert(order.order_number, { type })
+      setAlertSent(prev => ({ ...prev, [type]: true }))
+      toast.success(type === 'waiter' ? 'Staff notified! A team member is coming to your table.' : 'Bill requested from the counter.', {
+        icon: '🙋',
+        duration: 3500
+      })
+      setTimeout(() => {
+        setAlertSent(prev => ({ ...prev, [type]: false }))
+      }, 30000)
+    } catch (err) {
+      toast.error('Failed to notify staff. Please alert the counter.')
+    }
   }
 
-  const getStepIndex = (status) => {
-    if (status === 'preparing' || status === 'ready') return 1;
-    return STATUS_STEPS.findIndex(s => s.key === status);
+  // Download PDF Receipt
+  const handleDownloadPDF = async () => {
+    if (!printRef.current) return
+    printRef.current.style.display = 'block'
+    try {
+      const canvas = await html2canvas(printRef.current, { scale: 2, backgroundColor: '#ffffff' })
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+      pdf.save(`Invoice_${order?.order_number || 'Order'}.pdf`)
+      toast.success('Bill receipt downloaded! 📄')
+    } catch (err) {
+      toast.error('Failed to generate PDF')
+    } finally {
+      printRef.current.style.display = 'none'
+    }
   }
+
+  // Proper Step Index Calculation
+  const getStepIndex = (status) => {
+    const idx = STATUS_STEPS.findIndex(s => s.key === status)
+    return idx >= 0 ? idx : 0
+  }
+
+  const currentStepIdx = order ? getStepIndex(order.order_status) : 0
+  const currentStep = STATUS_STEPS[currentStepIdx] || STATUS_STEPS[0]
 
   return (
-    <div style={{ padding: '20px 16px', animation: 'fadeIn 0.4s ease' }}>
+    <div style={{ padding: '20px 16px', animation: 'fadeIn 0.35s ease', paddingBottom: 120 }}>
 
       {/* ── Header ── */}
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 4px', fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.5px' }}>Track Order</h2>
-        <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>Follow your order in real-time</p>
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 900, color: 'var(--text-primary)', margin: 0, fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.3px' }}>
+          Track Order
+        </h1>
+        <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+          Follow your dining status in real time
+        </p>
       </div>
 
-
-
-      {/* ── Recent Orders ── */}
-      {!order && myOrders.length === 0 && !loading && (
-        <div style={{ textAlign: 'center', padding: '60px 20px', opacity: 0.5 }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🛒</div>
-          <p>No recent orders found.</p>
-        </div>
-      )}
-
-      {!order && myOrders.length > 0 && (
-        <div style={{ animation: 'slideUp 0.3s ease' }}>
-          <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 12px', paddingLeft: 4 }}>Recent Orders</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {myOrders.map((o, i) => (
+      {/* ── Order Selector Tabs if user placed multiple orders ── */}
+      {myOrders.length > 1 && (
+        <div style={{ 
+          display: 'flex', 
+          gap: 8, 
+          overflowX: 'auto', 
+          paddingBottom: 12, 
+          scrollbarWidth: 'none', 
+          marginBottom: 16 
+        }}>
+          {myOrders.map((o, idx) => {
+            const active = orderNumber === o.orderNumber
+            return (
               <button
-                key={i} onClick={() => setOrderNumber(o.orderNumber)}
+                key={idx}
+                onClick={() => setOrderNumber(o.orderNumber)}
                 style={{
-                  width: '100%', padding: '16px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)',
-                  background: 'var(--bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  cursor: 'pointer', transition: 'background 0.2s', textAlign: 'left'
+                  padding: '8px 14px',
+                  borderRadius: 12,
+                  border: active ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-medium)',
+                  background: active ? 'var(--accent-bg-subtle)' : 'var(--bg-card)',
+                  color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                  fontSize: 12,
+                  fontWeight: active ? 800 : 600,
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'all 0.15s ease'
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--border-light)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-card)'}
               >
-                <div>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', display: 'block' }}>{o.orderNumber}</span>
-                  <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{new Date(o.createdAt).toLocaleDateString()} at {new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                </div>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
+                {o.tokenNumber || o.orderNumber}
               </button>
-            ))}
-          </div>
+            )
+          })}
         </div>
       )}
 
-      {/* ── Order Details ── */}
-      {order && (
-        <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 28, padding: 24, animation: 'slideUp 0.4s ease both' }}>
+      {/* ── No Recent Orders Empty State ── */}
+      {!order && myOrders.length === 0 && !loading && (
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg-card)', borderRadius: 24, border: '1px solid var(--border-medium)', boxShadow: 'var(--shadow-card)' }}>
+          <div style={{ width: 64, height: 64, borderRadius: 20, background: 'var(--border-light)', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <UtensilsCrossed size={32} />
+          </div>
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px' }}>No Active Orders</h2>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 24px', maxWidth: 280, marginInline: 'auto' }}>
+            You haven't placed an order yet. Check out the menu and order your favorite dishes!
+          </p>
+          <button
+            onClick={() => navigate(`/${cafeId}/menu`)}
+            style={{
+              padding: '12px 28px',
+              borderRadius: 14,
+              border: 'none',
+              background: 'var(--accent-gradient)',
+              color: '#ffffff',
+              fontSize: 14,
+              fontWeight: 800,
+              cursor: 'pointer',
+              boxShadow: 'var(--accent-shadow)'
+            }}
+          >
+            Explore Menu
+          </button>
+        </div>
+      )}
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 }}>
-            <div>
-              <p style={{ fontSize: 32, fontWeight: 900, color: 'var(--accent-primary)', margin: '0 0 4px', fontFamily: "'Outfit',sans-serif" }}>Order #{order.token_number || order.order_number.slice(-4)}</p>
-              <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 2px', opacity: 0.5 }}>Transaction: {order.order_number}</p>
-              <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: 0 }}>{new Date(order.created_at).toLocaleString()}</p>
+      {/* ── Active Order Tracking Card ── */}
+      {order && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, animation: 'cardAppear 0.3s ease both' }}>
+          
+          {/* Main Status Hero Card */}
+          <div style={{ 
+            background: 'var(--bg-card)', 
+            border: '1px solid var(--border-medium)', 
+            borderRadius: 24, 
+            padding: 20, 
+            boxShadow: 'var(--shadow-card)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {/* Header row: Token & Payment Badge */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div>
+                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'block' }}>
+                  Dining Token
+                </span>
+                <p style={{ 
+                  fontSize: 28, 
+                  fontWeight: 900, 
+                  color: 'var(--accent-primary)', 
+                  margin: '2px 0 0', 
+                  fontFamily: "'Outfit', sans-serif",
+                  letterSpacing: '-0.5px'
+                }}>
+                  {order.token_number || `#${order.order_number.slice(-4)}`}
+                </p>
+                <p style={{ fontSize: 11, color: 'var(--text-tertiary)', margin: '2px 0 0' }}>
+                  ID: {order.order_number}
+                </p>
+              </div>
+
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ 
+                  fontSize: 11, 
+                  fontWeight: 800, 
+                  padding: '5px 10px', 
+                  borderRadius: 10, 
+                  background: (order.payment_status === 'received' || order.payment_status === 'completed') ? 'rgba(16, 185, 129, 0.12)' : 'rgba(234, 88, 12, 0.12)', 
+                  color: (order.payment_status === 'received' || order.payment_status === 'completed') ? '#10b981' : 'var(--accent-primary)', 
+                  textTransform: 'uppercase',
+                  display: 'inline-block'
+                }}>
+                  {(order.payment_status === 'received' || order.payment_status === 'completed') ? '✓ Paid' : 'Payment Pending'}
+                </span>
+                
+                {order.table_number && (
+                  <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', margin: '6px 0 0', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <UtensilsCrossed size={13} />
+                    <span>Table {order.table_number}</span>
+                  </p>
+                )}
+              </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 8, background: order.payment_status === 'received' ? 'var(--success-light)' : 'var(--warning-light)', color: order.payment_status === 'received' ? 'var(--success-text)' : 'var(--accent-primary)', textTransform: 'uppercase' }}>
-                {order.payment_method} - {order.payment_status}
+
+            {/* Current Step Highlight Banner */}
+            <div style={{ 
+              background: 'var(--accent-bg-subtle)', 
+              borderRadius: 16, 
+              padding: '14px 16px', 
+              marginBottom: 26,
+              border: '1px solid var(--accent-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12
+            }}>
+              <span style={{ fontSize: 26 }}>{currentStep.icon}</span>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 900, color: 'var(--accent-primary)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                  {currentStep.label}
+                </h3>
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0', lineHeight: 1.4 }}>
+                  {currentStep.desc}
+                </p>
+              </div>
+            </div>
+
+            {/* ── Status Stepper Bar ── */}
+            <div style={{ position: 'relative', marginBottom: 20, padding: '0 6px' }}>
+              {/* Background Line */}
+              <div style={{ 
+                position: 'absolute', 
+                top: 20, 
+                left: 20, 
+                right: 20, 
+                height: 3, 
+                background: 'var(--border-medium)', 
+                borderRadius: 2 
+              }} />
+              
+              {/* Active Animated Progress Line */}
+              <div style={{ 
+                position: 'absolute', 
+                top: 20, 
+                left: 20, 
+                height: 3, 
+                background: 'var(--accent-gradient)', 
+                borderRadius: 2, 
+                transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)', 
+                width: `calc(${(currentStepIdx / (STATUS_STEPS.length - 1)) * 100}% - 40px)` 
+              }} />
+
+              {/* Step Bubbles */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
+                {STATUS_STEPS.map((step, i) => {
+                  const isCompleted = i <= currentStepIdx
+                  const isCurrent = i === currentStepIdx
+
+                  return (
+                    <div key={step.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 44 }}>
+                      <div style={{
+                        width: 40, 
+                        height: 40, 
+                        borderRadius: 14, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        fontSize: 16, 
+                        zIndex: 2, 
+                        transition: 'all 0.3s ease',
+                        background: isCompleted ? 'var(--accent-gradient)' : 'var(--bg-card)',
+                        border: isCompleted ? 'none' : '2px solid var(--border-medium)',
+                        color: isCompleted ? '#ffffff' : 'var(--text-tertiary)',
+                        boxShadow: isCurrent ? '0 0 0 4px var(--accent-bg-subtle), var(--accent-shadow)' : 'none',
+                        transform: isCurrent ? 'scale(1.12)' : 'scale(1)'
+                      }}>
+                        {step.icon}
+                      </div>
+                      <span style={{ 
+                        fontSize: 10, 
+                        fontWeight: isCurrent ? 800 : 600, 
+                        color: isCompleted ? 'var(--text-primary)' : 'var(--text-tertiary)', 
+                        marginTop: 8, 
+                        textAlign: 'center',
+                        lineHeight: 1.2
+                      }}>
+                        {step.label}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+          </div>
+
+          {/* ── Table Assistance Actions (Call Waiter / Request Bill) ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <button
+              onClick={() => handleStaffAlert('waiter')}
+              disabled={alertSent.waiter}
+              style={{
+                padding: '12px 14px',
+                borderRadius: 14,
+                border: '1px solid var(--border-medium)',
+                background: alertSent.waiter ? 'rgba(16, 185, 129, 0.12)' : 'var(--bg-card)',
+                color: alertSent.waiter ? '#10b981' : 'var(--text-primary)',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: alertSent.waiter ? 'default' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                boxShadow: 'var(--shadow-card)',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {alertSent.waiter ? <CheckCircle2 size={16} /> : <Bell size={16} />}
+              <span>{alertSent.waiter ? 'Notified' : 'Call Waiter'}</span>
+            </button>
+
+            <button
+              onClick={() => handleStaffAlert('bill')}
+              disabled={alertSent.bill}
+              style={{
+                padding: '12px 14px',
+                borderRadius: 14,
+                border: '1px solid var(--border-medium)',
+                background: alertSent.bill ? 'rgba(16, 185, 129, 0.12)' : 'var(--bg-card)',
+                color: alertSent.bill ? '#10b981' : 'var(--text-primary)',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: alertSent.bill ? 'default' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                boxShadow: 'var(--shadow-card)',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {alertSent.bill ? <CheckCircle2 size={16} /> : <Receipt size={16} />}
+              <span>{alertSent.bill ? 'Requested' : 'Request Bill'}</span>
+            </button>
+          </div>
+
+          {/* ── Itemized Receipt Summary ── */}
+          <div style={{ 
+            background: 'var(--bg-card)', 
+            border: '1px solid var(--border-medium)', 
+            borderRadius: 20, 
+            padding: 18, 
+            boxShadow: 'var(--shadow-card)' 
+          }}>
+            <h2 style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.6px', margin: '0 0 14px' }}>
+              Ordered Items
+            </h2>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 }}>
+              {order.items?.map((item, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>
+                    <span style={{ color: 'var(--accent-primary)', fontWeight: 800, marginRight: 6 }}>{item.quantity}x</span>
+                    {item.name}
+                  </span>
+                  <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                    ₹{(item.price * item.quantity).toFixed(2)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ height: 1, background: 'var(--border-medium)', margin: '12px 0' }} />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>Total Amount</span>
+              <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--accent-primary)', fontFamily: "'Outfit', sans-serif", fontVariantNumeric: 'tabular-nums' }}>
+                ₹{order.total_amount?.toFixed(2) || '0.00'}
               </span>
             </div>
           </div>
 
-          {order.payment_method === 'online' && (order.payment_status === 'pending' || order.payment_status === 'failed') ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', background: 'rgba(239,68,68,0.05)', borderRadius: 20, border: '1px solid rgba(239,68,68,0.2)' }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
-              <h3 style={{ fontSize: 20, fontWeight: 800, color: 'var(--danger-text)', margin: '0 0 8px' }}>Payment Incomplete</h3>
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5, marginBottom: 24 }}>
-                Your order is not confirmed because the payment was cancelled or failed. Please complete your payment to confirm your order.
-              </p>
+          {/* Action Row: Download PDF & Leave Review */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {order.order_status === 'completed' && (
               <button
-                onClick={handleRetryPayment}
-                disabled={loading}
+                onClick={() => navigate(`/${cafeId}/menu/feedback`)}
                 style={{
-                  padding: '12px 32px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)',
-                  color: 'var(--text-primary)', fontSize: 15, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer',
-                  boxShadow: '0 4px 15px rgba(16,185,129,0.4)', transition: 'transform 0.2s, box-shadow 0.2s', opacity: loading ? 0.7 : 1
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: 14,
+                  border: 'none',
+                  background: 'var(--accent-gradient)',
+                  color: '#ffffff',
+                  fontSize: 14,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  boxShadow: 'var(--accent-shadow)'
                 }}
-                onMouseEnter={e => { if (!loading) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(16,185,129,0.6)' } }}
-                onMouseLeave={e => { if (!loading) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(16,185,129,0.4)' } }}
               >
-                {loading ? 'Initiating...' : 'Complete Payment'}
+                <span>⭐ Leave a Review for the Chef</span>
               </button>
-            </div>
-          ) : (
-            <>
-              {/* ── Status Stepper ── */}
-              <div style={{ position: 'relative', marginBottom: 40, padding: '0 10px' }}>
-                <div style={{ position: 'absolute', top: 20, left: 24, right: 24, height: 2, background: 'var(--border-hover)', borderRadius: 2 }} />
-                <div style={{ position: 'absolute', top: 20, left: 24, height: 2, background: 'var(--accent-gradient)', borderRadius: 2, transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)', width: `calc(${(getStepIndex(order.order_status) / (STATUS_STEPS.length - 1)) * 100}% - 48px)` }} />
+            )}
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
-                  {STATUS_STEPS.map((step, i) => {
-                    const currentIdx = getStepIndex(order.order_status)
-                    const isCompleted = i <= currentIdx
-                    const isCurrent = i === currentIdx
-                    return (
-                      <div key={step.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 48 }}>
-                        <div style={{
-                          width: 40, height: 40, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, zIndex: 2, transition: 'all 0.4s',
-                          background: isCompleted ? 'var(--accent-gradient)' : 'var(--border-medium)',
-                          border: isCompleted ? 'none' : '2px solid rgba(255,255,255,0.1)',
-                          color: isCompleted ? 'var(--text-primary)' : 'var(--text-tertiary)',
-                          boxShadow: isCurrent ? '0 0 0 4px rgba(245,158,11,0.2), 0 10px 20px rgba(245,158,11,0.3)' : 'none',
-                          transform: isCurrent ? 'scale(1.1)' : 'scale(1)'
-                        }}>
-                          {step.icon}
-                        </div>
-                        <span style={{ fontSize: 10, fontWeight: 700, color: isCompleted ? 'var(--text-primary)' : 'var(--text-tertiary)', marginTop: 8, textAlign: 'center', transition: 'color 0.4s' }}>{step.label}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
+            <button
+              onClick={handleDownloadPDF}
+              style={{
+                width: '100%',
+                padding: '13px',
+                borderRadius: 14,
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-medium)',
+                color: 'var(--text-primary)',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                boxShadow: 'var(--shadow-card)',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent-primary)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-medium)'}
+            >
+              <FileText size={16} />
+              <span>Download PDF Receipt</span>
+            </button>
+          </div>
 
-              {/* ── Receipt ── */}
-              <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 20, padding: 20 }}>
-                <h4 style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 16px' }}>Order Summary</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
-                  {order.items?.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}><span style={{ color: 'var(--accent-primary)', fontWeight: 700, marginRight: 8 }}>{item.quantity}x</span>{item.name}</span>
-                      <span style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600 }}>₹{item.price * item.quantity}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div style={{ height: 1, background: 'var(--border-hover)', margin: '0 0 16px' }} />
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Total Paid</span>
-                  <span style={{ fontSize: 24, fontWeight: 900, color: 'var(--accent-primary)', fontFamily: "'Outfit',sans-serif" }}>₹{order.total_amount}</span>
-                </div>
-              </div>
-
-              {/* Download Bill Button */}
-              <button
-                onClick={handleDownloadPDF}
-                style={{
-                  width: '100%', padding: '14px', borderRadius: 14, background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.1)',
-                  color: 'var(--text-primary)', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16,
-                  transition: 'background 0.2s, border-color 0.2s'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.borderColor = 'var(--border-hover)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Download PDF Bill
-              </button>
-            </>
-          )}
         </div>
       )}
 
-      {/* ── Hidden PDF Bill Template ── */}
+      {/* ── Hidden Printable Invoice for PDF Export ── */}
       {order && cafeDetails && (
         <div 
           ref={printRef}
           style={{
-            display: 'none', width: '210mm', padding: '20mm', background: '#fff', color: '#000', fontFamily: 'sans-serif'
+            display: 'none', 
+            width: '210mm', 
+            padding: '20mm', 
+            background: '#ffffff', 
+            color: '#1c1917', 
+            fontFamily: 'sans-serif'
           }}
         >
-          <div style={{ textAlign: 'center', marginBottom: '10mm' }}>
+          <div style={{ textAlign: 'center', marginBottom: '8mm' }}>
             <h1 style={{ margin: '0 0 2mm', fontSize: '24px', fontWeight: 'bold' }}>{cafeDetails.name}</h1>
             <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>{cafeDetails.address || 'Dining Receipt'}</p>
           </div>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8mm', fontSize: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8mm', fontSize: '13px' }}>
             <div>
+              <p style={{ margin: '0 0 1mm' }}><strong>Token #:</strong> {order.token_number || 'N/A'}</p>
               <p style={{ margin: '0 0 1mm' }}><strong>Order #:</strong> {order.order_number}</p>
-              <p style={{ margin: '0 0 1mm' }}><strong>Date:</strong> {new Date(order.created_at).toLocaleString()}</p>
+              <p style={{ margin: 0 }}><strong>Date:</strong> {new Date(order.created_at).toLocaleString()}</p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ margin: '0 0 1mm' }}><strong>Customer:</strong> {order.customer_name || 'Guest'}</p>
-              <p style={{ margin: '0 0 1mm' }}><strong>Table:</strong> {order.table_number || 'Takeaway'}</p>
+              <p style={{ margin: '0 0 1mm' }}><strong>Table:</strong> {order.table_number || 'Dine-In'}</p>
+              <p style={{ margin: 0 }}><strong>Payment:</strong> {order.payment_method?.toUpperCase()} ({order.payment_status?.toUpperCase()})</p>
             </div>
           </div>
           
           <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '8mm' }}>
             <thead>
-              <tr style={{ borderBottom: '2px solid #000' }}>
-                <th style={{ textAlign: 'left', padding: '2mm 0', fontSize: '14px' }}>Item</th>
-                <th style={{ textAlign: 'center', padding: '2mm 0', fontSize: '14px' }}>Qty</th>
-                <th style={{ textAlign: 'right', padding: '2mm 0', fontSize: '14px' }}>Price</th>
+              <tr style={{ borderBottom: '2px solid #1c1917' }}>
+                <th style={{ textAlign: 'left', padding: '2mm 0', fontSize: '13px' }}>Item</th>
+                <th style={{ textAlign: 'center', padding: '2mm 0', fontSize: '13px' }}>Qty</th>
+                <th style={{ textAlign: 'right', padding: '2mm 0', fontSize: '13px' }}>Price</th>
               </tr>
             </thead>
             <tbody>
               {order.items?.map((item, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '2mm 0', fontSize: '14px' }}>{item.name}</td>
-                  <td style={{ textAlign: 'center', padding: '2mm 0', fontSize: '14px' }}>{item.quantity}</td>
-                  <td style={{ textAlign: 'right', padding: '2mm 0', fontSize: '14px' }}>₹{item.price * item.quantity}</td>
+                <tr key={i} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                  <td style={{ padding: '2mm 0', fontSize: '13px' }}>{item.name}</td>
+                  <td style={{ textAlign: 'center', padding: '2mm 0', fontSize: '13px' }}>{item.quantity}</td>
+                  <td style={{ textAlign: 'right', padding: '2mm 0', fontSize: '13px' }}>₹{(item.price * item.quantity).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           
           <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '14px' }}>
-            <div style={{ width: '60%' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2mm' }}>
-                <span>Subtotal:</span>
-                <span>₹{order.total_amount}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #000', paddingTop: '2mm', fontWeight: 'bold', fontSize: '16px' }}>
-                <span>Total Paid:</span>
-                <span>₹{order.total_amount}</span>
+            <div style={{ width: '50%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #1c1917', paddingTop: '2mm', fontWeight: 'bold', fontSize: '16px' }}>
+                <span>Total Amount:</span>
+                <span>₹{order.total_amount?.toFixed(2)}</span>
               </div>
             </div>
           </div>
           
-          <div style={{ textAlign: 'center', marginTop: '15mm', fontSize: '12px', color: '#666' }}>
-            <p>Thank you for your visit!</p>
+          <div style={{ textAlign: 'center', marginTop: '12mm', fontSize: '12px', color: '#888' }}>
+            <p>Thank you for dining with us!</p>
           </div>
         </div>
       )}
 
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes cardAppear { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </div>
   )
 }
 
-const OrderTracking = () => <ErrorBoundary><OrderTrackingContent /></ErrorBoundary>;
+const OrderTracking = () => (
+  <ErrorBoundary>
+    <OrderTrackingContent />
+  </ErrorBoundary>
+)
 
 export default OrderTracking

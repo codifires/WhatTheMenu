@@ -236,32 +236,31 @@ If verification fails (wrong secret, expired, tampered) → 401 Unauthorized.
 
 ## 7. OTP Security
 
-### Generation
+### Generation (Cryptographically Secure)
 
 ```js
-// 6-digit OTP
-const otp = Math.floor(100000 + Math.random() * 900000).toString();
+// 6-digit cryptographically secure OTP
+const otp = crypto.randomInt(100000, 1000000).toString();
 ```
 
-> **Note:** `Math.random()` is not cryptographically secure. For production hardening, consider using `crypto.randomInt(100000, 999999)`.
+> **Hardened:** `crypto.randomInt` utilizes Node.js's underlying CSPRNG (`crypto.randomBytes`), eliminating predictability vulnerabilities associated with `Math.random()`.
 
 ### Storage & Expiry
 
 ```js
-cafe.login_otp = otp;
-cafe.login_otp_expire = Date.now() + 10 * 60 * 1000; // 10 minutes
+user.login_otp = otp;
+user.login_otp_expire = Date.now() + 10 * 60 * 1000; // 10 minutes
+user.login_otp_attempts = 0; // Reset failed attempts counter
 ```
 
-### Verification
+### Verification & Attempt Limiting
 
-```js
-if (cafe.login_otp !== otp || Date.now() > cafe.login_otp_expire) {
-  return res.status(400).json({ message: 'Invalid or expired OTP' });
-}
-// On success: clear OTP fields
-cafe.login_otp = undefined;
-cafe.login_otp_expire = undefined;
-```
+To prevent automated guessing and brute-force attacks within the 10-minute expiry window, strict attempt limiting is enforced:
+
+1. **Max 5 attempts allowed** per generated OTP.
+2. If `login_otp_attempts >= 5`: The OTP is immediately invalidated and cleared from the database, returning `429 Too Many Requests`.
+3. On incorrect guess: `login_otp_attempts` is incremented, and the client is informed of remaining attempts.
+4. On success: OTP fields and `login_otp_attempts` are cleared from the database.
 
 ### OTP Transmission
 
@@ -326,11 +325,11 @@ Required for accurate IP-based rate limiting when behind Render/Nginx reverse pr
 
 ---
 
-## 9. Razorpay Webhook Security
+## 9. Razorpay Payment, Webhook & Secret Security
 
-Webhooks are the most security-sensitive endpoints — they trigger subscription activations and payment confirmations.
+Payment endpoints are critical — they handle SaaS subscription billing and restaurant customer checkout.
 
-### Raw Body Preservation
+### Raw Body Preservation for Webhooks
 
 ```js
 // server.js — registered BEFORE express.json()
@@ -344,22 +343,24 @@ app.post('/api/webhooks/razorpay/subscription',
 
 This captures the raw request body before JSON parsing — required for HMAC signature verification.
 
-### Signature Verification
+### Cryptographic Signature Verification (`crypto.timingSafeEqual`)
+
+All payment signatures (webhooks, subscription confirmations, and customer order payments) are verified using HMAC-SHA256 in **constant time** using `crypto.timingSafeEqual` to eliminate timing side-channel attacks:
 
 ```js
-// In razorpayController.js
-const crypto = require('crypto');
-const expectedSignature = crypto
-  .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET)
-  .update(req.rawBody)
-  .digest('hex');
-
-if (req.headers['x-razorpay-signature'] !== expectedSignature) {
-  return res.status(400).json({ message: 'Invalid webhook signature' });
-}
+// backend/utils/razorpay.js
+const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
+const signatureBuffer = Buffer.from(signature, 'utf8');
+if (expectedBuffer.length !== signatureBuffer.length) return false;
+return crypto.timingSafeEqual(expectedBuffer, signatureBuffer);
 ```
 
-Any webhook with a mismatched signature is **rejected immediately** — preventing spoofed payment confirmations.
+### Payment Secret Isolation & Protection
+
+1. **Schema-Level Protection:** `razorpay_key_secret` and `razorpay_webhook_secret` are defined with `select: false` in `Cafe.js`. Mongoose automatically excludes them from all queries and serialization by default.
+2. **API Filtering:** `PUT /api/owner/settings` explicitly excludes both secrets via `.select('-password -razorpay_key_secret -razorpay_webhook_secret')`, ensuring secrets are write-only configuration fields.
+3. **Multi-Tenant Isolation:** Café owners can only configure their own credentials via their authenticated JWT (`req.user._id`). Cross-tenant access or modification is strictly prevented.
+4. **Browser Privacy:** Only the public `razorpay_key_id` is sent to the customer's browser for initializing the checkout modal. Secrets are never exposed.
 
 ---
 
@@ -523,30 +524,63 @@ The URL `/admin/codifires` is intentionally obscured. Any redirect to `/admin` f
 
 ---
 
-## 16. Known Security Notes & Recommendations
+## 16. Socket.IO Real-Time Security
 
-### ⚠️ Current Gaps & Recommendations
+Socket.IO handles real-time push events across customer ordering, kitchen operations, and SaaS management.
 
-| Issue | Severity | Recommendation |
-|-------|----------|----------------|
-| `Math.random()` for OTP generation | Medium | Replace with `crypto.randomInt(100000, 999999)` |
-| JWT in `localStorage` (XSS risk) | Medium | Consider `httpOnly` cookies with CSRF protection |
-| CORS allows all origins | Low-Medium | Restrict to `FRONTEND_URL` in production |
-| No refresh token mechanism | Low | Add refresh token for better UX on expiry |
-| OTP not hashed before storage | Low | Hash OTP before storing in DB |
-| No account lockout after N failed logins | Medium | Add lockout after 10 consecutive failures |
-| Duplicate fields in Settings.js | Low | Clean up duplicate schema definitions |
+### Handshake Authentication & Middleware
 
-### ✅ Security Strengths
+```js
+// backend/server.js
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+  if (token) {
+    try {
+      socket.user = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      console.warn(`Socket token error: ${err.message}`);
+    }
+  }
+  next();
+});
+```
 
-- Password hashing with bcrypt (salt 12) — industry standard
-- HMAC-SHA256 webhook verification — prevents spoofed payments
-- Per-request session token validation — near-real-time revocation
-- Input validation on all user-facing routes
-- Field-level `select: false` for sensitive data
-- Tenant data isolation enforced at query level
-- Rate limiting on all route groups
-- Separate production/test databases
+### Room Authorization Matrix
+
+| Room Event | Target Room | Access Policy | Authorization Check |
+|------------|-------------|---------------|---------------------|
+| `join-admin` | `admin-room` | **Superadmin only** | `socket.user?.role === 'superadmin'` |
+| `join-cafe` | `cafe-${cafeId}` | **Café Owner & Admin** | `socket.user?.id === cafeId` or `role === 'superadmin'` |
+| `join-menu` | `menu-${cafeId}` | **Public** | Public availability channel for QR customers |
+| `track-order` | `order-${orderNumber}` | **Validated Guest** | Order format sanitized + verified exists in MongoDB |
+| `join-payment-session` | `session-${sessionId}` | **Owner only** | Validated against owner ID for `cafe-*` sessions |
+
+> **Architectural Separation:** Customer menu viewing is isolated to `join-menu` (`menu-${cafeId}`). Customers **never** join `cafe-${cafeId}`, completely preventing customers from intercepting live order details, customer contact numbers, table assignments, or revenue events.
+
+---
+
+## 17. Security Hardening Status & Recommendations
+
+### ✅ Security Hardening Completed
+
+| Item | Previous State | Hardened Implementation |
+|------|----------------|-------------------------|
+| **Socket.IO Room Security** | Unauthenticated room joins | Handshake JWT verification + strict authorization checks on `join-admin` & `join-cafe` |
+| **Menu vs Order Isolation** | Customers shared `cafe-${id}` room | Separated public menu updates to `menu-${id}`, isolating order streams |
+| **Order Number Tracking** | Blind tracking of any ID | String sanitization + MongoDB existence verification |
+| **OTP Generation** | Predictable `Math.random()` | Cryptographically secure `crypto.randomInt(100000, 1000000)` CSPRNG |
+| **OTP Attempt Limiting** | Unlimited brute-force guesses | Strict 5-attempt limit (`login_otp_attempts`) with auto-invalidation and 429 response |
+| **Payment Signature Verification** | Loose string comparison | Constant-time HMAC comparison via `crypto.timingSafeEqual` (timing attack safe) |
+| **Payment Secret Handling** | Returned in settings update | Schema `select: false` + explicit exclusion on update; write-only |
+
+### ⚠️ Strategic Recommendations & Next Steps
+
+| Topic | Analysis & Recommendation |
+|-------|---------------------------|
+| **JWT Storage Strategy** | Currently stored in `localStorage`. While standard for modern decoupled SPAs, any XSS vulnerability can expose the token. **Recommendation:** For maximum security, plan a future migration to `httpOnly`, `Secure`, `SameSite=Strict` cookies paired with a Double-Submit CSRF token. Currently mitigated by Content Security Policy (Helmet), XSS sanitization, and strict input validation. |
+| **Order Retention Alignment** | Discrepancy noted between MongoDB TTL index (5 days) and cleanup cron (15 days). `OrderRevenue` preserves permanent financial records. Recommend extending operational order retention to 30 days for customer dispute resolution. |
+| **Account Lockout** | Add progressive lockout on 10 consecutive failed password logins. |
+| **Refresh Tokens** | Introduce short-lived access tokens (15m) + rotating refresh tokens. |
 
 ---
 
