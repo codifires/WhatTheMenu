@@ -146,7 +146,7 @@ export default function SubscriptionManagement() {
             Subscription Plan Management
           </h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Monitor active restaurant subscriptions, verify pending UPI payments, and review tenant billing history.
+            Monitor active restaurant subscriptions, review automated Razorpay transactions, and view tenant billing history.
           </p>
         </div>
 
@@ -217,14 +217,26 @@ export default function SubscriptionManagement() {
         </div>
       </div>
 
-      {/* ── Pending Offline Verification Requests ── */}
+      {/* ── Pending Offline Verification Requests (Legacy / Deprecated Flow) ── */}
       {requests.length > 0 && (
         <div className="rounded-3xl bg-amber-500/5 border border-amber-500/30 overflow-hidden shadow-sm">
-          <div className="p-5 border-b border-amber-500/20 flex items-center gap-2.5 bg-amber-500/10">
-            <Clock className="w-5 h-5 text-amber-400" />
-            <h2 className="font-bold text-sm font-heading text-amber-300">
-              Pending Offline UPI Verifications ({requests.length})
-            </h2>
+          <div className="p-5 border-b border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-500/10">
+            <div className="flex items-start sm:items-center gap-2.5">
+              <Clock className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5 sm:mt-0" />
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="font-bold text-sm font-heading text-amber-300">
+                    Legacy Offline Verification Requests ({requests.length})
+                  </h2>
+                  <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    Deprecated Fallback
+                  </span>
+                </div>
+                <p className="text-[11px] text-amber-400/80 mt-0.5">
+                  Automated owner subscriptions now process directly via Razorpay. This queue only manages historical or manual offline fallback submissions.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="overflow-x-auto">

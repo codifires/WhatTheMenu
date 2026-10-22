@@ -17,26 +17,32 @@ const settingsSchema = new mongoose.Schema({
     type: String,
     default: 'INR'
   },
-
   starter_price: {
     type: Number,
-    default: 199
-  },
-  starter_price: {
-    type: Number,
-    default: 299
+    default: 199,
+    min: [0, 'Starter price cannot be negative']
   },
   pro_price: {
     type: Number,
-    default: 499
+    default: 299,
+    min: [0, 'Pro price cannot be negative']
+  },
+  pro_plus_price: {
+    type: Number,
+    default: 499,
+    min: [0, 'Pro plus price cannot be negative']
   },
   yearly_discount_percentage: {
     type: Number,
-    default: 20
+    default: 20,
+    min: [0, 'Discount percentage cannot be negative'],
+    max: [100, 'Discount percentage cannot exceed 100%']
   },
   tax_rate: {
     type: Number,
-    default: 18
+    default: 18,
+    min: [0, 'Tax rate cannot be negative'],
+    max: [100, 'Tax rate cannot exceed 100%']
   },
   payment_live_mode: {
     type: Boolean,
@@ -44,23 +50,33 @@ const settingsSchema = new mongoose.Schema({
   },
   platform_name: {
     type: String,
-    default: 'QRMenu SaaS'
+    default: 'QRMenu SaaS',
+    trim: true,
+    maxlength: 100
   },
   contact_email: {
     type: String,
-    default: 'support@qrmenu.com'
+    default: 'support@qrmenu.com',
+    trim: true,
+    maxlength: 120
   },
   support_phone: {
     type: String,
-    default: '+91 98765 43210'
+    default: '+91 98765 43210',
+    trim: true,
+    maxlength: 30
   },
   support_whatsapp: {
     type: String,
-    default: '919876543210'
+    default: '919876543210',
+    trim: true,
+    maxlength: 30
   },
   support_hours: {
     type: String,
-    default: 'Mon - Sun, 9:00 AM - 10:00 PM IST'
+    default: 'Mon - Sun, 9:00 AM - 10:00 PM IST',
+    trim: true,
+    maxlength: 100
   },
   maintenance_mode: {
     type: Boolean,
@@ -71,26 +87,29 @@ const settingsSchema = new mongoose.Schema({
     default: [
       'Digital QR Menu',
       'Basic Analytics',
-      'Up to 10 Menu Items'
-    ]
-  },
-  starter_features: {
-    type: [String],
-    default: [
-      'Digital QR Menu',
-      'Basic Analytics',
-      'Up to 50 Menu Items',
-      'Email Support'
+      'Up to 25 Menu Items',
+      'Table QR Ordering'
     ]
   },
   pro_features: {
     type: [String],
     default: [
       'Everything in Starter',
+      'Up to 100 Menu Items',
+      'Advanced Sales Analytics',
+      'Online Payment Settlements',
+      'Standard Support'
+    ]
+  },
+  pro_plus_features: {
+    type: [String],
+    default: [
+      'Everything in Pro',
       'Unlimited Menu Items',
-      'Advanced Analytics',
-      'Priority Support',
-      'Custom Domain'
+      'Razorpay Automated Gateway',
+      'Dedicated Priority Support',
+      'Multi-Device Management (3 Devices)',
+      'Custom Branding & All Themes'
     ]
   }
 }, {

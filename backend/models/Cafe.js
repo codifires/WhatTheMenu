@@ -6,38 +6,46 @@ const cafeSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, 'Café name is required'],
-    trim: true
+    trim: true,
+    maxlength: 100
   },
   slug: {
     type: String,
     unique: true,
-    lowercase: true
+    lowercase: true,
+    trim: true,
+    maxlength: 120
   },
   logo: {
     type: String,
-    default: ''
+    default: '',
+    maxlength: 500
   },
   address: {
     type: String,
     default: '',
-    trim: true
+    trim: true,
+    maxlength: 500
   },
   phone: {
     type: String,
     default: '',
-    trim: true
+    trim: true,
+    maxlength: 25
   },
   email: {
     type: String,
     required: [true, 'Email is required'],
     unique: true,
     lowercase: true,
-    trim: true
+    trim: true,
+    maxlength: 120
   },
   password: {
     type: String,
     required: [true, 'Password is required'],
     minlength: 6,
+    maxlength: 128,
     select: false
   },
 
@@ -65,12 +73,14 @@ const cafeSchema = new mongoose.Schema({
   },
   tax_percentage: {
     type: Number,
-    default: 0
+    default: 0,
+    min: [0, 'Tax percentage cannot be negative'],
+    max: [100, 'Tax percentage cannot exceed 100%']
   },
   billing_settings: {
     format: { type: String, enum: ['standard', 'minimal', 'detailed'], default: 'standard' },
-    tax_number: { type: String, default: '' },
-    thank_you_message: { type: String, default: 'Thank you for your visit!' }
+    tax_number: { type: String, default: '', trim: true, maxlength: 50 },
+    thank_you_message: { type: String, default: 'Thank you for your visit!', trim: true, maxlength: 200 }
   },
   theme_settings: {
     active_theme: {
@@ -107,18 +117,20 @@ const cafeSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  resetPasswordToken: String,
-  resetPasswordExpire: Date,
-  login_otp: String,
-  login_otp_expire: Date,
+  resetPasswordToken: { type: String, select: false },
+  resetPasswordExpire: { type: Date, select: false },
+  login_otp: { type: String, select: false },
+  login_otp_expire: { type: Date, select: false },
   login_otp_attempts: {
     type: Number,
-    default: 0
+    default: 0,
+    select: false
   },
-  pending_logout_sessions: [String],
+  login_otp_last_sent: { type: Date, select: false },
+  pending_logout_sessions: { type: [String], select: false },
   active_sessions: [{
-    token: String,
-    device_info: String,
+    token: { type: String, maxlength: 500 },
+    device_info: { type: String, maxlength: 200, default: '' },
     last_active: { type: Date, default: Date.now }
   }]
 }, {
@@ -126,7 +138,22 @@ const cafeSchema = new mongoose.Schema({
   collection: 'cafes'
 });
 
-// Generate slug from name
+// Compound indexes for tenant-scoped query performance
+cafeSchema.index({ slug: 1, is_active: 1 });
+cafeSchema.index({ is_active: 1, subscription_status: 1 });
+cafeSchema.index({ is_active: 1, created_at: -1 });
+cafeSchema.index({ 'active_sessions.token': 1 });
+
+// Partial unique index for subscription identifier (prevents empty string collisions)
+cafeSchema.index(
+  { razorpay_subscription_id: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { razorpay_subscription_id: { $type: 'string', $gt: '' } }
+  }
+);
+
+// Generate slug, hash password, and prune unbounded active_sessions
 cafeSchema.pre('save', async function (next) {
   if (this.isModified('name')) {
     this.slug = this.name
@@ -137,6 +164,10 @@ cafeSchema.pre('save', async function (next) {
   if (this.isModified('password')) {
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
+  }
+  // Protection against unbounded arrays: keep maximum 5 active sessions
+  if (this.active_sessions && this.active_sessions.length > 5) {
+    this.active_sessions = this.active_sessions.slice(-5);
   }
   next();
 });

@@ -19,7 +19,7 @@ const INPUT_STYLE = {
   transition: 'all 0.2s ease',
 }
 
-function InputField({ label, as, optional, ...props }) {
+function InputField({ label, as, optional, error, ...props }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -28,18 +28,23 @@ function InputField({ label, as, optional, ...props }) {
       </label>
       {as === 'textarea' ? (
         <textarea
-          style={{ ...INPUT_STYLE, resize: 'vertical', minHeight: 74 }}
-          onFocus={e => { e.target.style.borderColor = 'var(--accent-primary)'; e.target.style.boxShadow = '0 0 0 3px var(--accent-bg-subtle)' }}
-          onBlur={e => { e.target.style.borderColor = 'var(--border-medium)'; e.target.style.boxShadow = 'none' }}
+          style={{ ...INPUT_STYLE, borderColor: error ? '#ef4444' : 'var(--border-medium)', resize: 'vertical', minHeight: 74 }}
+          onFocus={e => { e.target.style.borderColor = error ? '#ef4444' : 'var(--accent-primary)'; e.target.style.boxShadow = '0 0 0 3px var(--accent-bg-subtle)' }}
+          onBlur={e => { e.target.style.borderColor = error ? '#ef4444' : 'var(--border-medium)'; e.target.style.boxShadow = 'none' }}
           {...props}
         />
       ) : (
         <input
-          style={INPUT_STYLE}
-          onFocus={e => { e.target.style.borderColor = 'var(--accent-primary)'; e.target.style.boxShadow = '0 0 0 3px var(--accent-bg-subtle)' }}
-          onBlur={e => { e.target.style.borderColor = 'var(--border-medium)'; e.target.style.boxShadow = 'none' }}
+          style={{ ...INPUT_STYLE, borderColor: error ? '#ef4444' : 'var(--border-medium)' }}
+          onFocus={e => { e.target.style.borderColor = error ? '#ef4444' : 'var(--accent-primary)'; e.target.style.boxShadow = '0 0 0 3px var(--accent-bg-subtle)' }}
+          onBlur={e => { e.target.style.borderColor = error ? '#ef4444' : 'var(--border-medium)'; e.target.style.boxShadow = 'none' }}
           {...props}
         />
+      )}
+      {error && (
+        <span style={{ fontSize: 11, color: '#ef4444', marginTop: 4, display: 'block', fontWeight: 600 }}>
+          {error}
+        </span>
       )}
     </div>
   )
@@ -55,9 +60,10 @@ const Checkout = () => {
   const [form, setForm] = useState({
     customer_name: '',
     customer_phone: '',
-    table_number: () => searchParams.get('table') || localStorage.getItem('customer_table') || '',
-    notes: () => localStorage.getItem('order_notes') || ''
+    table_number: searchParams.get('table') || localStorage.getItem('customer_table') || '',
+    notes: localStorage.getItem('order_notes') || ''
   })
+  const [fieldErrors, setFieldErrors] = useState({})
 
   const [loading, setLoading] = useState(false)
   const [cafe, setCafe] = useState(null)
@@ -84,6 +90,15 @@ const Checkout = () => {
   const taxPercentage = cafe?.tax_percentage || 0
   const taxAmount = (totalAmount * taxPercentage) / 100
   const grandTotal = totalAmount + taxAmount
+
+  // Helper to extract granular backend validation or business error
+  const extractErrorMessage = (err, fallback) => {
+    const errorList = err.response?.data?.errors
+    if (Array.isArray(errorList) && errorList.length > 0) {
+      return errorList[0].message || errorList[0].msg || err.response?.data?.message || fallback
+    }
+    return err.response?.data?.message || err.message || fallback
+  }
 
   // Save successful order into customer's local order history
   const recordOrderLocally = (orderNumber, tokenNumber) => {
@@ -114,13 +129,53 @@ const Checkout = () => {
       return
     }
 
+    if (!items || items.length === 0) {
+      toast.error('Your cart is empty. Please add items before checking out.')
+      navigate(`/${cafeId}/menu`)
+      return
+    }
+
+    // Client-side field validations
+    const errors = {}
+    const rawPhone = (form.customer_phone || '').trim()
+    if (rawPhone) {
+      const cleanDigits = rawPhone.replace(/\D/g, '')
+      if (cleanDigits.length < 10) {
+        errors.customer_phone = 'Phone number must have at least 10 digits'
+      } else if (!/^[0-9+\-\s]+$/.test(rawPhone) || rawPhone.length > 15) {
+        errors.customer_phone = 'Please enter a valid phone number (10-15 digits)'
+      }
+    }
+
+    const rawName = (form.customer_name || '').trim()
+    if (rawName.length > 50) {
+      errors.customer_name = 'Name cannot exceed 50 characters'
+    }
+
+    const rawTable = (form.table_number || '').trim()
+    if (rawTable.length > 20) {
+      errors.table_number = 'Table identifier cannot exceed 20 characters'
+    }
+
+    const rawNotes = (form.notes || '').trim()
+    if (rawNotes.length > 500) {
+      errors.notes = 'Cooking instructions cannot exceed 500 characters'
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors)
+      toast.error(Object.values(errors)[0])
+      return
+    }
+    setFieldErrors({})
+
     // Common payload for order
     const payload = {
       cafe_id: cafeId,
-      customer_name: (typeof form.customer_name === 'function' ? form.customer_name() : form.customer_name) || 'Guest',
-      customer_phone: (typeof form.customer_phone === 'function' ? form.customer_phone() : form.customer_phone) || '',
-      table_number: (typeof form.table_number === 'function' ? form.table_number() : form.table_number) || '',
-      notes: (typeof form.notes === 'function' ? form.notes() : form.notes) || '',
+      customer_name: rawName || 'Guest',
+      customer_phone: rawPhone,
+      table_number: rawTable,
+      notes: rawNotes,
       items: items.map(item => ({
         menu_item_id: item._id,
         name: item.name,
@@ -163,7 +218,7 @@ const Checkout = () => {
                   toast.error('Payment verification failed.')
                 }
               } catch (err) {
-                toast.error(err.response?.data?.message || 'Payment verification failed.')
+                toast.error(extractErrorMessage(err, 'Payment verification failed.'))
               }
             },
             prefill: {
@@ -191,7 +246,7 @@ const Checkout = () => {
           }
         }
       } catch (error) {
-        toast.error(error.response?.data?.message || 'Failed to initiate online payment')
+        toast.error(extractErrorMessage(error, 'Failed to initiate online payment'))
       } finally {
         setLoading(false)
       }
@@ -216,16 +271,16 @@ const Checkout = () => {
         toast.error(res.data?.message || 'Failed to place order.')
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to place order. Please check with staff.')
+      toast.error(extractErrorMessage(error, 'Failed to place order. Please check with staff.'))
     } finally {
       setLoading(false)
     }
   }
 
-  const tableVal = typeof form.table_number === 'function' ? form.table_number() : form.table_number
-  const notesVal = typeof form.notes === 'function' ? form.notes() : form.notes
-  const nameVal = typeof form.customer_name === 'function' ? form.customer_name() : form.customer_name
-  const phoneVal = typeof form.customer_phone === 'function' ? form.customer_phone() : form.customer_phone
+  const tableVal = form.table_number
+  const notesVal = form.notes
+  const nameVal = form.customer_name
+  const phoneVal = form.customer_phone
 
   return (
     <div style={{ padding: '20px 16px', animation: 'fadeIn 0.35s ease', paddingBottom: 130, maxWidth: 500, margin: '0 auto' }}>
@@ -288,8 +343,10 @@ const Checkout = () => {
             label="Table Number / Dine-in Spot" 
             placeholder="e.g. Table 4 or Takeaway" 
             value={tableVal} 
+            error={fieldErrors.table_number}
             onChange={e => {
               setForm({ ...form, table_number: e.target.value })
+              if (fieldErrors.table_number) setFieldErrors({ ...fieldErrors, table_number: null })
               localStorage.setItem('customer_table', e.target.value)
             }} 
           />
@@ -299,16 +356,24 @@ const Checkout = () => {
             placeholder="e.g. Rahul Sharma" 
             optional
             value={nameVal} 
-            onChange={e => setForm({ ...form, customer_name: e.target.value })} 
+            error={fieldErrors.customer_name}
+            onChange={e => {
+              setForm({ ...form, customer_name: e.target.value })
+              if (fieldErrors.customer_name) setFieldErrors({ ...fieldErrors, customer_name: null })
+            }} 
           />
 
           <InputField 
             label="Mobile Number" 
-            placeholder="For order SMS & updates" 
+            placeholder="For order SMS & updates (min 10 digits)" 
             optional
             type="tel"
             value={phoneVal} 
-            onChange={e => setForm({ ...form, customer_phone: e.target.value })} 
+            error={fieldErrors.customer_phone}
+            onChange={e => {
+              setForm({ ...form, customer_phone: e.target.value })
+              if (fieldErrors.customer_phone) setFieldErrors({ ...fieldErrors, customer_phone: null })
+            }} 
           />
 
           <InputField 
@@ -317,8 +382,10 @@ const Checkout = () => {
             optional
             placeholder="e.g. Less spicy, extra napkins, serve cutlery..." 
             value={notesVal} 
+            error={fieldErrors.notes}
             onChange={e => {
               setForm({ ...form, notes: e.target.value })
+              if (fieldErrors.notes) setFieldErrors({ ...fieldErrors, notes: null })
               localStorage.setItem('order_notes', e.target.value)
             }} 
           />

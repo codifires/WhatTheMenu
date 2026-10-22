@@ -13,6 +13,8 @@ const SubscriptionHistory = require('../models/SubscriptionHistory');
 const SubscriptionRequest = require('../models/SubscriptionRequest');
 const Settings = require('../models/Settings');
 const { generateQRCode } = require('../utils/qrcode');
+const { getStartOfBusinessDay, getEndOfBusinessDay } = require('../utils/dateTime');
+const { isValidOrderStatusTransition, isValidPaymentStatusTransition } = require('../utils/orderStateMachine');
 
 // ============ DASHBOARD ============
 
@@ -21,8 +23,7 @@ const { generateQRCode } = require('../utils/qrcode');
 const getDashboard = async (req, res, next) => {
   try {
     const cafeId = req.user._id;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getStartOfBusinessDay(new Date());
 
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
@@ -280,9 +281,9 @@ const createMenuItem = async (req, res, next) => {
   try {
     const { name, description, price, category_id, is_veg, image_url } = req.body;
 
-    const categoryCount = await Category.countDocuments({ cafe_id: req.user._id });
-    if (categoryCount === 0) {
-      return res.status(400).json({ success: false, message: 'Please first create a category, then create the item.' });
+    const category = await Category.findOne({ _id: category_id, cafe_id: req.user._id });
+    if (!category) {
+      return res.status(400).json({ success: false, message: 'Invalid category: category does not belong to this café' });
     }
 
     const existingItem = await MenuItem.findOne({ 
@@ -315,6 +316,13 @@ const createMenuItem = async (req, res, next) => {
 // @route   PUT /api/owner/menu-items/:id
 const updateMenuItem = async (req, res, next) => {
   try {
+    if (req.body.category_id) {
+      const category = await Category.findOne({ _id: req.body.category_id, cafe_id: req.user._id });
+      if (!category) {
+        return res.status(400).json({ success: false, message: 'Invalid category: category does not belong to this café' });
+      }
+    }
+
     if (req.body.name) {
       const existingItem = await MenuItem.findOne({ 
         cafe_id: req.user._id, 
@@ -362,6 +370,19 @@ const deleteMenuItem = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Menu item not found' });
     }
 
+    // Safely clean up Cloudinary storage asset if hosted on Cloudinary
+    if (item.image && item.image.includes('cloudinary.com')) {
+      try {
+        const upload = require('../middleware/upload');
+        const matches = item.image.match(/\/upload\/(?:v\d+\/)?(.+?)\.[a-zA-Z0-9]+$/);
+        if (matches && matches[1]) {
+          await upload.cloudinary.uploader.destroy(matches[1]);
+        }
+      } catch (cErr) {
+        console.warn('Cloudinary destroy warning (menu item):', cErr.message);
+      }
+    }
+
     res.json({ success: true, message: 'Menu item deleted' });
   } catch (error) {
     next(error);
@@ -405,47 +426,43 @@ const toggleAvailability = async (req, res, next) => {
 // @route   GET /api/owner/orders
 const getOrders = async (req, res, next) => {
   try {
-    const { status, date, page = 1, limit = 20 } = req.query;
+    const pageNum = Math.max(1, parseInt(req.query.page) || 1);
+    const limitNum = Math.min(Math.max(1, parseInt(req.query.limit) || 20), 100);
+    const { status, date } = req.query;
     const query = { cafe_id: req.user._id };
 
     if (status) query.order_status = status;
 
     if (date === 'today') {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        query.created_at = { $gte: today };
-      } else if (date) {
-        // Assume date is in YYYY-MM-DD format
-        const startOfDay = new Date(date);
-        startOfDay.setHours(0, 0, 0, 0);
-        
-        const endOfDay = new Date(date);
-        endOfDay.setHours(23, 59, 59, 999);
-        
-        query.created_at = { $gte: startOfDay, $lte: endOfDay };
-      }
+      query.created_at = { $gte: getStartOfBusinessDay(new Date()) };
+    } else if (date) {
+      query.created_at = {
+        $gte: getStartOfBusinessDay(date),
+        $lte: getEndOfBusinessDay(date)
+      };
+    }
 
-    
     // Exclude abandoned online orders from the general order list
     query.$or = [
       { payment_method: { $ne: 'razorpay' } },
       { payment_status: { $in: ['received', 'completed'] } }
     ];
-    
+
     const total = await Order.countDocuments(query);
     const orders = await Order.find(query)
       .sort({ created_at: -1 })
-      .skip((parseInt(page) - 1) * parseInt(limit))
-      .limit(parseInt(limit));
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .select('-razorpay_signature');
 
     res.json({
       success: true,
       data: orders,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: pageNum,
+        limit: limitNum,
         total,
-        pages: Math.ceil(total / parseInt(limit))
+        pages: Math.ceil(total / limitNum)
       }
     });
   } catch (error) {
@@ -458,15 +475,22 @@ const getOrders = async (req, res, next) => {
 const updateOrderStatus = async (req, res, next) => {
   try {
     const { order_status } = req.body;
-    const order = await Order.findOneAndUpdate(
-      { _id: req.params.id, cafe_id: req.user._id },
-      { order_status },
-      { new: true }
-    );
+    const order = await Order.findOne({ _id: req.params.id, cafe_id: req.user._id });
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
+
+    // State Machine Validation: Prevent impossible transitions
+    if (!isValidOrderStatusTransition(order.order_status, order_status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid order status transition from "${order.order_status}" to "${order_status}"`
+      });
+    }
+
+    order.order_status = order_status;
+    await order.save();
 
     // If order is cancelled, ensure it is completely removed from the revenue ledger
     if (order_status === 'cancelled') {
@@ -484,7 +508,11 @@ const updateOrderStatus = async (req, res, next) => {
         order_number: order.order_number,
         status: order.order_status
       });
-      io.to(`cafe-${req.user._id}`).emit('order-updated', order);
+
+      // Strip sensitive payment secrets/signatures before broadcasting
+      const safeOrder = order.toObject ? order.toObject() : { ...order };
+      delete safeOrder.razorpay_signature;
+      io.to(`cafe-${req.user._id}`).emit('order-updated', safeOrder);
     }
 
     res.json({ success: true, data: order });
@@ -498,15 +526,23 @@ const updateOrderStatus = async (req, res, next) => {
 const updatePaymentStatus = async (req, res, next) => {
   try {
     const { payment_status = 'received' } = req.body;
-    const order = await Order.findOneAndUpdate(
-      { _id: req.params.id, cafe_id: req.user._id },
-      { payment_status },
-      { new: true }
-    );
+    const order = await Order.findOne({ _id: req.params.id, cafe_id: req.user._id });
 
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
+
+    // State Machine Validation: Reject impossible transitions
+    const transitionCheck = isValidPaymentStatusTransition(order.payment_status, payment_status, order.order_status);
+    if (!transitionCheck.valid) {
+      return res.status(400).json({
+        success: false,
+        message: transitionCheck.reason || 'Invalid payment status transition'
+      });
+    }
+
+    order.payment_status = payment_status;
+    await order.save();
 
     // Save to permanent revenue ledger only if payment is received and order is NOT cancelled
     if (payment_status === 'received' && order.order_status !== 'cancelled') {
@@ -516,11 +552,20 @@ const updatePaymentStatus = async (req, res, next) => {
           {
             cafe_id: order.cafe_id,
             order_number: order.order_number,
-            total_amount: order.total_amount,
-            payment_method: order.payment_method === 'razorpay' ? 'online' : order.payment_method,
-              payment_method_details: order.payment_method === 'razorpay' ? 'razorpay' : '',
+            token_number: order.token_number || '',
+            customer_name: order.customer_name || 'Guest',
             table_number: order.table_number || '',
+            items: (order.items || []).map(i => ({
+              name: i.name,
+              quantity: i.quantity,
+              price: i.price
+            })),
             items_count: order.items?.length || 0,
+            total_amount: order.total_amount,
+            payment_provider: order.payment_provider || 'cash',
+            payment_method: order.payment_method === 'razorpay' ? 'online' : order.payment_method,
+            payment_method_details: order.payment_method === 'razorpay' ? 'razorpay' : '',
+            payment_status: 'received',
             payment_date: new Date()
           },
           { upsert: true, new: true }
@@ -695,7 +740,8 @@ const getFeedback = async (req, res, next) => {
   try {
     const feedback = await Feedback.find({ cafe_id: req.user._id })
       .populate('order_id', 'order_number')
-      .sort({ created_at: -1 });
+      .sort({ created_at: -1 })
+      .limit(100);
 
     res.json({ success: true, data: feedback });
   } catch (error) {

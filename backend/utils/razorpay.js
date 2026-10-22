@@ -37,16 +37,22 @@ const getCafeRazorpay = (keyId, keySecret) => {
  * @returns {boolean}
  */
 const verifyWebhookSignature = (body, signature, secret) => {
-  if (!signature || !secret) return false;
+  if (!signature || !secret || !body) return false;
   try {
+    const rawString = typeof body === 'string' ? body : (Buffer.isBuffer(body) ? body.toString('utf8') : JSON.stringify(body));
     const expectedSignature = crypto
       .createHmac('sha256', secret)
-      .update(typeof body === 'string' ? body : body.toString())
+      .update(rawString)
       .digest('hex');
-    return crypto.timingSafeEqual(
-      Buffer.from(expectedSignature, 'hex'),
-      Buffer.from(signature, 'hex')
-    );
+
+    const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
+    const signatureBuffer = Buffer.from(signature, 'utf8');
+
+    if (expectedBuffer.length !== signatureBuffer.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(expectedBuffer, signatureBuffer);
   } catch (err) {
     console.error('Webhook signature verification error:', err.message);
     return false;

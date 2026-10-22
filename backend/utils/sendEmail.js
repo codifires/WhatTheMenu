@@ -36,7 +36,7 @@ const createEmailTransporter = () => {
       pass: pass
     },
     tls: {
-      rejectUnauthorized: false // Avoid SSL certificate handshake failures behind cloud proxies
+      rejectUnauthorized: process.env.NODE_ENV === 'production'
     },
     connectionTimeout: 15000,
     socketTimeout: 20000
@@ -51,10 +51,15 @@ const sendEmail = async (options) => {
   const isSimulated = !host || host === 'smtp.example.com' || process.env.SIMULATE_EMAIL === 'true';
 
   if (isSimulated) {
+    const { redactString } = require('./redact');
     console.log('\n--- ✉️ [SIMULATED EMAIL] ---');
     console.log(`To: ${options.email}`);
     console.log(`Subject: ${options.subject}`);
-    console.log(`Message: \n${options.message}`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`Message: \n${redactString(options.message || '')}`);
+    } else {
+      console.log('Message: [BODY_REDACTED_IN_PRODUCTION]');
+    }
     console.log('----------------------------\n');
     return { success: true, simulated: true };
   }

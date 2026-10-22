@@ -22,3 +22,7 @@ backend/uploads/*
 .DS_Store
 Thumbs.db
 *.log
+
+# Database backups & local dumps
+backups/
+**/backups/

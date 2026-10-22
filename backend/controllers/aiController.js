@@ -1,4 +1,5 @@
 const axios = require('axios');
+const crypto = require('crypto');
 
 // Aggressively extract clean review text from AI response
 function extractCleanText(raw) {
@@ -83,7 +84,7 @@ async function callOpenRouter(messages, apiKey, retries = 3) {
         temperature: 0.9,
         max_tokens: 200,
         top_p: 0.95,
-        seed: Math.floor(Math.random() * 999999),
+        seed: crypto.randomInt(0, 1000000),
       }, {
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -108,6 +109,9 @@ async function callOpenRouter(messages, apiKey, retries = 3) {
 // @desc    Handle AI feedback assistance
 // @route   POST /api/feedback/ai-assist  
 // @access  Public
+// @desc    Handle AI feedback assistance
+// @route   POST /api/feedback/ai-assist  
+// @access  Public
 const aiFeedbackAssist = async (req, res, next) => {
   try {
     const { rating, text, action } = req.body;
@@ -117,58 +121,78 @@ const aiFeedbackAssist = async (req, res, next) => {
       return res.status(500).json({ success: false, message: 'AI API key not configured' });
     }
 
-    if (action === 'suggest_chips' && rating) {
-      const messages = [
-        { role: 'user', content: `Generate exactly 3 short realistic cafe review phrases (max 5 words each) for a ${rating}-star experience. Write like a real customer. Separate them with | character. Output ONLY the 3 phrases separated by |, nothing else. Example: Great food!|Loved it!|Best cafe ever` }
-      ];
-      
-      const raw = await callOpenRouter(messages, apiKey);
-      const chips = extractChips(raw);
-      
-      if (chips.length >= 3) {
-        return res.status(200).json({ success: true, suggestions: chips });
+    const ALLOWED_ACTIONS = ['suggest_chips', 'auto_write', 'auto_rate'];
+    if (!action || !ALLOWED_ACTIONS.includes(action)) {
+      return res.status(400).json({ success: false, message: 'Invalid action. Must be suggest_chips, auto_write, or auto_rate' });
+    }
+
+    if (action === 'suggest_chips' || action === 'auto_write') {
+      const ratingStr = String(rating != null ? rating : '').trim();
+      if (!/^[1-5]$/.test(ratingStr)) {
+        return res.status(400).json({ success: false, message: 'Valid rating between 1 and 5 is required' });
       }
-      
-      const fallbacks = {
-        5: ['Amazing experience!', 'Loved the food!', 'Highly recommend!'],
-        4: ['Great food overall!', 'Really enjoyed it!', 'Would visit again!'],
-        3: ['It was decent', 'Average experience', 'Room for improvement'],
-        2: ['Not impressed', 'Below average', 'Disappointing food'],
-        1: ['Terrible experience', 'Would not return', 'Waste of money']
-      };
-      const key = Math.min(5, Math.max(1, parseInt(rating)));
-      return res.status(200).json({ success: true, suggestions: fallbacks[key] || fallbacks[3] });
-      
-    } else if (action === 'auto_write' && rating) {
-      const messages = [
-        { role: 'user', content: `Write a short realistic ${rating}-star cafe review in 1-2 simple sentences. Write like a normal customer - casual and natural. Mention food, service, or ambiance. Output ONLY the review text, nothing else.` }
-      ];
-      
-      const raw = await callOpenRouter(messages, apiKey);
-      const reviewText = extractCleanText(raw);
-      
-      if (reviewText && reviewText.length >= 10) {
-        return res.status(200).json({ success: true, text: reviewText });
+      const parsedRating = parseInt(ratingStr, 10);
+
+      if (action === 'suggest_chips') {
+        const messages = [
+          { role: 'user', content: `Generate exactly 3 short realistic cafe review phrases (max 5 words each) for a ${parsedRating}-star experience. Write like a real customer. Separate them with | character. Output ONLY the 3 phrases separated by |, nothing else. Example: Great food!|Loved it!|Best cafe ever` }
+        ];
+        
+        const raw = await callOpenRouter(messages, apiKey);
+        const chips = extractChips(raw);
+        
+        if (chips.length >= 3) {
+          return res.status(200).json({ success: true, suggestions: chips });
+        }
+        
+        const fallbacks = {
+          5: ['Amazing experience!', 'Loved the food!', 'Highly recommend!'],
+          4: ['Great food overall!', 'Really enjoyed it!', 'Would visit again!'],
+          3: ['It was decent', 'Average experience', 'Room for improvement'],
+          2: ['Not impressed', 'Below average', 'Disappointing food'],
+          1: ['Terrible experience', 'Would not return', 'Waste of money']
+        };
+        return res.status(200).json({ success: true, suggestions: fallbacks[parsedRating] || fallbacks[3] });
       }
-      
-      return res.status(200).json({ success: true, text: rating >= 4 ? 'Had a wonderful experience! The food was delicious and the atmosphere was perfect.' : 'The experience was decent but there is room for improvement.' });
-      
-    } else if (action === 'auto_rate' && text) {
+
+      if (action === 'auto_write') {
+        const messages = [
+          { role: 'user', content: `Write a short realistic ${parsedRating}-star cafe review in 1-2 simple sentences. Write like a normal customer - casual and natural. Mention food, service, or ambiance. Output ONLY the review text, nothing else.` }
+        ];
+        
+        const raw = await callOpenRouter(messages, apiKey);
+        const reviewText = extractCleanText(raw);
+        
+        if (reviewText && reviewText.length >= 10) {
+          return res.status(200).json({ success: true, text: reviewText });
+        }
+        
+        return res.status(200).json({ success: true, text: parsedRating >= 4 ? 'Had a wonderful experience! The food was delicious and the atmosphere was perfect.' : 'The experience was decent but there is room for improvement.' });
+      }
+    }
+
+    if (action === 'auto_rate') {
+      if (typeof text !== 'string' || !text.trim()) {
+        return res.status(400).json({ success: false, message: 'Text is required for auto_rate' });
+      }
+
+      // Bound text length to 500 characters and sanitize special control chars to prevent prompt injection / quota exhaustion
+      const sanitizedText = text.trim().substring(0, 500).replace(/[\r\n\t]+/g, ' ').replace(/[^\x20-\x7E\u00A0-\u024F]/g, '');
+
       const messages = [
-        { role: 'user', content: `Rate this cafe review from 1 to 5 stars. Output ONLY a single number, nothing else. Review: "${text}"` }
+        { role: 'user', content: `Rate this cafe review from 1 to 5 stars. Output ONLY a single number (1, 2, 3, 4, or 5), nothing else. Review: "${sanitizedText}"` }
       ];
       
       const raw = await callOpenRouter(messages, apiKey);
       if (raw) {
         const match = raw.match(/[1-5]/);
-        if (match) return res.status(200).json({ success: true, rating: parseInt(match[0]) });
+        if (match) return res.status(200).json({ success: true, rating: parseInt(match[0], 10) });
       }
       
       return res.status(200).json({ success: true, rating: 3 });
-      
-    } else {
-      return res.status(400).json({ success: false, message: 'Invalid action or missing parameters' });
     }
+
+    return res.status(400).json({ success: false, message: 'Invalid request' });
   } catch (error) {
     console.error('AI Feedback Error:', error.message);
     res.status(500).json({ success: false, message: 'AI service temporarily unavailable' });

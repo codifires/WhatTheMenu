@@ -89,11 +89,17 @@ const startSubscriptionCron = () => {
           await cafe.save();
           
           // Sync to Subscription collection for Admin Dashboard
+          const planPrice = cafe.subscription.plan_name === 'pro_plus' 
+            ? (settings?.pro_plus_price || 499) 
+            : (cafe.subscription.plan_name === 'pro' 
+              ? (settings?.pro_price || 299) 
+              : (settings?.starter_price || 199));
+
           await Subscription.findOneAndUpdate(
             { cafe_id: cafe._id },
             {
               plan_name: cafe.subscription.plan_name,
-              price: cafe.subscription.plan_name === 'pro_plus' ? (settings?.pro_price || 499) : (cafe.subscription.plan_name === 'pro' ? (settings?.starter_price || 299) : (settings?.basic_price || 199)),
+              price: planPrice,
               start_date: new Date(),
               end_date: newEndDate,
               status: 'active'
@@ -105,7 +111,7 @@ const startSubscriptionCron = () => {
           await SubscriptionHistory.create({
             cafe_id: cafe._id,
             plan_name: cafe.subscription.plan_name,
-            price: cafe.subscription.plan_name === 'pro_plus' ? (settings?.pro_price || 499) : (cafe.subscription.plan_name === 'pro' ? (settings?.starter_price || 299) : (settings?.basic_price || 199)),
+            price: planPrice,
             start_date: new Date(),
             end_date: newEndDate,
             status: 'active'

@@ -4,7 +4,8 @@ const feedbackSchema = new mongoose.Schema({
   order_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Order',
-    required: true
+    required: true,
+    unique: true
   },
   cafe_id: {
     type: mongoose.Schema.Types.ObjectId,
@@ -20,16 +21,20 @@ const feedbackSchema = new mongoose.Schema({
   review: {
     type: String,
     default: '',
-    trim: true
+    trim: true,
+    maxlength: 500
   },
   customer_name: {
     type: String,
-    default: 'Guest'
+    default: 'Guest',
+    trim: true,
+    maxlength: 50
   }
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
 });
 
-feedbackSchema.index({ cafe_id: 1 });
+feedbackSchema.index({ cafe_id: 1, created_at: -1 });
+feedbackSchema.index({ cafe_id: 1, rating: 1, created_at: -1 });
 
 module.exports = mongoose.model('Feedback', feedbackSchema);

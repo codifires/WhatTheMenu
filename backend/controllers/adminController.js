@@ -11,9 +11,22 @@ const Settings = require('../models/Settings');
 const GlobalMedia = require('../models/GlobalMedia');
 const SupportTicket = require('../models/SupportTicket');
 const SystemLog = require('../models/SystemLog');
+const DailyTokenCounter = require('../models/DailyTokenCounter');
 const crypto = require('crypto');
+const { withTransaction } = require('../utils/transaction');
 const sendEmail = require('../utils/sendEmail');
 const { welcomeTemplate, emailChangeOldTemplate, emailChangeNewTemplate } = require('../utils/emailTemplates');
+const logger = require('../utils/logger');
+
+const getCleanFrontendUrl = (req) => {
+  if (process.env.FRONTEND_URL && process.env.FRONTEND_URL !== '*' && !process.env.FRONTEND_URL.includes('*')) {
+    return process.env.FRONTEND_URL.replace(/\/$/, '');
+  }
+  const host = req.get('host') || 'localhost:5000';
+  const protocol = req.protocol || 'http';
+  const feHost = host.includes('5000') ? host.replace('5000', '5173') : host;
+  return `${protocol}://${feHost}`;
+};
 
 // @desc    Get admin dashboard stats
 // @route   GET /api/admin/dashboard
@@ -167,7 +180,7 @@ const createCafe = async (req, res, next) => {
     await cafe.save();
 
     // Create reset url
-    const resetUrl = `${req.protocol}://${req.get('host').replace('5000', '3000')}/set-password/${resetToken}`;
+    const resetUrl = `${getCleanFrontendUrl(req)}/set-password/${resetToken}`;
 
     const message = `Welcome to QR Menu SaaS!\n\nYour café account has been officially created.\nYour temporary password is: ${tempPassword}\n\nPlease set your new password using this link: ${resetUrl}`;
     
@@ -208,8 +221,8 @@ const createCafe = async (req, res, next) => {
 // @route   GET /api/admin/cafes
 const getCafes = async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(Math.max(1, parseInt(req.query.limit) || 10), 100);
     const search = req.query.search || '';
 
     const query = search
@@ -221,7 +234,7 @@ const getCafes = async (req, res, next) => {
       .sort({ created_at: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .select('-password');
+      .select('-password -razorpay_key_secret -razorpay_webhook_secret');
 
     // Get subscription info for each cafe
     const cafesWithSubs = await Promise.all(
@@ -369,7 +382,8 @@ const suspendCafe = async (req, res, next) => {
       req.params.id,
       {
         subscription_status: 'suspended',
-        is_active: false
+        is_active: false,
+        active_sessions: []
       },
       { new: true }
     ).select('-password');
@@ -384,13 +398,24 @@ const suspendCafe = async (req, res, next) => {
       { status: 'suspended' }
     );
 
-    // Emit socket event to log out owner
+    // Emit socket event to log out owner and disconnect sockets
     const io = req.app.get('io');
     if (io) {
       io.to(`cafe-${cafe._id}`).emit('account-suspended', {
         message: 'Your account was suspended by the admin. Please contact support at support@qrmenu.com or 1-800-QR-MENU.'
       });
+      if (typeof io.in === 'function') {
+        io.in(`cafe-${cafe._id}`).disconnectSockets(true);
+      }
     }
+
+    logger.security('SECURITY_PRIVILEGED_ACTION', {
+      action: 'SUSPEND_CAFE',
+      target_cafe_id: cafe._id,
+      admin_id: req.user?._id,
+      ip: req.ip,
+      request_id: req.id
+    });
 
     res.json({ success: true, data: cafe, message: 'Café suspended successfully' });
   } catch (error) {
@@ -415,6 +440,14 @@ const activateCafe = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Café not found' });
     }
 
+    logger.security('SECURITY_PRIVILEGED_ACTION', {
+      action: 'ACTIVATE_CAFE',
+      target_cafe_id: cafe._id,
+      admin_id: req.user?._id,
+      ip: req.ip,
+      request_id: req.id
+    });
+
     res.json({ success: true, data: cafe, message: 'Café activated successfully' });
   } catch (error) {
     next(error);
@@ -430,16 +463,30 @@ const deleteCafe = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Café not found' });
     }
 
-    // Delete all related data
-    await Category.deleteMany({ cafe_id: cafe._id });
-    await MenuItem.deleteMany({ cafe_id: cafe._id });
-    await Order.deleteMany({ cafe_id: cafe._id });
-    await Feedback.deleteMany({ cafe_id: cafe._id });
-    await Subscription.deleteMany({ cafe_id: cafe._id });
-    await QRCode.deleteMany({ cafe_id: cafe._id });
-    await Cafe.findByIdAndDelete(cafe._id);
+    // Atomic multi-document deletion of tenant operational records
+    // NOTE: OrderRevenue and SubscriptionHistory are permanently preserved for legal, tax, and audit compliance.
+    await withTransaction(async (session) => {
+      const opts = session ? { session } : {};
+      await Category.deleteMany({ cafe_id: cafe._id }, opts);
+      await MenuItem.deleteMany({ cafe_id: cafe._id }, opts);
+      await Order.deleteMany({ cafe_id: cafe._id }, opts);
+      await Feedback.deleteMany({ cafe_id: cafe._id }, opts);
+      await Subscription.deleteMany({ cafe_id: cafe._id }, opts);
+      await QRCode.deleteMany({ cafe_id: cafe._id }, opts);
+      await DailyTokenCounter.deleteMany({ cafe_id: cafe._id }, opts);
+      await Cafe.findByIdAndDelete(cafe._id, opts);
+    });
 
-    res.json({ success: true, message: 'Café and all related data deleted' });
+    logger.security('SECURITY_PRIVILEGED_ACTION', {
+      action: 'DELETE_CAFE',
+      target_cafe_id: cafe._id,
+      target_cafe_name: cafe.name,
+      admin_id: req.user?._id,
+      ip: req.ip,
+      request_id: req.id
+    });
+
+    res.json({ success: true, message: 'Café and all related operational data deleted successfully' });
   } catch (error) {
     next(error);
   }
@@ -496,6 +543,9 @@ const updateSubscription = async (req, res, next) => {
           io.to(`cafe-${subscription.cafe_id._id}`).emit('account-suspended', {
             message: 'Your account was suspended by the admin. Please contact support at support@qrmenu.com or 1-800-QR-MENU.'
           });
+          if (typeof io.in === 'function') {
+            io.in(`cafe-${subscription.cafe_id._id}`).disconnectSockets(true);
+          }
         }
       }
     }
@@ -636,8 +686,8 @@ const updateSettings = async (req, res, next) => {
     if (support_whatsapp) settings.support_whatsapp = support_whatsapp;
     if (support_hours) settings.support_hours = support_hours;
     if (starter_price !== undefined) settings.starter_price = Number(starter_price);
-    if (starter_price !== undefined) settings.starter_price = Number(starter_price);
     if (pro_price !== undefined) settings.pro_price = Number(pro_price);
+    if (pro_plus_price !== undefined) settings.pro_plus_price = Number(pro_plus_price);
     if (yearly_discount_percentage !== undefined) settings.yearly_discount_percentage = Number(yearly_discount_percentage);
     if (maintenance_mode !== undefined) settings.maintenance_mode = maintenance_mode;
     if (starter_features !== undefined) settings.starter_features = starter_features;
@@ -651,6 +701,13 @@ const updateSettings = async (req, res, next) => {
     if (io) {
       io.emit('settings-updated');
     }
+
+    logger.security('SECURITY_PRIVILEGED_ACTION', {
+      action: 'UPDATE_GLOBAL_SETTINGS',
+      admin_id: req.user?._id,
+      ip: req.ip,
+      request_id: req.id
+    });
 
     res.json({ success: true, data: settings, message: 'Settings saved successfully' });
   } catch (error) {
@@ -695,10 +752,25 @@ const getGlobalMedia = async (req, res, next) => {
 // @route   DELETE /api/admin/media/:id
 const deleteGlobalMedia = async (req, res, next) => {
   try {
-    const media = await GlobalMedia.findByIdAndDelete(req.params.id);
+    const media = await GlobalMedia.findById(req.params.id);
     if (!media) {
       return res.status(404).json({ success: false, message: 'Media not found' });
     }
+
+    // Safely remove asset from Cloudinary storage if hosted on Cloudinary
+    if (media.image_url && media.image_url.includes('cloudinary.com')) {
+      try {
+        const upload = require('../middleware/upload');
+        const matches = media.image_url.match(/\/upload\/(?:v\d+\/)?(.+?)\.[a-zA-Z0-9]+$/);
+        if (matches && matches[1]) {
+          await upload.cloudinary.uploader.destroy(matches[1]);
+        }
+      } catch (cErr) {
+        console.warn('Cloudinary destroy warning:', cErr.message);
+      }
+    }
+
+    await GlobalMedia.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: 'Media deleted successfully' });
   } catch (error) {
     next(error);
@@ -796,8 +868,8 @@ const getRevenueHistory = async (req, res, next) => {
 // @route   GET /api/admin/payments
 const getAllPayments = async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(Math.max(1, parseInt(req.query.limit) || 20), 100);
     
     const total = await SubscriptionHistory.countDocuments();
     const payments = await SubscriptionHistory.find()
@@ -825,8 +897,8 @@ const getAllPayments = async (req, res, next) => {
 // @route   GET /api/admin/logs
 const getSystemLogs = async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(Math.max(1, parseInt(req.query.limit) || 20), 100);
 
     const total = await SystemLog.countDocuments();
     const logs = await SystemLog.find()
@@ -861,6 +933,58 @@ const clearSystemLogs = async (req, res, next) => {
   }
 };
 
+// @desc    Get payment health and reconciliation backlog metrics
+// @route   GET /api/admin/monitoring/payment-health
+const getPaymentMonitoring = async (req, res, next) => {
+  try {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+    const [
+      failedPayments24h,
+      successfulPayments24h,
+      pendingReconciliationBacklog,
+      webhookFailures24h
+    ] = await Promise.all([
+      Order.countDocuments({
+        payment_status: 'failed',
+        created_at: { $gte: twentyFourHoursAgo }
+      }),
+      Order.countDocuments({
+        payment_status: { $in: ['received', 'completed'] },
+        created_at: { $gte: twentyFourHoursAgo }
+      }),
+      Order.countDocuments({
+        payment_status: 'pending',
+        order_status: { $ne: 'cancelled' },
+        payment_provider: 'razorpay',
+        created_at: { $gte: thirtyMinsAgo, $lte: fiveMinsAgo }
+      }),
+      require('../models/WebhookLog').countDocuments({
+        status: 'failed',
+        created_at: { $gte: twentyFourHoursAgo }
+      })
+    ]);
+
+    const isAttentionRequired = pendingReconciliationBacklog > 10 || webhookFailures24h > 10;
+
+    res.json({
+      success: true,
+      data: {
+        status: isAttentionRequired ? 'ATTENTION_REQUIRED' : 'HEALTHY',
+        pending_reconciliation_backlog: pendingReconciliationBacklog,
+        failed_payments_24h: failedPayments24h,
+        successful_payments_24h: successfulPayments24h,
+        webhook_failures_24h: webhookFailures24h,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getDashboard,
   createCafe,
@@ -884,5 +1008,6 @@ module.exports = {
   getRevenueHistory,
   getAllPayments,
   getSystemLogs,
-  clearSystemLogs
+  clearSystemLogs,
+  getPaymentMonitoring
 };

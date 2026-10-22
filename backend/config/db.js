@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
+    if (mongoose.connection.readyState === 1) {
+      return;
+    }
     const isTestMode = process.env.NODE_ENV === 'test' || process.env.USE_TEST_DB === 'true';
     
     // Choose active URI: MONGO_URI_TEST for test mode (QR_System), MONGO_URI for prod (QR_System_prod)

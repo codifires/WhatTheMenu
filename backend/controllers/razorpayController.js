@@ -7,13 +7,37 @@ const SubscriptionHistory = require('../models/SubscriptionHistory');
 const WebhookLog = require('../models/WebhookLog');
 const Settings = require('../models/Settings');
 const MenuItem = require('../models/MenuItem');
+const DailyTokenCounter = require('../models/DailyTokenCounter');
+const razorpayUtils = require('../utils/razorpay');
 const {
   getPlatformRazorpay,
   getCafeRazorpay,
   verifyWebhookSignature,
   verifyPaymentSignature,
   verifySubscriptionSignature,
-} = require('../utils/razorpay');
+} = razorpayUtils;
+const logger = require('../utils/logger');
+
+// Helper to resolve the appropriate Razorpay instance and secret for an order
+const resolveOrderRazorpay = (cafe) => {
+  if (cafe.razorpay_key_id && cafe.razorpay_key_secret) {
+    return {
+      instance: razorpayUtils.getCafeRazorpay(cafe.razorpay_key_id, cafe.razorpay_key_secret),
+      keyId: cafe.razorpay_key_id,
+      keySecret: cafe.razorpay_key_secret,
+      isPlatform: false
+    };
+  }
+  if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    return {
+      instance: razorpayUtils.getPlatformRazorpay(),
+      keyId: process.env.RAZORPAY_KEY_ID,
+      keySecret: process.env.RAZORPAY_KEY_SECRET,
+      isPlatform: true
+    };
+  }
+  return null;
+};
 
 // ============================================================
 //  FLOW 1: SaaS SUBSCRIPTION BILLING (Café Owner → Platform)
@@ -30,11 +54,16 @@ const createSubscription = async (req, res, next) => {
     const cafeId = req.user._id;
 
     if (!['pro', 'pro_plus'].includes(plan_name)) {
-      return res.status(400).json({ success: false, message: 'Invalid plan name. Choose starter or pro.' });
+      return res.status(400).json({ success: false, message: 'Invalid plan name. Choose pro or pro_plus.' });
     }
     
     if (!['monthly', 'yearly'].includes(billing_cycle)) {
       return res.status(400).json({ success: false, message: 'Invalid billing cycle. Choose monthly or yearly.' });
+    }
+
+    const cafe = await Cafe.findById(cafeId);
+    if (!cafe) {
+      return res.status(404).json({ success: false, message: 'Café account not found' });
     }
 
     const razorpay = getPlatformRazorpay();
@@ -52,12 +81,10 @@ const createSubscription = async (req, res, next) => {
     }
 
     if (!planId) {
-      return res.status(500).json({ success: false, message: `Razorpay plan ID for ${plan_name} (${billing_cycle}) is not configured.` });
-    }
-
-    const cafe = await Cafe.findById(cafeId);
-    if (!cafe) {
-      return res.status(404).json({ success: false, message: 'Café account not found' });
+      return res.status(500).json({
+        success: false,
+        message: `Razorpay plan ID for ${plan_name} (${billing_cycle}) is not configured on the server.`
+      });
     }
 
     // Create or fetch Razorpay customer
@@ -74,8 +101,8 @@ const createSubscription = async (req, res, next) => {
         cafe.razorpay_customer_id = customerId;
         await cafe.save({ validateBeforeSave: false });
       } catch (custErr) {
-        console.error('Razorpay customer creation failed:', custErr);
-        return res.status(500).json({ success: false, message: 'Failed to create Razorpay customer' });
+        console.error('Razorpay customer creation failed:', custErr.message);
+        return res.status(500).json({ success: false, message: 'Failed to create Razorpay customer record' });
       }
     }
 
@@ -83,7 +110,7 @@ const createSubscription = async (req, res, next) => {
     const subscription = await razorpay.subscriptions.create({
       plan_id: planId,
       customer_id: customerId,
-      total_count: billing_cycle === 'yearly' ? 10 : 120, // Max billing cycles (10 years)
+      total_count: billing_cycle === 'yearly' ? 10 : 120, // Max cycles (10 years)
       customer_notify: 1,
       notes: {
         cafe_id: cafeId.toString(),
@@ -126,7 +153,7 @@ const verifySubscriptionPayment = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Missing payment verification parameters' });
     }
 
-    // Verify signature
+    // 1. Verify signature using Razorpay official procedure
     const isValid = verifySubscriptionSignature(
       razorpay_subscription_id,
       razorpay_payment_id,
@@ -138,9 +165,39 @@ const verifySubscriptionPayment = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Payment signature verification failed' });
     }
 
-    // Fetch subscription details from Razorpay
+    // 2. Fetch subscription and payment details from Razorpay to verify state
     const razorpay = getPlatformRazorpay();
-    const rzpSub = await razorpay.subscriptions.fetch(razorpay_subscription_id);
+    let rzpSub;
+    try {
+      rzpSub = await razorpay.subscriptions.fetch(razorpay_subscription_id);
+    } catch (subErr) {
+      return res.status(400).json({ success: false, message: 'Could not fetch subscription details from Razorpay' });
+    }
+
+    // Validate that subscription belongs to the authenticated café
+    if (rzpSub.notes?.cafe_id && rzpSub.notes.cafe_id !== cafeId.toString()) {
+      return res.status(403).json({ success: false, message: 'Subscription does not belong to this café' });
+    }
+
+    // Verify payment from Razorpay API
+    let verifiedPaymentMethod = 'razorpay';
+    try {
+      const rzpPayment = await razorpay.payments.fetch(razorpay_payment_id);
+      if (rzpPayment) {
+        if (rzpPayment.status !== 'captured' && rzpPayment.status !== 'authorized') {
+          return res.status(400).json({
+            success: false,
+            message: `Payment is not confirmed (status: ${rzpPayment.status})`
+          });
+        }
+        if (rzpPayment.currency !== 'INR') {
+          return res.status(400).json({ success: false, message: 'Invalid payment currency' });
+        }
+        verifiedPaymentMethod = rzpPayment.method || 'razorpay';
+      }
+    } catch (pmtErr) {
+      console.warn('Could not fetch payment record from Razorpay:', pmtErr.message);
+    }
 
     const cafe = await Cafe.findById(cafeId);
     if (!cafe) {
@@ -160,14 +217,15 @@ const verifySubscriptionPayment = async (req, res, next) => {
       price = planName === 'pro_plus' ? (settings.pro_price || 499) : (planName === 'pro' ? (settings.starter_price || 299) : (settings.basic_price || 199));
     }
 
-    // Calculate end date
+    // Calculate end date with fair rollover for early renewals
     const now = new Date();
-    const endDate = new Date();
-    if (billingCycle === 'yearly') {
-      endDate.setDate(endDate.getDate() + 365);
-    } else {
-      endDate.setDate(endDate.getDate() + 30);
-    }
+    const currentEnd = cafe.subscription?.end_date ? new Date(cafe.subscription.end_date) : null;
+    const baseDate = (currentEnd && currentEnd > now && cafe.subscription?.plan_name === planName)
+      ? new Date(currentEnd)
+      : new Date(now);
+    const daysToAdd = billingCycle === 'yearly' ? 365 : 30;
+    baseDate.setDate(baseDate.getDate() + daysToAdd);
+    const endDate = baseDate;
 
     // Activate café subscription
     cafe.subscription_status = 'active';
@@ -200,17 +258,24 @@ const verifySubscriptionPayment = async (req, res, next) => {
       { upsert: true, new: true }
     );
 
-    // Record in permanent history
-    await SubscriptionHistory.create({
-      cafe_id: cafe._id,
-      plan_name: planName,
-      price,
-      start_date: now,
-      end_date: endDate,
-      status: 'active',
-      razorpay_payment_id,
-      payment_method: 'razorpay'
-    });
+    // Record in permanent history idempotently
+    await SubscriptionHistory.findOneAndUpdate(
+      { razorpay_payment_id },
+      {
+        $setOnInsert: {
+          cafe_id: cafe._id,
+          plan_name: planName,
+          price,
+          start_date: now,
+          end_date: endDate,
+          status: 'active',
+          razorpay_payment_id,
+          payment_provider: 'razorpay',
+          payment_method: verifiedPaymentMethod
+        }
+      },
+      { upsert: true, new: true }
+    );
 
     // Real-time notifications
     const io = req.app.get('io');
@@ -218,14 +283,14 @@ const verifySubscriptionPayment = async (req, res, next) => {
       io.to(`cafe-${cafe._id}`).emit('subscription-activated', {
         plan_name: planName,
         amount: price,
-        payment_method: 'razorpay'
+        payment_method: verifiedPaymentMethod
       });
       io.to('admin-room').emit('new-subscription-revenue', {
         cafe_name: cafe.name,
         plan_name: planName,
         amount: price,
         date: new Date(),
-        payment_method: 'razorpay'
+        payment_method: verifiedPaymentMethod
       });
     }
 
@@ -254,6 +319,11 @@ const cancelSubscription = async (req, res, next) => {
 
     const razorpay = getPlatformRazorpay();
     await razorpay.subscriptions.cancel(cafe.razorpay_subscription_id, { cancel_at_cycle_end: 1 });
+
+    await Subscription.findOneAndUpdate(
+      { cafe_id: cafe._id },
+      { status: 'cancelled' }
+    );
 
     res.json({
       success: true,
@@ -306,30 +376,40 @@ const getSubscriptionInvoices = async (req, res, next) => {
  * @route   POST /api/webhooks/razorpay/subscription
  * @access  Public (Razorpay calls this)
  */
-const handleSubscriptionWebhook = async (req, res, next) => {
+const handleSubscriptionWebhook = async (req, res) => {
   try {
     const signature = req.headers['x-razorpay-signature'];
     const rawBody = req.rawBody || JSON.stringify(req.body);
 
-    // Verify webhook signature
+    if (!signature) {
+      return res.status(400).json({ success: false, message: 'Missing webhook signature' });
+    }
+
+    // Verify webhook signature against platform secret
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
-    if (webhookSecret && signature) {
-      const isValid = verifyWebhookSignature(rawBody, signature, webhookSecret);
-      if (!isValid) {
-        await WebhookLog.create({
-          event_type: 'signature_failed',
-          payload: req.body,
-          status: 'failed',
-          error_message: 'Invalid webhook signature',
-          source: 'subscription'
-        });
-        return res.status(400).json({ success: false, message: 'Invalid signature' });
-      }
+    if (!webhookSecret) {
+      console.error('RAZORPAY_WEBHOOK_SECRET is not configured on server');
+      return res.status(500).json({ success: false, message: 'Webhook secret is not configured' });
+    }
+
+    const isValid = verifyWebhookSignature(rawBody, signature, webhookSecret);
+    if (!isValid) {
+      logger.security('SECURITY_WEBHOOK_VERIFICATION_FAILED', { source: 'subscription', ip: req.ip, request_id: req.id });
+      await WebhookLog.create({
+        event_type: 'signature_failed',
+        payload: { error: 'Invalid signature' },
+        status: 'failed',
+        error_message: 'Invalid webhook signature',
+        source: 'subscription'
+      });
+      return res.status(400).json({ success: false, message: 'Invalid webhook signature' });
     }
 
     const event = req.body;
     const eventType = event.event;
-    const eventId = event.account_id + '_' + (event.payload?.subscription?.entity?.id || '') + '_' + eventType;
+    const eventId = req.headers['x-razorpay-event-id'] || event.id || (
+      (event.account_id || '') + '_' + (event.payload?.subscription?.entity?.id || '') + '_' + eventType + '_' + (event.created_at || '')
+    );
 
     // Idempotency: check for duplicate event
     const existingLog = await WebhookLog.findOne({ razorpay_event_id: eventId, status: 'processed' });
@@ -344,7 +424,7 @@ const handleSubscriptionWebhook = async (req, res, next) => {
       await WebhookLog.create({
         event_type: eventType || 'unknown',
         razorpay_event_id: eventId,
-        payload: event,
+        payload: { eventType },
         status: 'skipped',
         error_message: 'No subscription entity in payload',
         source: 'subscription'
@@ -365,10 +445,24 @@ const handleSubscriptionWebhook = async (req, res, next) => {
         if (!cafe) break;
 
         const settings = await Settings.getSettings();
-        const price = planName === 'pro_plus' ? (settings.pro_price || 499) : (planName === 'pro' ? (settings.starter_price || 299) : (settings.basic_price || 199));
+        const billingCycle = subscriptionEntity.notes?.billing_cycle || 'monthly';
+        let price;
+        if (billingCycle === 'yearly') {
+          const monthlyPrice = planName === 'pro_plus' ? (settings.pro_price || 499) : (planName === 'pro' ? (settings.starter_price || 299) : (settings.basic_price || 199));
+          const discount = settings.yearly_discount_percentage || 20;
+          price = Math.round(monthlyPrice * 12 * (1 - discount / 100));
+        } else {
+          price = planName === 'pro_plus' ? (settings.pro_price || 499) : (planName === 'pro' ? (settings.starter_price || 299) : (settings.basic_price || 199));
+        }
+
         const now = new Date();
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + 30);
+        const currentEnd = cafe.subscription?.end_date ? new Date(cafe.subscription.end_date) : null;
+        const baseDate = (currentEnd && currentEnd > now && cafe.subscription?.plan_name === planName)
+          ? new Date(currentEnd)
+          : new Date(now);
+        const daysToAdd = billingCycle === 'yearly' ? 365 : 30;
+        baseDate.setDate(baseDate.getDate() + daysToAdd);
+        const endDate = baseDate;
 
         cafe.subscription_status = 'active';
         cafe.is_active = true;
@@ -392,26 +486,36 @@ const handleSubscriptionWebhook = async (req, res, next) => {
             razorpay_subscription_id: subscriptionEntity.id,
             razorpay_payment_id: paymentEntity?.id || '',
             razorpay_plan_id: subscriptionEntity.plan_id || '',
-            billing_cycle: 'monthly',
+            billing_cycle: billingCycle,
             next_billing_date: endDate
           },
           { upsert: true, new: true }
         );
 
-        await SubscriptionHistory.create({
-          cafe_id: cafe._id,
-          plan_name: planName,
-          price,
-          start_date: now,
-          end_date: endDate,
-          status: 'active',
-          razorpay_payment_id: paymentEntity?.id || '',
-          payment_method: 'razorpay'
-        });
+        const verifiedMethod = paymentEntity?.method || 'razorpay';
+        if (paymentEntity?.id) {
+          await SubscriptionHistory.findOneAndUpdate(
+            { razorpay_payment_id: paymentEntity.id },
+            {
+              $setOnInsert: {
+                cafe_id: cafe._id,
+                plan_name: planName,
+                price,
+                start_date: now,
+                end_date: endDate,
+                status: 'active',
+                razorpay_payment_id: paymentEntity.id,
+                payment_provider: 'razorpay',
+                payment_method: verifiedMethod
+              }
+            },
+            { upsert: true, new: true }
+          );
+        }
 
         if (io) {
           io.to(`cafe-${cafe._id}`).emit('subscription-activated', {
-            plan_name: planName, amount: price, payment_method: 'razorpay'
+            plan_name: planName, amount: price, payment_method: verifiedMethod
           });
           io.to('admin-room').emit('new-subscription-revenue', {
             cafe_name: cafe.name, plan_name: planName, amount: price, date: now
@@ -426,8 +530,6 @@ const handleSubscriptionWebhook = async (req, res, next) => {
         const cafe = await Cafe.findById(cafeId);
         if (!cafe) break;
 
-        // Don't immediately deactivate on cancel (runs till cycle end)
-        // But halted means payment failed repeatedly
         if (eventType === 'subscription.halted') {
           cafe.subscription_status = 'suspended';
           if (cafe.subscription) cafe.subscription.status = 'suspended';
@@ -451,29 +553,25 @@ const handleSubscriptionWebhook = async (req, res, next) => {
         break;
     }
 
-    // Log the webhook event
-    await WebhookLog.create({
-      event_type: eventType,
-      razorpay_event_id: eventId,
-      entity_id: subscriptionEntity.id,
-      payload: event,
-      status: 'processed',
-      source: 'subscription'
-    });
+    // Persist verified webhook event log
+    await WebhookLog.findOneAndUpdate(
+      { razorpay_event_id: eventId },
+      {
+        $setOnInsert: {
+          event_type: eventType,
+          razorpay_event_id: eventId,
+          entity_id: subscriptionEntity.id,
+          status: 'processed',
+          source: 'subscription'
+        }
+      },
+      { upsert: true }
+    );
 
     res.status(200).json({ success: true, message: 'Webhook processed' });
   } catch (error) {
-    console.error('Subscription webhook error:', error);
-    try {
-      await WebhookLog.create({
-        event_type: req.body?.event || 'error',
-        payload: req.body,
-        status: 'failed',
-        error_message: error.message,
-        source: 'subscription'
-      });
-    } catch (_) {}
-    res.status(200).json({ success: true, message: 'Webhook received (with errors)' });
+    console.error('Subscription webhook error:', error.message);
+    res.status(200).json({ success: true, message: 'Webhook received' });
   }
 };
 
@@ -483,7 +581,7 @@ const handleSubscriptionWebhook = async (req, res, next) => {
 // ============================================================
 
 /**
- * @desc    Create a Razorpay order using the café owner's Razorpay keys
+ * @desc    Create a Razorpay order for customer checkout
  * @route   POST /api/orders/create-razorpay-order
  * @access  Public
  */
@@ -498,36 +596,38 @@ const createOrderPayment = async (req, res, next) => {
       notes
     } = req.body;
 
-    // Validate café
-    let query = mongoose.Types.ObjectId.isValid(cafe_id) ? { _id: cafe_id } : { slug: cafe_id };
+    // Validate café existence, active status, and active subscription
+    const query = mongoose.Types.ObjectId.isValid(cafe_id) ? { _id: cafe_id } : { slug: cafe_id };
     const cafe = await Cafe.findOne(query)
-      .select('+razorpay_key_secret subscription_status razorpay_key_id name tax_percentage upi_id')
+      .select('+razorpay_key_secret subscription_status is_active razorpay_key_id name tax_percentage')
       .lean();
 
     if (!cafe) {
-      return res.status(404).json({ success: false, message: 'Cafe not found' });
+      return res.status(404).json({ success: false, message: 'Café not found' });
     }
     
-    if (cafe.subscription_status !== 'active') {
+    if (cafe.subscription_status !== 'active' || cafe.is_active === false) {
       return res.status(403).json({ 
         success: false, 
-        message: 'Cafe subscription has expired. You cannot use the QR menu system.' 
+        message: 'Café subscription has expired or account is deactivated. Online ordering is unavailable.' 
       });
     }
 
-    if (!cafe.razorpay_key_id || !cafe.razorpay_key_secret) {
+    // Resolve Razorpay gateway (café custom credentials or platform default)
+    const gateway = resolveOrderRazorpay(cafe);
+    if (!gateway) {
       return res.status(400).json({
         success: false,
-        message: 'Café has not configured Razorpay payment gateway. Please contact the café.'
+        message: 'Café has not configured Razorpay payment gateway. Please choose Pay at Counter.'
       });
     }
 
-    // Batch fetch and validate menu items
+    // Batch fetch and strictly validate menu items against target café
     const itemIds = items.map(i => i.menu_item_id);
     const dbMenuItems = await MenuItem.find({ _id: { $in: itemIds } }).lean();
     const itemMap = new Map(dbMenuItems.map(m => [m._id.toString(), m]));
 
-    let total = 0;
+    let subtotal = 0;
     const orderItems = [];
 
     for (const item of items) {
@@ -535,26 +635,44 @@ const createOrderPayment = async (req, res, next) => {
       if (!menuItem || !menuItem.availability) {
         return res.status(400).json({
           success: false,
-          message: `Item "${item.name || 'Unknown'}" is no longer available`
+          message: `Item "${item.name || 'Selected item'}" is currently unavailable`
         });
       }
-      total += menuItem.price * item.quantity;
+      if (menuItem.cafe_id.toString() !== cafe._id.toString()) {
+        logger.security('SECURITY_TENANT_ACCESS_DENIED', {
+          reason: 'Cross-tenant item checkout violation',
+          target_cafe_id: cafe._id,
+          item_cafe_id: menuItem.cafe_id,
+          item_id: menuItem._id,
+          ip: req.ip,
+          request_id: req.id
+        });
+        return res.status(400).json({
+          success: false,
+          message: 'Cross-tenant violation: item does not belong to this café'
+        });
+      }
+      const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
+      subtotal += menuItem.price * qty;
       orderItems.push({
         menu_item_id: menuItem._id,
         name: menuItem.name,
-        quantity: item.quantity,
+        quantity: qty,
         price: menuItem.price
       });
     }
 
-    const taxAmount = total * ((cafe.tax_percentage || 0) / 100);
-    const finalTotal = Math.round((total + taxAmount) * 100) / 100;
+    // Calculate taxes and totals strictly on backend (ignore any client prices)
+    const taxAmount = subtotal * ((cafe.tax_percentage || 0) / 100);
+    const finalTotal = Math.round((subtotal + taxAmount) * 100) / 100;
     const amountInPaise = Math.round(finalTotal * 100);
 
-    // Create Razorpay order using café owner's keys
-    const cafeRazorpay = getCafeRazorpay(cafe.razorpay_key_id, cafe.razorpay_key_secret);
+    if (amountInPaise <= 0) {
+      return res.status(400).json({ success: false, message: 'Order total must be greater than zero' });
+    }
 
-    const rzpOrder = await cafeRazorpay.orders.create({
+    // Create Razorpay order
+    const rzpOrder = await gateway.instance.orders.create({
       amount: amountInPaise,
       currency: 'INR',
       receipt: `ORD_${Date.now()}`,
@@ -565,19 +683,21 @@ const createOrderPayment = async (req, res, next) => {
       }
     });
 
-    // Create pending order in DB
+    // Create pending internal order
     const order = await Order.create({
       cafe_id: cafe._id,
-        customer_name: customer_name || 'Guest',
-      customer_phone: customer_phone || '',
-      table_number: table_number || '',
+      customer_name: (customer_name || 'Guest').trim().substring(0, 50),
+      customer_phone: (customer_phone || '').trim().substring(0, 15),
+      table_number: (table_number || '').trim().substring(0, 20),
       items: orderItems,
       total_amount: finalTotal,
-      token_number: '',
+      token_number: '', // Assigned upon payment verification
+      payment_provider: 'razorpay',
       payment_method: 'razorpay',
       payment_status: 'pending',
+      order_status: 'new',
       razorpay_order_id: rzpOrder.id,
-      notes: notes || ''
+      notes: (notes || '').trim().substring(0, 500)
     });
 
     res.status(201).json({
@@ -585,7 +705,7 @@ const createOrderPayment = async (req, res, next) => {
       data: {
         order_id: rzpOrder.id,
         order_number: order.order_number,
-        razorpay_key_id: cafe.razorpay_key_id,
+        razorpay_key_id: gateway.keyId,
         amount: amountInPaise,
         currency: 'INR',
         cafe_name: cafe.name,
@@ -597,7 +717,7 @@ const createOrderPayment = async (req, res, next) => {
     if (error.statusCode === 401 || error.error?.code === 'BAD_REQUEST_ERROR') {
       return res.status(400).json({
         success: false,
-        message: 'Payment gateway configuration error. Please contact the restaurant staff.'
+        message: 'Payment gateway configuration error. Please contact restaurant staff.'
       });
     }
     next(error);
@@ -617,85 +737,148 @@ const verifyOrderPayment = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Missing payment verification parameters' });
     }
 
-    // Find the order
+    // 1. Find internal order
     const order = await Order.findOne({ razorpay_order_id });
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    // Already processed?
+    // 2. Idempotency: If already verified, return confirmed order immediately
     if (order.payment_status === 'received' || order.payment_status === 'completed') {
-      return res.json({ success: true, message: 'Payment already verified', data: order });
+      return res.json({
+        success: true,
+        message: 'Payment already verified',
+        data: {
+          order_number: order.order_number,
+          token_number: order.token_number,
+          payment_status: order.payment_status,
+          total_amount: order.total_amount
+        }
+      });
     }
 
-    // Fetch café's Razorpay secret for signature verification
-    const cafe = await Cafe.findById(order.cafe_id).select('+razorpay_key_secret').lean();
-    if (!cafe || !cafe.razorpay_key_secret) {
-      return res.status(500).json({ success: false, message: 'Café payment configuration error' });
+    // 2.1 State Machine Check: Cannot verify payment for a cancelled order
+    if (order.order_status === 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot verify payment for a cancelled order'
+      });
     }
 
-    // Verify signature
+    // 3. Resolve gateway credentials
+    const cafe = await Cafe.findById(order.cafe_id).select('+razorpay_key_secret razorpay_key_id').lean();
+    if (!cafe) {
+      return res.status(404).json({ success: false, message: 'Café account not found' });
+    }
+
+    const gateway = resolveOrderRazorpay(cafe);
+    if (!gateway) {
+      return res.status(500).json({ success: false, message: 'Café payment credentials are not configured' });
+    }
+
+    // 4. Verify HMAC SHA-256 signature
     const isValid = verifyPaymentSignature(
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      cafe.razorpay_key_secret
+      gateway.keySecret
     );
 
     if (!isValid) {
+      logger.security('SECURITY_SIGNATURE_FORGERY_DETECTED', {
+        order_id: order._id,
+        razorpay_order_id,
+        razorpay_payment_id,
+        ip: req.ip,
+        request_id: req.id
+      });
       order.payment_status = 'failed';
       await order.save();
       return res.status(400).json({ success: false, message: 'Payment signature verification failed' });
     }
 
-    // Generate token number
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const todaysOrders = await Order.find({
-      cafe_id: order.cafe_id,
-      created_at: { $gte: startOfDay },
-      token_number: { $ne: '' }
-    }).select('token_number').lean();
-
-    let maxToken = 0;
-    todaysOrders.forEach(o => {
-      if (o.token_number) {
-        const num = parseInt(o.token_number.replace('#', ''), 10);
-        if (!isNaN(num) && num > maxToken) maxToken = num;
+    // 5. Verify payment status from trusted Razorpay data
+    let verifiedPaymentMethod = 'online';
+    try {
+      const payment = await gateway.instance.payments.fetch(razorpay_payment_id);
+      if (payment) {
+        // Amount and currency check
+        const expectedPaise = Math.round(order.total_amount * 100);
+        if (payment.amount !== expectedPaise) {
+          order.payment_status = 'failed';
+          await order.save();
+          return res.status(400).json({ success: false, message: 'Payment amount mismatch' });
+        }
+        if (payment.currency !== 'INR') {
+          order.payment_status = 'failed';
+          await order.save();
+          return res.status(400).json({ success: false, message: 'Invalid payment currency' });
+        }
+        if (payment.order_id !== razorpay_order_id) {
+          order.payment_status = 'failed';
+          await order.save();
+          return res.status(400).json({ success: false, message: 'Payment is not associated with this order' });
+        }
+        if (payment.status !== 'captured' && payment.status !== 'authorized') {
+          order.payment_status = 'failed';
+          await order.save();
+          return res.status(400).json({
+            success: false,
+            message: `Payment was not captured (status: ${payment.status})`
+          });
+        }
+        verifiedPaymentMethod = payment.method || 'online';
       }
-    });
+    } catch (fetchErr) {
+      console.warn('Could not fetch payment from Razorpay API:', fetchErr.message);
+    }
 
+    // 6. Generate atomic, concurrency-safe token number
+    let tokenNumber = order.token_number;
+    if (!tokenNumber) {
+      tokenNumber = await DailyTokenCounter.getNextToken(order.cafe_id);
+    }
+
+    // 7. Update internal order state
     order.payment_status = 'received';
     order.order_status = 'new';
+    order.payment_provider = 'razorpay';
+    order.payment_method = verifiedPaymentMethod;
     order.razorpay_payment_id = razorpay_payment_id;
     order.razorpay_signature = razorpay_signature;
-    order.token_number = `#${maxToken + 1}`;
+    order.token_number = tokenNumber;
     order.payment_transaction_id = razorpay_payment_id;
     await order.save();
 
-    // Save to permanent revenue ledger
+    // 8. Save to permanent revenue ledger idempotently
     try {
-      await OrderRevenue.create({
-        order_id: order._id,
-        cafe_id: order.cafe_id,
-        order_number: order.order_number,
-        token_number: order.token_number,
-        customer_name: order.customer_name,
-        table_number: order.table_number,
-        items: order.items.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
-        total_amount: order.total_amount,
-        payment_method: 'online',
-          payment_method_details: razorpay_payment_id,
-          payment_status: 'received',
-          order_created_at: order.created_at,
-          payment_date: new Date()
-      });
+      await OrderRevenue.findOneAndUpdate(
+        { order_number: order.order_number },
+        {
+          $setOnInsert: {
+            cafe_id: order.cafe_id,
+            order_number: order.order_number,
+            token_number: order.token_number,
+            customer_name: order.customer_name,
+            table_number: order.table_number,
+            items: order.items.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
+            items_count: order.items.length,
+            total_amount: order.total_amount,
+            payment_provider: 'razorpay',
+            payment_method: verifiedPaymentMethod,
+            payment_method_details: razorpay_payment_id,
+            payment_status: 'received',
+            order_created_at: order.created_at,
+            payment_date: new Date()
+          }
+        },
+        { upsert: true, new: true }
+      );
     } catch (revErr) {
       console.warn('Revenue audit note:', revErr.message);
     }
 
-    // Real-time notifications
+    // 9. Real-time notifications
     const io = req.app.get('io');
     if (io) {
       io.to(`cafe-${order.cafe_id}`).emit('new-order', {
@@ -712,6 +895,13 @@ const verifyOrderPayment = async (req, res, next) => {
           created_at: order.created_at
         },
         message: `⚡ Razorpay Paid: Token ${order.token_number} Received!`
+      });
+
+      io.to(`order-${order.order_number}`).emit('order-updated', {
+        order_number: order.order_number,
+        order_status: order.order_status,
+        payment_status: order.payment_status,
+        token_number: order.token_number
       });
     }
 
@@ -732,25 +922,65 @@ const verifyOrderPayment = async (req, res, next) => {
 };
 
 /**
- * @desc    Handle Razorpay order payment webhooks (backup confirmation path)
+ * @desc    Handle Razorpay order payment webhooks
  * @route   POST /api/webhooks/razorpay/order
  * @access  Public (Razorpay calls this)
  */
-const handleOrderWebhook = async (req, res, next) => {
+const handleOrderWebhook = async (req, res) => {
   try {
     const signature = req.headers['x-razorpay-signature'];
     const rawBody = req.rawBody || JSON.stringify(req.body);
 
+    if (!signature) {
+      return res.status(400).json({ success: false, message: 'Missing webhook signature' });
+    }
+
     const event = req.body;
     const eventType = event.event;
     const paymentEntity = event.payload?.payment?.entity;
+    const refundEntity = event.payload?.refund?.entity;
+    const rzpOrderId = paymentEntity?.order_id || refundEntity?.order_id;
 
-    if (!paymentEntity) {
-      return res.status(200).json({ success: true, message: 'No payment entity' });
+    // Resolve café webhook secret if order is known
+    let cafeWebhookSecret = null;
+    if (rzpOrderId) {
+      const order = await Order.findOne({ razorpay_order_id: rzpOrderId });
+      if (order?.cafe_id) {
+        const cafe = await Cafe.findById(order.cafe_id).select('+razorpay_webhook_secret');
+        if (cafe?.razorpay_webhook_secret) {
+          cafeWebhookSecret = cafe.razorpay_webhook_secret;
+        }
+      }
     }
 
-    const rzpOrderId = paymentEntity.order_id;
-    const eventId = (paymentEntity.id || '') + '_' + eventType;
+    // Verify webhook signature (café secret first, platform secret fallback)
+    let isSignatureValid = false;
+    if (cafeWebhookSecret) {
+      isSignatureValid = verifyWebhookSignature(rawBody, signature, cafeWebhookSecret);
+    }
+    if (!isSignatureValid && process.env.RAZORPAY_WEBHOOK_SECRET) {
+      isSignatureValid = verifyWebhookSignature(rawBody, signature, process.env.RAZORPAY_WEBHOOK_SECRET);
+    }
+
+    if (!isSignatureValid) {
+      logger.security('SECURITY_WEBHOOK_VERIFICATION_FAILED', { source: 'order', ip: req.ip, request_id: req.id });
+      await WebhookLog.create({
+        event_type: 'signature_failed',
+        payload: { error: 'Invalid webhook signature' },
+        status: 'failed',
+        error_message: 'Invalid webhook signature',
+        source: 'order'
+      });
+      return res.status(400).json({ success: false, message: 'Invalid webhook signature' });
+    }
+
+    if (!paymentEntity && !refundEntity) {
+      return res.status(200).json({ success: true, message: 'No payment or refund entity in payload' });
+    }
+
+    const eventId = req.headers['x-razorpay-event-id'] || event.id || (
+      (paymentEntity?.id || refundEntity?.id || '') + '_' + eventType + '_' + (event.created_at || '')
+    );
 
     // Idempotency check
     const existingLog = await WebhookLog.findOne({ razorpay_event_id: eventId, status: 'processed' });
@@ -758,78 +988,61 @@ const handleOrderWebhook = async (req, res, next) => {
       return res.status(200).json({ success: true, message: 'Duplicate event' });
     }
 
-    // Try to find the order or cafe to get the cafe-specific webhook secret
-    const order = await Order.findOne({ razorpay_order_id: rzpOrderId });
-    let cafeWebhookSecret = null;
-    let cafeId = order?.cafe_id;
+    const order = rzpOrderId ? await Order.findOne({ razorpay_order_id: rzpOrderId }) : null;
 
-    if (cafeId) {
-      const cafe = await Cafe.findById(cafeId).select('+razorpay_webhook_secret');
-      if (cafe && cafe.razorpay_webhook_secret) {
-        cafeWebhookSecret = cafe.razorpay_webhook_secret;
-      }
-    }
-
-    // Verify webhook signature
-    // If the cafe has set their own webhook secret, we must use it to verify the signature.
-    // Otherwise, we fallback to the global webhook secret for backward compatibility or platform-level webhooks.
-    const secretToUse = cafeWebhookSecret || process.env.RAZORPAY_WEBHOOK_SECRET;
-
-    if (secretToUse && signature) {
-      const isValid = verifyWebhookSignature(rawBody, signature, secretToUse);
-      if (!isValid) {
-        console.warn(`Order webhook signature mismatch for cafe ${cafeId || 'unknown'}`);
-        return res.status(400).json({ success: false, message: 'Invalid webhook signature' });
-      }
-    } else if (signature) {
-      console.warn('Webhook received with signature but no webhook secret is configured for verification.');
-    }
-
-    if (eventType === 'payment.captured') {
+    // Supported event types: payment.captured, order.paid, payment.failed, refund.processed
+    if (eventType === 'payment.captured' || eventType === 'order.paid') {
       if (order && order.payment_status !== 'received' && order.payment_status !== 'completed') {
-        // Generate token if missing
-        if (!order.token_number) {
-          const startOfDay = new Date();
-          startOfDay.setHours(0, 0, 0, 0);
-          const todaysOrders = await Order.find({
-            cafe_id: order.cafe_id,
-            created_at: { $gte: startOfDay },
-            token_number: { $ne: '' }
-          }).select('token_number').lean();
-
-          let maxToken = 0;
-          todaysOrders.forEach(o => {
-            if (o.token_number) {
-              const num = parseInt(o.token_number.replace('#', ''), 10);
-              if (!isNaN(num) && num > maxToken) maxToken = num;
-            }
+        // State Machine Check: Cancelled orders cannot be revived or marked as paid
+        if (order.order_status === 'cancelled') {
+          console.warn(`[WEBHOOK] Ignored payment event for cancelled order ${order.order_number}`);
+          await WebhookLog.create({
+            razorpay_event_id: eventId,
+            event_type: eventType,
+            status: 'processed',
+            raw_payload: event
           });
-          order.token_number = `#${maxToken + 1}`;
+          return res.status(200).json({ success: true, message: 'Order is cancelled; acknowledged without state transition' });
         }
 
+        // Concurrency-safe atomic token assignment
+        if (!order.token_number) {
+          order.token_number = await DailyTokenCounter.getNextToken(order.cafe_id);
+        }
+
+        const verifiedMethod = paymentEntity?.method || 'online';
         order.payment_status = 'received';
         order.order_status = 'new';
-        order.razorpay_payment_id = paymentEntity.id;
-        order.payment_transaction_id = paymentEntity.id;
+        order.payment_provider = 'razorpay';
+        order.payment_method = verifiedMethod;
+        order.razorpay_payment_id = paymentEntity?.id || order.razorpay_payment_id;
+        order.payment_transaction_id = paymentEntity?.id || order.razorpay_payment_id;
         await order.save();
 
-        // Revenue ledger
+        // Revenue ledger idempotency
         try {
-          await OrderRevenue.create({
-            order_id: order._id,
-            cafe_id: order.cafe_id,
-            order_number: order.order_number,
-            token_number: order.token_number,
-            customer_name: order.customer_name,
-            table_number: order.table_number,
-            items: order.items.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
-            total_amount: order.total_amount,
-            payment_method: 'online',
-              payment_method_details: paymentEntity.id,
-              payment_status: 'received',
-              order_created_at: order.created_at,
-              payment_date: new Date()
-          });
+          await OrderRevenue.findOneAndUpdate(
+            { order_number: order.order_number },
+            {
+              $setOnInsert: {
+                cafe_id: order.cafe_id,
+                order_number: order.order_number,
+                token_number: order.token_number,
+                customer_name: order.customer_name,
+                table_number: order.table_number,
+                items: order.items.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
+                items_count: order.items.length,
+                total_amount: order.total_amount,
+                payment_provider: 'razorpay',
+                payment_method: verifiedMethod,
+                payment_method_details: paymentEntity?.id || order.razorpay_payment_id,
+                payment_status: 'received',
+                order_created_at: order.created_at,
+                payment_date: new Date()
+              }
+            },
+            { upsert: true, new: true }
+          );
         } catch (revErr) {
           console.warn('Revenue audit (webhook):', revErr.message);
         }
@@ -851,6 +1064,13 @@ const handleOrderWebhook = async (req, res, next) => {
             },
             message: `⚡ Razorpay Paid (Webhook): Token ${order.token_number}`
           });
+
+          io.to(`order-${order.order_number}`).emit('order-updated', {
+            order_number: order.order_number,
+            order_status: order.order_status,
+            payment_status: order.payment_status,
+            token_number: order.token_number
+          });
         }
       }
     } else if (eventType === 'payment.failed') {
@@ -858,30 +1078,38 @@ const handleOrderWebhook = async (req, res, next) => {
         order.payment_status = 'failed';
         await order.save();
       }
+    } else if (eventType === 'refund.processed') {
+      if (order) {
+        order.payment_status = 'failed';
+        order.order_status = 'cancelled';
+        order.payment_method_details = `Refunded: ${refundEntity?.id || 'Razorpay'}`;
+        await order.save();
+
+        try {
+          await OrderRevenue.deleteOne({ order_number: order.order_number });
+        } catch (_) {}
+      }
     }
 
-    await WebhookLog.create({
-      event_type: eventType,
-      razorpay_event_id: eventId,
-      entity_id: paymentEntity.id,
-      payload: event,
-      status: 'processed',
-      source: 'order'
-    });
+    // Persist verified event log
+    await WebhookLog.findOneAndUpdate(
+      { razorpay_event_id: eventId },
+      {
+        $setOnInsert: {
+          event_type: eventType,
+          razorpay_event_id: eventId,
+          entity_id: paymentEntity?.id || refundEntity?.id || '',
+          status: 'processed',
+          source: 'order'
+        }
+      },
+      { upsert: true }
+    );
 
     res.status(200).json({ success: true, message: 'Webhook processed' });
   } catch (error) {
-    console.error('Order webhook error:', error);
-    try {
-      await WebhookLog.create({
-        event_type: req.body?.event || 'error',
-        payload: req.body,
-        status: 'failed',
-        error_message: error.message,
-        source: 'order'
-      });
-    } catch (_) {}
-    res.status(200).json({ success: true, message: 'Webhook received (with errors)' });
+    console.error('Order webhook error:', error.message);
+    res.status(200).json({ success: true, message: 'Webhook received' });
   }
 };
 
@@ -903,14 +1131,18 @@ const initiateRefund = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'This order was not paid via Razorpay' });
     }
 
-    const cafe = await Cafe.findById(req.user._id).select('+razorpay_key_secret');
-    if (!cafe || !cafe.razorpay_key_id || !cafe.razorpay_key_secret) {
-      return res.status(400).json({ success: false, message: 'Razorpay keys not configured' });
+    if (order.order_status === 'cancelled') {
+      return res.status(400).json({ success: false, message: 'This order has already been cancelled / refunded' });
     }
 
-    const cafeRazorpay = getCafeRazorpay(cafe.razorpay_key_id, cafe.razorpay_key_secret);
+    const cafe = await Cafe.findById(req.user._id).select('+razorpay_key_secret razorpay_key_id');
+    const gateway = resolveOrderRazorpay(cafe);
 
-    const refund = await cafeRazorpay.payments.refund(order.razorpay_payment_id, {
+    if (!gateway) {
+      return res.status(400).json({ success: false, message: 'Razorpay payment gateway keys are not configured' });
+    }
+
+    const refund = await gateway.instance.payments.refund(order.razorpay_payment_id, {
       amount: Math.round(order.total_amount * 100), // Full refund in paise
       notes: {
         order_number: order.order_number,
@@ -918,18 +1150,33 @@ const initiateRefund = async (req, res, next) => {
       }
     });
 
-    order.payment_status = 'failed'; // Mark as refunded
+    order.payment_status = 'failed';
     order.order_status = 'cancelled';
+    order.payment_method_details = `Refunded: ${refund.id || 'Processed'}`;
     await order.save();
 
-    // Remove from revenue ledger
+    // Remove from permanent revenue ledger
     try {
       await OrderRevenue.deleteOne({ order_number: order.order_number });
     } catch (_) {}
 
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`cafe-${req.user._id}`).emit('order-updated', {
+        order_number: order.order_number,
+        order_status: 'cancelled',
+        payment_status: 'failed'
+      });
+      io.to(`order-${order.order_number}`).emit('order-updated', {
+        order_number: order.order_number,
+        order_status: 'cancelled',
+        payment_status: 'failed'
+      });
+    }
+
     res.json({
       success: true,
-      message: 'Refund initiated successfully',
+      message: 'Refund initiated successfully via Razorpay',
       data: { refund_id: refund.id, status: refund.status }
     });
   } catch (error) {

@@ -9,11 +9,14 @@ const categorySchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, 'Category name is required'],
-    trim: true
+    trim: true,
+    minlength: 1,
+    maxlength: 60
   },
   sort_order: {
     type: Number,
-    default: 0
+    default: 0,
+    min: 0
   },
   is_active: {
     type: Boolean,
@@ -25,5 +28,8 @@ const categorySchema = new mongoose.Schema({
 
 // Compound index for uniqueness within a café
 categorySchema.index({ cafe_id: 1, name: 1 }, { unique: true });
+
+// Compound index for tenant-scoped active menu category retrieval and ordering
+categorySchema.index({ cafe_id: 1, is_active: 1, sort_order: 1 });
 
 module.exports = mongoose.model('Category', categorySchema);

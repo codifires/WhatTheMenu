@@ -3,9 +3,10 @@ const router = express.Router();
 const { submitFeedback } = require('../controllers/customerController');
 const { feedbackValidator } = require('../validators/customerValidators');
 const { aiFeedbackAssist } = require('../controllers/aiController');
+const { aiLimiter, feedbackSubmissionLimiter } = require('../middleware/rateLimiter');
 
-// Public route - no auth required
-router.post('/ai-assist', aiFeedbackAssist);
-router.post('/', feedbackValidator, submitFeedback);
+// Public routes - protected with rate limiting
+router.post('/ai-assist', aiLimiter, aiFeedbackAssist);
+router.post('/', feedbackSubmissionLimiter, feedbackValidator, submitFeedback);
 
 module.exports = router;

@@ -50,11 +50,56 @@ export default function OwnerSettings() {
   
   const actualUnlockedThemes = (themeSettings.unlocked_themes || ['classic']).slice(0, maxThemes)
   const THEME_OPTIONS = [
-    { id: 'classic', name: 'Classic Minimal', color: '#ffffff', textColor: '#0f172a', desc: 'Clean white background with warm modern typography' },
-    { id: 'midnight', name: 'Midnight Amber', color: '#1a1f2e', textColor: '#f8fafc', desc: 'Deep obsidian dark mode with golden amber highlights' },
-    { id: 'forest', name: 'Forest Sage', color: '#0d1f15', textColor: '#ecfdf5', desc: 'Rich emerald forest with fresh coral accents' },
-    { id: 'rose', name: 'Rose Noir', color: '#1a0a10', textColor: '#fff1f2', desc: 'Warm velvety dark rose with blush highlights' },
-    { id: 'blackgold', name: 'Black & Gold', color: '#191919', textColor: '#fef08a', desc: 'Luxury matte black with champagne gold buttons' }
+    {
+      id: 'classic',
+      name: 'Classic Minimal',
+      desc: 'Clean modern layout with vibrant ember-orange accents',
+      bg: '#f8fafc',
+      cardBg: '#ffffff',
+      headerBg: '#0f172a',
+      accent: '#ea580c',
+      text: '#0f172a'
+    },
+    {
+      id: 'midnight',
+      name: 'Warm Amber Bistro',
+      desc: 'Warm bistro style with rich espresso tones & golden amber',
+      bg: '#fdfbf7',
+      cardBg: '#ffffff',
+      headerBg: '#2b1f13',
+      accent: '#d97706',
+      text: '#291e10'
+    },
+    {
+      id: 'forest',
+      name: 'Fresh Sage Garden',
+      desc: 'Organic garden aesthetic with emerald green & sage highlights',
+      bg: '#f7faf8',
+      cardBg: '#ffffff',
+      headerBg: '#12281b',
+      accent: '#059669',
+      text: '#12281b'
+    },
+    {
+      id: 'rose',
+      name: 'Berry & Rose Patisserie',
+      desc: 'Velvety blush & berry tones perfect for bakeries & desserts',
+      bg: '#fdf8f9',
+      cardBg: '#ffffff',
+      headerBg: '#2d121c',
+      accent: '#e11d48',
+      text: '#2d121c'
+    },
+    {
+      id: 'blackgold',
+      name: 'Artisan Gold & Onyx',
+      desc: 'Luxury dark roast aesthetic with warm champagne gold',
+      bg: '#faf9f5',
+      cardBg: '#ffffff',
+      headerBg: '#1c1917',
+      accent: '#b45309',
+      text: '#1f1d1a'
+    }
   ]
   
   const handleThemeChange = async (themeId) => {
@@ -405,14 +450,39 @@ export default function OwnerSettings() {
                       }`}
                     >
                       <div>
-                        {/* Theme Palette Swatch Preview */}
+                        {/* Realistic Mini Theme UI Preview */}
                         <div
-                          className="w-full h-20 rounded-xl mb-3 border border-white/10 flex items-center justify-center p-3 relative overflow-hidden"
-                          style={{ background: theme.color }}
+                          className="w-full h-24 rounded-xl mb-3 border border-black/10 shadow-inner overflow-hidden flex flex-col justify-between"
+                          style={{ background: theme.bg }}
                         >
-                          <span className="text-xs font-bold font-heading" style={{ color: theme.textColor }}>
-                            Menu Preview
-                          </span>
+                          {/* Mini Header Bar */}
+                          <div
+                            className="h-6 px-2.5 flex items-center justify-between text-[10px] font-bold text-white shadow-sm"
+                            style={{ background: theme.headerBg }}
+                          >
+                            <span className="truncate max-w-[120px] font-heading tracking-wide">
+                              {form.name || 'Café Menu'}
+                            </span>
+                            <span className="w-2 h-2 rounded-full" style={{ background: theme.accent }} />
+                          </div>
+
+                          {/* Mini Body / Card Sample */}
+                          <div className="p-2 flex items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[11px] font-extrabold truncate" style={{ color: theme.text }}>
+                                Signature Dish
+                              </div>
+                              <div className="text-[10px] font-bold" style={{ color: theme.accent }}>
+                                ₹249
+                              </div>
+                            </div>
+                            <div
+                              className="px-2 py-0.5 rounded text-[9px] font-bold text-white shadow-xs"
+                              style={{ background: theme.accent }}
+                            >
+                              + ADD
+                            </div>
+                          </div>
                         </div>
 
                         <h3 className="font-bold text-sm text-[var(--text-primary)] mb-0.5">

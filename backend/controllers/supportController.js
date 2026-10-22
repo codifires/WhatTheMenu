@@ -116,7 +116,9 @@ const createTicket = async (req, res, next) => {
 // @route   GET /api/support/owner/tickets
 const getMyTickets = async (req, res, next) => {
   try {
-    const tickets = await SupportTicket.find({ cafe_id: req.user._id }).sort({ created_at: -1 });
+    const tickets = await SupportTicket.find({ cafe_id: req.user._id })
+      .sort({ created_at: -1 })
+      .limit(100);
     res.status(200).json({
       success: true,
       data: tickets
@@ -170,7 +172,8 @@ const getAllTickets = async (req, res, next) => {
 
     const tickets = await SupportTicket.find(filter)
       .populate('cafe_id', 'name email phone subscription_status subscription')
-      .sort({ created_at: -1 });
+      .sort({ created_at: -1 })
+      .limit(200);
 
     const totalCount = await SupportTicket.countDocuments();
     const openCount = await SupportTicket.countDocuments({ status: 'open' });

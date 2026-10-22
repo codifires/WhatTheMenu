@@ -149,8 +149,9 @@ const CustomerLayout = ({ children }) => {
                 to={item.to}
                 end={item.end}
                 style={({ isActive }) => ({
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '8px 14px', borderRadius: 16,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '6px 6px', borderRadius: 16,
                   textDecoration: 'none', transition: 'all 0.2s ease', position: 'relative', minHeight: 44, justifyContent: 'center',
+                  flex: 1, minWidth: 0,
                   color: isActive ? 'var(--accent-primary)' : 'var(--text-tertiary)',
                   background: isActive ? 'var(--accent-bg-subtle)' : 'transparent',
                 })}

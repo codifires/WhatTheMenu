@@ -541,17 +541,21 @@ export default function MenuManagement() {
               }}>
                 {searchQuery || dietFilter !== 'all' || stockFilter !== 'all'
                   ? 'No Dishes Match Selected Filters'
+                  : categories.length === 0
+                  ? 'Create Your First Menu Category'
                   : 'No Menu Items in this Category'}
               </h3>
               <p style={{
                 fontSize: 14,
                 color: 'var(--text-secondary)',
-                maxWidth: 420,
+                maxWidth: 440,
                 margin: '0 auto 20px'
               }}>
                 {searchQuery || dietFilter !== 'all' || stockFilter !== 'all'
                   ? 'Try clearing your search query or reset dietary and stock filters.'
-                  : 'Click "Add New Dish" to add items to your digital menu.'}
+                  : categories.length === 0
+                  ? 'Menu items belong to categories (e.g. Beverages, Starters, Main Course). Create a category first to organize your dishes!'
+                  : 'Click "Add First Dish" to add items to your digital menu.'}
               </p>
               {(searchQuery || dietFilter !== 'all' || stockFilter !== 'all') ? (
                 <button
@@ -572,6 +576,29 @@ export default function MenuManagement() {
                   }}
                 >
                   Reset Filters
+                </button>
+              ) : categories.length === 0 ? (
+                <button
+                  onClick={() => {
+                    setActiveTab('categories')
+                    setEditingCat(null)
+                    setCatForm({ name: '', sort_order: 0 })
+                    setShowCatModal(true)
+                  }}
+                  style={{
+                    padding: '10px 22px',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'var(--brand-gradient)',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(79, 70, 229, 0.35)'
+                  }}
+                >
+                  <FolderPlus size={16} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle' }} />
+                  + Create First Category
                 </button>
               ) : (
                 <button

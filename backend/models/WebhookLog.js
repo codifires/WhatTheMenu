@@ -4,16 +4,21 @@ const webhookLogSchema = new mongoose.Schema({
   event_type: {
     type: String,
     required: true,
+    trim: true,
+    maxlength: 100,
     index: true
   },
   razorpay_event_id: {
     type: String,
     default: '',
-    index: true
+    trim: true,
+    maxlength: 100
   },
   entity_id: {
     type: String,
-    default: ''
+    default: '',
+    trim: true,
+    maxlength: 100
   },
   payload: {
     type: Object,
@@ -26,7 +31,9 @@ const webhookLogSchema = new mongoose.Schema({
   },
   error_message: {
     type: String,
-    default: ''
+    default: '',
+    trim: true,
+    maxlength: 1000
   },
   source: {
     type: String,
@@ -37,7 +44,19 @@ const webhookLogSchema = new mongoose.Schema({
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
 });
 
-// TTL: Auto-delete webhook logs after 90 days
+// Compound index for event queries
+webhookLogSchema.index({ event_type: 1, created_at: -1 });
+
+// Partial unique index for razorpay_event_id (ensures idempotency without null collisions)
+webhookLogSchema.index(
+  { razorpay_event_id: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { razorpay_event_id: { $type: 'string', $gt: '' } }
+  }
+);
+
+// TTL: Auto-delete webhook operational logs after 90 days (7,776,000 seconds)
 webhookLogSchema.index({ created_at: 1 }, { expireAfterSeconds: 7776000 });
 
 module.exports = mongoose.model('WebhookLog', webhookLogSchema);

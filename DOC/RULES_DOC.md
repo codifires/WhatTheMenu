@@ -22,6 +22,7 @@
 14. [Data Retention Rules](#14-data-retention-rules)
 15. [QR Code Rules](#15-qr-code-rules)
 16. [Theme Rules](#16-theme-rules)
+17. [Phase 13 Implementation & Engineering Rules](#17-phase-13-implementation--engineering-rules)
 
 ---
 
@@ -454,5 +455,50 @@ Rate limit headers returned to client:
 
 ---
 
-*This document defines the business rules as implemented in the production system.*  
+## 17. Phase 13 Implementation & Engineering Rules
+
+The following core principles and guardrails strictly govern all bug fixes, security remediations, and architectural evolutions in the WhatTheMenu repository:
+
+1. **Fix Confirmed Vulnerabilities Over Cosmetic Changes**  
+   Focus strictly on verified security vulnerabilities, architectural flaws, and demonstrable bugs. Avoid cosmetic churn, subjective rewrites, or unnecessary aesthetic alterations that risk introducing regressions.
+
+2. **Preserve Current MERN Architecture & Frontend Contracts**  
+   Retain the existing stack (MongoDB, Express, React + Vite, Node.js, Socket.IO, Razorpay). Never alter existing API endpoints, parameter schemas, or JSON response shapes (`success`, `data`, `message`, `errors`, `request_id`) unless explicitly required by an authorized architectural upgrade.
+
+3. **Incremental Fixes Over Complete Rewrites**  
+   Apply surgical, modular, and incremental modifications. Do not rewrite existing working subsystems unless a verified defect cannot reasonably be addressed incrementally.
+
+4. **Zero Unnecessary Dependencies**  
+   Favor native Node.js core modules (`crypto`, `http`, `path`, `url`) and existing production packages (`express-validator`, `mongoose`, `jsonwebtoken`, `axios`, `socket.io`). Avoid introducing new external libraries unless strictly justified.
+
+5. **Never Disable Security Checks for Tests**  
+   Under no circumstances may authentication middleware, authorization checks, rate limiters, input sanitizers, HMAC signature validations, or role guards be commented out or relaxed to facilitate test passage. Tests must validate real, uncompromising security controls.
+
+6. **Zero Hardcoded Secrets & Unweakened Validation**  
+   All credentials, tokens, API keys, and webhook secrets must be dynamically resolved from `process.env`. Never hardcode secrets in code or tests. Never weaken regex boundaries, string length restrictions, or numeric constraints.
+
+7. **Feature & Field Preservation Policy**  
+   Do not delete existing features, database models, schema attributes, or endpoints without demonstrating a clear, documented, and approved justification.
+
+8. **Frontend Synchronization Protocol**  
+   Modify frontend code only when a backend contract change strictly necessitates it. Clearly document every frontend contract alteration and explain its rationale.
+
+9. **Safe Database Migrations & Indexing**  
+   Perform database schema or index modifications using idempotent, safe scripts (e.g. `backend/scripts/ensure_indexes.js`). Execute pre-flight duplicate scans before applying unique constraints, and never perform destructive data operations against active collections.
+
+10. **Backward Compatibility by Default**  
+    Maintain fallback handling and backward compatibility for existing clients, legacy query parameters, and operational routes whenever endpoints are upgraded.
+
+11. **Strict Repository Conventions & Documentation Currency**  
+    Preserve established directory structures, naming patterns, logging idioms, and error classes. Concurrently update `DOC/` and `backend_audit_matrix.md` with every change.
+
+12. **Mandatory Stop-and-Consult Gate for Destructive Actions**  
+    If an architectural or implementation decision could lead to data loss, compromise production compatibility, or alter live payment/settlement behavior, **halt immediately before executing the destructive action**, present the available options, and await explicit approval.
+
+13. **Small Reviewable Stages with Continuous Test Verification**  
+    Structure implementation into small, reviewable increments. After every stage, execute relevant test suites (`npm run test:negative`, `npm run test:all`) and resolve all regressions before progressing.
+
+---
+
+*This document defines the business and implementation rules as implemented in the production system.*  
 *All rule changes must be reflected in both this document and the corresponding code.*

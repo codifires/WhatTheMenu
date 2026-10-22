@@ -62,6 +62,11 @@ async function runTest() {
       { expiresIn: '1h' }
     );
 
+    cafe.active_sessions = cafe.active_sessions || [];
+    cafe.active_sessions.push({ token, device_info: 'test-runner', last_active: new Date() });
+    cafe.is_active = true;
+    await cafe.save({ validateBeforeSave: false });
+
     const authHeaders = {
       headers: { Authorization: `Bearer ${token}` }
     };
@@ -87,7 +92,7 @@ async function runTest() {
 
     // 3. Test Polling Status (Initial: pending)
     console.log('\n2️⃣ [TESTING GET /api/owner/subscription/check-status/:sessionId]...');
-    const statusBefore = await axios.get(`${API_BASE}/owner/subscription/check-status/${sessionData.session_id}`);
+    const statusBefore = await axios.get(`${API_BASE}/owner/subscription/check-status/${sessionData.session_id}`, authHeaders);
     console.log('   Status Before Settlement:', statusBefore.data.data.status);
     if (statusBefore.data.data.status !== 'pending') {
       throw new Error('Initial status should be pending');
@@ -111,7 +116,7 @@ async function runTest() {
 
     // 5. Test Polling Status After Settlement (Expected: approved)
     console.log('\n4️⃣ [TESTING STATUS AFTER SETTLEMENT]...');
-    const statusAfter = await axios.get(`${API_BASE}/owner/subscription/check-status/${sessionData.session_id}`);
+    const statusAfter = await axios.get(`${API_BASE}/owner/subscription/check-status/${sessionData.session_id}`, authHeaders);
     console.log('   Status After Settlement:', statusAfter.data.data.status);
     if (statusAfter.data.data.status !== 'approved') {
       throw new Error('Status after webhook settlement must be approved');
@@ -122,10 +127,10 @@ async function runTest() {
     console.log('\n5️⃣ [VERIFYING DATABASE CONSISTENCY & HISTORY LEDGER]...');
     const updatedCafe = await Cafe.findById(cafe._id);
     console.log(`   Cafe subscription_status: ${updatedCafe.subscription_status} (Expected: active)`);
-    console.log(`   Cafe plan_name: ${updatedCafe.subscription?.plan_name} (Expected: pro)`);
+    console.log(`   Cafe plan_name: ${updatedCafe.subscription?.plan_name} (Expected: pro_plus)`);
     console.log(`   Cafe is_active: ${updatedCafe.is_active} (Expected: true)`);
     if (updatedCafe.subscription_status !== 'active') throw new Error('Cafe subscription_status is not active');
-    if (updatedCafe.subscription?.plan_name !== 'pro_plus') throw new Error('Cafe plan_name is not pro');
+    if (updatedCafe.subscription?.plan_name !== 'pro_plus') throw new Error('Cafe plan_name is not pro_plus');
 
     const subDoc = await Subscription.findOne({ cafe_id: cafe._id });
     console.log(`   Subscription collection sync: plan=${subDoc?.plan_name}, status=${subDoc?.status}`);
@@ -148,7 +153,7 @@ async function runTest() {
       authHeaders
     );
     const session2Id = initRes2.data.data.session_id;
-    const cancelRes = await axios.post(`${API_BASE}/owner/subscription/cancel-session/${session2Id}`);
+    const cancelRes = await axios.post(`${API_BASE}/owner/subscription/cancel-session/${session2Id}`, {}, authHeaders);
     console.log('   Cancel Response:', cancelRes.data);
     const cancelledReq = await SubscriptionRequest.findOne({ session_id: session2Id });
     console.log('   Cancelled Request Status:', cancelledReq?.status);

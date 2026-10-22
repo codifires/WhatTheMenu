@@ -5,11 +5,22 @@ const {
   trackOrder,
   triggerStaffAlert
 } = require('../controllers/customerController');
-const { placeOrderValidator } = require('../validators/customerValidators');
+const {
+  placeOrderValidator,
+  trackOrderValidator,
+  staffAlertValidator
+} = require('../validators/customerValidators');
+const {
+  orderCreationLimiter,
+  orderPollingLimiter,
+  staffAlertLimiter
+} = require('../middleware/rateLimiter');
 
-// Public routes - no auth required
-router.post('/', placeOrderValidator, placeOrder);
-router.get('/:orderNumber/track', trackOrder);
-router.post('/:orderNumber/alert', triggerStaffAlert);
+// Public customer routes (Pay-at-Counter / Cash order placement)
+router.post('/', orderCreationLimiter, placeOrderValidator, placeOrder);
+
+// Order tracking & staff alerts
+router.get('/:orderNumber/track', orderPollingLimiter, trackOrderValidator, trackOrder);
+router.post('/:orderNumber/alert', staffAlertLimiter, staffAlertValidator, triggerStaffAlert);
 
 module.exports = router;

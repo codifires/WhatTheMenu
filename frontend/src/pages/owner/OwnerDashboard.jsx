@@ -288,6 +288,137 @@ const OwnerDashboard = () => {
         </div>
       </div>
 
+      {/* ─── New Café Onboarding Setup Guide (Only shown if 0 menu items) ─── */}
+      {!loading && stats && stats.totalMenuItems === 0 && (
+        <div style={{
+          padding: '24px',
+          borderRadius: 'var(--radius-xl)',
+          background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%)',
+          border: '1px solid rgba(79, 70, 229, 0.25)',
+          boxShadow: 'var(--shadow-card)',
+          marginBottom: 28,
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+            <div style={{ maxWidth: 600 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 999, background: 'rgba(79, 70, 229, 0.15)', color: 'var(--brand-primary)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 10 }}>
+                🚀 Getting Started Checklist
+              </div>
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px', fontFamily: "'Outfit', sans-serif" }}>
+                Welcome to your new digital café!
+              </h2>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+                Your digital ordering system is ready to launch. Complete these simple steps to start taking instant QR orders from your tables:
+              </p>
+            </div>
+
+            <Link
+              to="/owner/menu"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 20px',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--brand-primary)',
+                color: '#ffffff',
+                fontSize: 14,
+                fontWeight: 700,
+                textDecoration: 'none',
+                boxShadow: '0 4px 14px rgba(79, 70, 229, 0.35)',
+                alignSelf: 'center'
+              }}
+            >
+              <Plus size={18} />
+              <span>Create First Dish</span>
+            </Link>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: 14,
+            marginTop: 20
+          }}>
+            <Link
+              to="/owner/menu"
+              style={{
+                padding: '14px 16px',
+                borderRadius: 'var(--radius-lg)',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-medium)',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand-primary)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-medium)'; e.currentTarget.style.transform = 'translateY(0)' }}
+            >
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--brand-subtle)', color: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>
+                1
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Add Menu Items</p>
+                <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--text-tertiary)' }}>Create categories and dishes with prices</p>
+              </div>
+            </Link>
+
+            <Link
+              to="/owner/qr-code"
+              style={{
+                padding: '14px 16px',
+                borderRadius: 'var(--radius-lg)',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-medium)',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand-primary)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-medium)'; e.currentTarget.style.transform = 'translateY(0)' }}
+            >
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>
+                2
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Download Table QRs</p>
+                <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--text-tertiary)' }}>Print tabletop stickers for dining spots</p>
+              </div>
+            </Link>
+
+            <Link
+              to="/owner/settings"
+              style={{
+                padding: '14px 16px',
+                borderRadius: 'var(--radius-lg)',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-medium)',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand-primary)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-medium)'; e.currentTarget.style.transform = 'translateY(0)' }}
+            >
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>
+                3
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Setup Payments & Brand</p>
+                <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--text-tertiary)' }}>Enable Razorpay & pick a menu theme</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* ─── 2. Standardized KPI Metrics Grid (6 Core Metrics) ─── */}
       <div style={{
         display: 'grid',
@@ -721,10 +852,12 @@ const OwnerDashboard = () => {
                 <ShoppingBag size={24} color="var(--text-tertiary)" />
               </div>
               <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px' }}>
-                No Orders Yet Today
+                {stats?.totalMenuItems === 0 ? 'Ready to Receive Your First Order' : 'No Orders Yet Today'}
               </p>
-              <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>
-                Orders placed from your QR codes will appear here in real time.
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0, maxWidth: 440, marginLeft: 'auto', marginRight: 'auto' }}>
+                {stats?.totalMenuItems === 0
+                  ? 'Add your menu items and place QR codes on your tables. Incoming customer orders will appear here in real time.'
+                  : 'Orders placed from your QR codes will appear here in real time.'}
               </p>
             </div>
           )}

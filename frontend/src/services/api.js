@@ -140,8 +140,6 @@ export const ownerAPI = {
   updateSettings: (data) => api.put('/owner/settings', data, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
-  // Subscription
-  submitSubscriptionRequest: (data) => api.post('/owner/subscription/request', data),
   getGlobalMedia: () => api.get('/owner/media/global'),
   // Revenue History (permanent ledger)
   getRevenue: (params) => api.get('/owner/revenue', { params }),

@@ -21,26 +21,31 @@ const {
   getFeedback,
   updateSettings,
   updateThemeSettings,
-  submitSubscriptionRequest,
-  initiateSubscriptionSession,
-  handleSubscriptionWebhook,
-  checkSubscriptionStatus,
-  cancelSubscriptionSession,
   getGlobalMedia
 } = require('../controllers/ownerController');
 const { protect, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
-const { apiLimiter } = require('../middleware/rateLimiter');
 const {
+  apiLimiter,
+  uploadLimiter,
+  analyticsLimiter,
+  sensitiveActionLimiter
+} = require('../middleware/rateLimiter');
+const {
+  mongoIdParamValidator,
   categoryValidator,
+  updateCategoryValidator,
   menuItemValidator,
-  settingsValidator,
+  updateMenuItemValidator,
+  reorderMenuItemsValidator,
+  toggleAvailabilityValidator,
+  getOrdersValidator,
   orderStatusValidator,
-  subscriptionRequestValidator,
-  initiateSubscriptionSessionValidator
+  updatePaymentStatusValidator,
+  getRevenueValidator,
+  settingsValidator,
+  themeSettingsValidator
 } = require('../validators/ownerValidators');
-
-
 
 // All routes below require owner auth
 router.use(protect, authorize('owner'), apiLimiter);
@@ -48,8 +53,8 @@ router.use(protect, authorize('owner'), apiLimiter);
 // Dashboard
 router.get('/dashboard', getDashboard);
 
-// Revenue History (permanent ledger)
-router.get('/revenue', getRevenueHistory);
+// Revenue History (permanent ledger - heavy aggregation)
+router.get('/revenue', analyticsLimiter, getRevenueValidator, getRevenueHistory);
 
 // Categories
 router.route('/categories')
@@ -57,39 +62,37 @@ router.route('/categories')
   .post(categoryValidator, createCategory);
 
 router.route('/categories/:id')
-  .put(categoryValidator, updateCategory)
-  .delete(deleteCategory);
+  .put(updateCategoryValidator, updateCategory)
+  .delete(mongoIdParamValidator, deleteCategory);
 
 // Menu Items
-router.put('/menu-items/reorder', reorderMenuItems);
+router.put('/menu-items/reorder', reorderMenuItemsValidator, reorderMenuItems);
 
 router.route('/menu-items')
   .get(getMenuItems)
-  .post(upload.single('image'), menuItemValidator, createMenuItem);
+  .post(uploadLimiter, upload.single('image'), menuItemValidator, createMenuItem);
 
 router.route('/menu-items/:id')
-  .put(upload.single('image'), menuItemValidator, updateMenuItem)
-  .delete(deleteMenuItem);
+  .put(uploadLimiter, upload.single('image'), updateMenuItemValidator, updateMenuItem)
+  .delete(mongoIdParamValidator, deleteMenuItem);
 
-router.put('/menu-items/:id/availability', toggleAvailability);
+router.put('/menu-items/:id/availability', toggleAvailabilityValidator, toggleAvailability);
 
 // Orders
-router.get('/orders', getOrders);
+router.get('/orders', getOrdersValidator, getOrders);
 router.put('/orders/:id/status', orderStatusValidator, updateOrderStatus);
-router.put('/orders/:id/payment', updatePaymentStatus);
+router.put('/orders/:id/payment', updatePaymentStatusValidator, updatePaymentStatus);
 
 // QR Code
 router.get('/qr-code', getQRCode);
-router.post('/qr-code/regenerate', regenerateQRCode);
+router.post('/qr-code/regenerate', sensitiveActionLimiter, regenerateQRCode);
 
 // Feedback
 router.get('/feedback', getFeedback);
 
 // Settings
-router.put('/settings', upload.single('logo'), settingsValidator, updateSettings);
-router.put('/settings/theme', updateThemeSettings);
-
-
+router.put('/settings', uploadLimiter, upload.single('logo'), settingsValidator, updateSettings);
+router.put('/settings/theme', themeSettingsValidator, updateThemeSettings);
 
 // Global Media
 router.get('/media/global', getGlobalMedia);

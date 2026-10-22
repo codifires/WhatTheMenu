@@ -7,45 +7,69 @@ const { generateToken } = require('../utils/jwt');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
 const { resetPasswordTemplate, deviceLogoutOtpTemplate } = require('../utils/emailTemplates');
+const logger = require('../utils/logger');
+
+// Helper to determine clean Frontend URL for emails
+const getCleanFrontendUrl = (req) => {
+  if (process.env.FRONTEND_URL && process.env.FRONTEND_URL !== '*' && !process.env.FRONTEND_URL.includes('*')) {
+    return process.env.FRONTEND_URL.replace(/\/$/, '');
+  }
+  const host = req.get('host') || 'localhost:5000';
+  const protocol = req.protocol || 'http';
+  // Common dev mapping: 5000 -> 5173 (Vite frontend)
+  const feHost = host.includes('5000') ? host.replace('5000', '5173') : host;
+  return `${protocol}://${feHost}`;
+};
 
 // @desc    Forgot password
 // @route   POST /api/auth/forgotpassword
 const forgotPassword = async (req, res, next) => {
   try {
-    const cafe = await Cafe.findOne({ email: req.body.email });
+    const rawEmail = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    if (!rawEmail) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+    }
 
+    const cafe = await Cafe.findOne({ email: rawEmail });
+
+    // Prevent account enumeration by returning identical success response whether email exists or not
     if (!cafe) {
-      return res.status(404).json({ success: false, message: 'There is no user with that email' });
+      return res.status(200).json({
+        success: true,
+        message: 'If an account with that email exists, password reset instructions have been sent.'
+      });
     }
 
     // Get reset token
     const resetToken = cafe.getResetPasswordToken();
-
     await cafe.save({ validateBeforeSave: false });
 
     // Create reset url
-    const resetUrl = `${req.protocol}://${req.get('host').replace('5000', '3000')}/set-password/${resetToken}`;
+    const baseUrl = getCleanFrontendUrl(req);
+    const resetUrl = `${baseUrl}/set-password/${resetToken}`;
 
-    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+    const message = `You are receiving this email because you (or someone else) requested a password reset. Please reset your password here: \n\n ${resetUrl}`;
     const html = resetPasswordTemplate(resetUrl);
 
     try {
       await sendEmail({
         email: cafe.email,
-        subject: 'Password reset token',
+        subject: 'Password reset instructions',
         message,
         html
       });
 
-      res.status(200).json({ success: true, data: 'Email sent' });
+      return res.status(200).json({
+        success: true,
+        message: 'If an account with that email exists, password reset instructions have been sent.'
+      });
     } catch (error) {
-      console.error(error);
+      console.error('Password reset email failed:', error.message);
       cafe.resetPasswordToken = undefined;
       cafe.resetPasswordExpire = undefined;
-
       await cafe.save({ validateBeforeSave: false });
 
-      return res.status(500).json({ success: false, message: 'Email could not be sent' });
+      return res.status(500).json({ success: false, message: 'Email could not be sent. Please try again later.' });
     }
   } catch (error) {
     next(error);
@@ -56,36 +80,51 @@ const forgotPassword = async (req, res, next) => {
 // @route   POST /api/auth/set-password/:token
 const setPassword = async (req, res, next) => {
   try {
+    const rawToken = typeof req.params?.token === 'string' ? req.params.token.trim() : '';
+    const newPassword = typeof req.body?.password === 'string' ? req.body.password : '';
+
+    if (!rawToken || !newPassword || newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid token and password of at least 6 characters are required'
+      });
+    }
+
     // Get hashed token
     const resetPasswordToken = crypto
       .createHash('sha256')
-      .update(req.params.token)
+      .update(rawToken)
       .digest('hex');
 
-    // Find user by token and check expiry
+    // Find user by token and check expiry (select fields explicitly since they have select: false)
     const cafe = await Cafe.findOne({
       resetPasswordToken,
       resetPasswordExpire: { $gt: Date.now() }
-    });
+    }).select('+password +resetPasswordToken +resetPasswordExpire');
 
     if (!cafe) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired token'
+        message: 'Invalid or expired password reset token'
       });
     }
 
-    // Set new password
-    cafe.password = req.body.password;
+    const token = generateToken(cafe._id, 'owner');
+
+    // Set new password and revoke all existing sessions to block compromised devices
+    cafe.password = newPassword;
     cafe.resetPasswordToken = undefined;
     cafe.resetPasswordExpire = undefined;
-    
+    cafe.active_sessions = [{
+      token,
+      device_info: 'Password Reset',
+      last_active: Date.now()
+    }];
     await cafe.save();
-
-    const token = generateToken(cafe._id, 'owner');
 
     res.json({
       success: true,
+      message: 'Password reset successfully',
       data: {
         token,
         user: {
@@ -105,7 +144,9 @@ const setPassword = async (req, res, next) => {
 // @route   POST /api/auth/login
 const login = async (req, res, next) => {
   try {
-    const { email, password, forceLogout, logoutSessionIds } = req.body;
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
+    const { forceLogout, logoutSessionIds } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
@@ -118,21 +159,30 @@ const login = async (req, res, next) => {
     let user = await Admin.findOne({ email }).select('+password');
     let role = 'superadmin';
 
-    // If not admin, check cafe owner
+    // If not admin, check cafe owner (select OTP fields explicitly)
     if (!user) {
-      user = await Cafe.findOne({ email }).select('+password');
+      user = await Cafe.findOne({ email }).select('+password +login_otp +login_otp_expire +login_otp_attempts +login_otp_last_sent');
       role = 'owner';
     }
 
     if (!user) {
+      logger.security('SECURITY_FAILED_LOGIN', { ip: req.ip, email, reason: 'Account not found', request_id: req.id });
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
       });
     }
 
-    // Check maintenance mode for owners
+    // Check account status and maintenance mode for owners
     if (role === 'owner') {
+      if (user.is_active === false) {
+        logger.security('SECURITY_SUSPENDED_LOGIN_ATTEMPT', { ip: req.ip, email, user_id: user._id, reason: 'Account deactivated', request_id: req.id });
+        return res.status(403).json({
+          success: false,
+          message: 'Account has been deactivated. Please contact platform administration.'
+        });
+      }
+
       const settings = await Settings.getSettings();
       if (settings.maintenance_mode) {
         return res.status(503).json({
@@ -143,8 +193,8 @@ const login = async (req, res, next) => {
     }
 
     const isMatch = await user.matchPassword(password);
-
     if (!isMatch) {
+      logger.security('SECURITY_FAILED_LOGIN', { ip: req.ip, email, user_id: user._id, reason: 'Invalid password', request_id: req.id });
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password'
@@ -164,17 +214,28 @@ const login = async (req, res, next) => {
       user.active_sessions = user.active_sessions.filter(s => (Date.now() - new Date(s.last_active || Date.now()).getTime()) < SEVEN_DAYS);
 
       if (forceLogout) {
+        // Enforce 60-second resend cooldown to protect against email flooding / OTP spam
+        if (user.login_otp_last_sent && (Date.now() - new Date(user.login_otp_last_sent).getTime() < 60 * 1000)) {
+          const waitSecs = Math.ceil((60 * 1000 - (Date.now() - new Date(user.login_otp_last_sent).getTime())) / 1000);
+          return res.status(429).json({
+            success: false,
+            message: `Please wait ${waitSecs} seconds before requesting a new verification code.`
+          });
+        }
+
         // Generate cryptographically secure 6-digit OTP
         const otp = crypto.randomInt(100000, 1000000).toString();
+        const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
         
-        // Save OTP to user document
-        user.login_otp = otp;
+        // Save hashed OTP to user document
+        user.login_otp = hashedOtp;
         user.login_otp_expire = Date.now() + 10 * 60 * 1000; // 10 minutes
         user.login_otp_attempts = 0; // Reset failed attempt counter
+        user.login_otp_last_sent = new Date();
         user.pending_logout_sessions = Array.isArray(logoutSessionIds) ? logoutSessionIds : [];
         await user.save({ validateBeforeSave: false });
 
-        console.log(`🔐 [DEVICE LOGOUT OTP] Generated code for ${user.email}: ${otp}`);
+        console.log(`🔐 [DEVICE LOGOUT OTP] Generated code for ${user.email}`);
 
         // Send Email
         try {
@@ -278,24 +339,29 @@ const login = async (req, res, next) => {
 // @route   POST /api/auth/verify-login-otp
 const verifyLoginOtp = async (req, res, next) => {
   try {
-    const { email, otp, forceLogout, logoutSessionIds } = req.body;
+    const rawEmail = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const rawOtp = req.body?.otp ? req.body.otp.toString().trim() : '';
+    const { logoutSessionIds } = req.body;
 
-    if (!email || !otp) {
+    if (!rawEmail || !rawOtp) {
       return res.status(400).json({
         success: false,
         message: 'Please provide email and OTP'
       });
     }
 
-    const cleanEmail = email.trim().toLowerCase();
-    const cleanOtp = otp.toString().trim();
-
-    const user = await Cafe.findOne({ email: cleanEmail });
-
+    const user = await Cafe.findOne({ email: rawEmail }).select('+login_otp +login_otp_expire +login_otp_attempts +login_otp_last_sent +pending_logout_sessions');
     if (!user) {
       return res.status(400).json({
         success: false,
         message: 'Invalid request. User not found.'
+      });
+    }
+
+    if (user.is_active === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'Account has been deactivated. Please contact platform administration.'
       });
     }
 
@@ -312,6 +378,7 @@ const verifyLoginOtp = async (req, res, next) => {
       user.login_otp = undefined;
       user.login_otp_expire = undefined;
       user.login_otp_attempts = 0;
+      user.login_otp_last_sent = undefined;
       user.pending_logout_sessions = undefined;
       await user.save({ validateBeforeSave: false });
 
@@ -321,15 +388,26 @@ const verifyLoginOtp = async (req, res, next) => {
       });
     }
 
-    // Validate OTP match
-    if (user.login_otp !== cleanOtp) {
+    // Validate OTP match (support SHA-256 hashed and legacy raw string)
+    const hashedOtp = crypto.createHash('sha256').update(rawOtp).digest('hex');
+    const isOtpMatch = (user.login_otp === hashedOtp) || (user.login_otp === rawOtp);
+
+    if (!isOtpMatch) {
       user.login_otp_attempts = (user.login_otp_attempts || 0) + 1;
       const remaining = 5 - user.login_otp_attempts;
+      logger.security('SECURITY_FAILED_OTP', {
+        ip: req.ip,
+        email: user.email,
+        user_id: user._id,
+        attempts: user.login_otp_attempts,
+        request_id: req.id
+      });
 
       if (user.login_otp_attempts >= 5) {
         user.login_otp = undefined;
         user.login_otp_expire = undefined;
         user.login_otp_attempts = 0;
+        user.login_otp_last_sent = undefined;
         user.pending_logout_sessions = undefined;
         await user.save({ validateBeforeSave: false });
 
@@ -369,7 +447,6 @@ const verifyLoginOtp = async (req, res, next) => {
         return !targetSessionIds.includes(sId);
       });
     } else {
-      // Clear all active sessions if no specific target is given
       user.active_sessions = [];
     }
 
@@ -398,6 +475,7 @@ const verifyLoginOtp = async (req, res, next) => {
     user.login_otp = undefined;
     user.login_otp_expire = undefined;
     user.login_otp_attempts = 0;
+    user.login_otp_last_sent = undefined;
     user.pending_logout_sessions = undefined;
 
     user.markModified('active_sessions');
@@ -427,7 +505,6 @@ const getMe = async (req, res, next) => {
   try {
     const user = req.user;
     let pendingRequest = null;
-    
     let subscription = user.subscription;
     
     if (user.role === 'owner') {
@@ -443,9 +520,8 @@ const getMe = async (req, res, next) => {
             end_date: activeSub.end_date,
             status: activeSub.status
           };
-          // Also save it to the DB so it's permanently fixed
           try {
-             await Cafe.findByIdAndUpdate(user._id, { subscription });
+            await Cafe.findByIdAndUpdate(user._id, { subscription });
           } catch(e) {}
         }
       }
@@ -468,8 +544,8 @@ const getMe = async (req, res, next) => {
           billing_settings: user.billing_settings,
           theme_settings: user.theme_settings,
           subscription_status: user.subscription_status,
-          subscription: subscription, // Use embedded subscription (patched if missing)
-          upcoming_subscription: user.upcoming_subscription, // Add upcoming subscription
+          subscription: subscription,
+          upcoming_subscription: user.upcoming_subscription,
           pending_request: pendingRequest
         })
       }
@@ -506,15 +582,17 @@ const logout = async (req, res, next) => {
 // @route   POST /api/auth/check-availability
 const checkAvailability = async (req, res, next) => {
   try {
-    const { email, phone } = req.body;
+    const rawEmail = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const rawPhone = typeof req.body?.phone === 'string' ? req.body.phone.trim() : '';
+
     let emailExists = false;
     let phoneExists = false;
 
-    if (email) {
-      emailExists = !!(await Cafe.findOne({ email }) || await Admin.findOne({ email }));
+    if (rawEmail) {
+      emailExists = !!(await Cafe.findOne({ email: rawEmail }) || await Admin.findOne({ email: rawEmail }));
     }
-    if (phone) {
-      phoneExists = !!(await Cafe.findOne({ phone }));
+    if (rawPhone) {
+      phoneExists = !!(await Cafe.findOne({ phone: rawPhone }));
     }
 
     res.json({
@@ -530,7 +608,12 @@ const checkAvailability = async (req, res, next) => {
 // @route   POST /api/auth/register
 const register = async (req, res, next) => {
   try {
-    const { name, email, password, phone, address, plan_name } = req.body;
+    const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
+    const phone = typeof req.body?.phone === 'string' ? req.body.phone.trim() : '';
+    const address = typeof req.body?.address === 'string' ? req.body.address.trim() : '';
+    const plan_name = typeof req.body?.plan_name === 'string' ? req.body.plan_name : 'starter';
 
     if (!name || !email || !password || !phone || !address) {
       return res.status(400).json({
@@ -555,43 +638,28 @@ const register = async (req, res, next) => {
       address
     });
 
-    // Determine subscription details based on plan
+    // All new registrations start with the platform Free Trial
+    // Paid plans (pro, pro_plus) require explicit checkout via Razorpay or UPI
     const settings = await Settings.getSettings();
-    let subscriptionData;
+    const trialDays = settings.trial_days || 14;
+    const trialEnd = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000);
 
-    if (plan_name === 'starter' || !plan_name) {
-      // Free trial — gets Pro plan features for trial_days
-      const trialDays = settings.trial_days || 14;
-      const trialEnd = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000);
-
-      subscriptionData = {
-        cafe_id: cafe._id,
-        plan_name: 'starter',
-        price: 0,
-        status: 'active',
-        start_date: Date.now(),
-        end_date: trialEnd,
-        trial_end_date: trialEnd
-      };
-    } else {
-      // Starter or Pro paid plan
-      const planPrice = plan_name === 'pro_plus' ? (settings.pro_price || 499) : (settings.starter_price || 299);
-      subscriptionData = {
-        cafe_id: cafe._id,
-        plan_name: plan_name,
-        price: planPrice,
-        status: 'active',
-        start_date: Date.now(),
-        end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
-      };
-    }
+    const subscriptionData = {
+      cafe_id: cafe._id,
+      plan_name: 'starter',
+      price: 0,
+      status: 'active',
+      start_date: Date.now(),
+      end_date: trialEnd,
+      trial_end_date: trialEnd
+    };
 
     await Subscription.create(subscriptionData);
     
     // Set embedded subscription in Cafe
     cafe.subscription_status = 'active';
     cafe.subscription = {
-      plan_name: subscriptionData.plan_name,
+      plan_name: 'starter',
       start_date: subscriptionData.start_date,
       end_date: subscriptionData.end_date,
       status: 'active'
@@ -605,8 +673,8 @@ const register = async (req, res, next) => {
           id: cafe._id,
           name: cafe.name,
           email: cafe.email,
-          plan: plan_name || 'starter',
-          created_at: cafe.createdAt
+          plan: 'starter',
+          created_at: cafe.created_at
         });
       }
     } catch (sockErr) {
@@ -615,11 +683,11 @@ const register = async (req, res, next) => {
 
     const token = generateToken(cafe._id, 'owner');
   
-      if (!cafe.active_sessions) cafe.active_sessions = [];
-      cafe.active_sessions.push({ token, last_active: Date.now() });
-      await cafe.save({ validateBeforeSave: false });
+    if (!cafe.active_sessions) cafe.active_sessions = [];
+    cafe.active_sessions.push({ token, last_active: Date.now() });
+    await cafe.save({ validateBeforeSave: false });
 
-      res.status(201).json({
+    res.status(201).json({
       success: true,
       data: {
         token,

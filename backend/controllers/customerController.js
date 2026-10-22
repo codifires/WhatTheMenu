@@ -4,25 +4,29 @@ const Cafe = require('../models/Cafe');
 const Order = require('../models/Order');
 const OrderRevenue = require('../models/OrderRevenue');
 const Feedback = require('../models/Feedback');
+const DailyTokenCounter = require('../models/DailyTokenCounter');
+const mongoose = require('mongoose');
+const crypto = require('crypto');
+
+// In-memory staff alert throttle store (orderNumber -> timestamp)
+const staffAlertTimestamps = new Map();
+
 const resolveCafeIdHelper = async (identifier) => {
-  const mongoose = require('mongoose');
   if (mongoose.isValidObjectId(identifier)) return identifier;
   const cafe = await Cafe.findOne({ slug: identifier }).select('_id').lean();
   return cafe ? cafe._id : null;
 };
 
-
 // @desc    Get café info and full menu (Optimized with parallel queries + lean)
 // @route   GET /api/menu/:cafeId
 const getCafeMenu = async (req, res, next) => {
   try {
-          const identifier = req.params.cafeId;
-      const mongoose = require('mongoose');
-      const query = mongoose.isValidObjectId(identifier) 
-        ? { _id: identifier } 
-        : { slug: identifier };
-      const cafe = await Cafe.findOne(query)
-      .select('name logo address phone tax_percentage subscription_status razorpay_key_id theme_settings')
+    const identifier = req.params.cafeId;
+    const query = mongoose.isValidObjectId(identifier) 
+      ? { _id: identifier } 
+      : { slug: identifier };
+    const cafe = await Cafe.findOne(query)
+      .select('name logo address phone tax_percentage subscription_status razorpay_key_id theme_settings upi_id')
       .lean();
 
     if (!cafe) {
@@ -67,9 +71,10 @@ const getCafeMenu = async (req, res, next) => {
           address: cafe.address,
           phone: cafe.phone,
           tax_percentage: cafe.tax_percentage || 0,
+          upi_id: cafe.upi_id || '',
           razorpay_key_id: cafe.razorpay_key_id || '',
-            theme_settings: cafe.theme_settings
-          },
+          theme_settings: cafe.theme_settings
+        },
         categories: menuByCategory,
         allItems: menuItems
       }
@@ -84,7 +89,7 @@ const getCafeMenu = async (req, res, next) => {
 const searchMenu = async (req, res, next) => {
   try {
     const { q } = req.query;
-    if (!q) {
+    if (!q || typeof q !== 'string') {
       return res.json({ success: true, data: [] });
     }
 
@@ -105,7 +110,7 @@ const searchMenu = async (req, res, next) => {
   }
 };
 
-// @desc    Place a new order (Optimized batch item lookup)
+// @desc    Place a new order (Optimized batch item lookup + strict cross-tenant verification)
 // @route   POST /api/orders
 const placeOrder = async (req, res, next) => {
   try {
@@ -120,12 +125,19 @@ const placeOrder = async (req, res, next) => {
       notes
     } = req.body;
 
-    // Validate café
-    const cafe = await Cafe.findById(cafe_id).select('subscription_status tax_percentage upi_id name').lean();
-    if (!cafe || cafe.subscription_status !== 'active') {
+    // Validate café existence, active status, and active subscription
+    const cafe = await Cafe.findById(cafe_id).select('subscription_status is_active tax_percentage upi_id name').lean();
+    if (!cafe || cafe.subscription_status !== 'active' || cafe.is_active === false) {
       return res.status(400).json({
         success: false,
         message: 'Cannot place order - café is unavailable'
+      });
+    }
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'At least one menu item is required to place an order'
       });
     }
 
@@ -145,11 +157,21 @@ const placeOrder = async (req, res, next) => {
           message: `Item "${item.name || 'Unknown'}" is no longer available`
         });
       }
-      total += menuItem.price * item.quantity;
+
+      // Security: Cross-tenant check — ensure item actually belongs to target cafe
+      if (menuItem.cafe_id.toString() !== cafe._id.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: `Unauthorized item: dish does not belong to this café`
+        });
+      }
+
+      const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
+      total += menuItem.price * qty;
       orderItems.push({
         menu_item_id: menuItem._id,
         name: menuItem.name,
-        quantity: item.quantity,
+        quantity: qty,
         price: menuItem.price
       });
     }
@@ -157,49 +179,28 @@ const placeOrder = async (req, res, next) => {
     const taxAmount = total * ((cafe.tax_percentage || 0) / 100);
     const finalTotal = Math.round((total + taxAmount) * 100) / 100;
 
-    // Generate sequential token number
-    let tokenNumber = '';
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    // Generate atomic, concurrency-safe sequential token number
+    const tokenNumber = await DailyTokenCounter.getNextToken(cafe._id);
 
-    const todaysOrders = await Order.find({ 
-      cafe_id, 
-      created_at: { $gte: startOfDay },
-      token_number: { $ne: '' } 
-    }).select('token_number').lean();
-
-    let maxToken = 0;
-    todaysOrders.forEach(o => {
-      if (o.token_number) {
-        const num = parseInt(o.token_number.replace('#', ''), 10);
-        if (!isNaN(num) && num > maxToken) {
-          maxToken = num;
-        }
-      }
-    });
-    tokenNumber = `#${maxToken + 1}`;
+    const cleanName = typeof customer_name === 'string' ? customer_name.trim().substring(0, 50) : 'Guest';
+    const cleanPhone = typeof customer_phone === 'string' ? customer_phone.trim().substring(0, 15) : '';
+    const cleanTable = typeof table_number === 'string' ? table_number.trim().substring(0, 20) : '';
+    const cleanNotes = typeof notes === 'string' ? notes.trim().substring(0, 500) : '';
 
     const order = await Order.create({
       cafe_id,
-      customer_name: customer_name || 'Guest',
-      customer_phone: customer_phone || '',
-      table_number: table_number || '',
+      customer_name: cleanName || 'Guest',
+      customer_phone: cleanPhone,
+      table_number: cleanTable,
       items: orderItems,
       total_amount: finalTotal,
       token_number: tokenNumber,
-      payment_method: (payment_method && ['cash', 'online', 'razorpay', 'upi'].includes(payment_method)) ? payment_method : (cafe.upi_id ? 'upi' : 'cash'),
-      payment_transaction_id: payment_transaction_id || '',
+      payment_provider: 'cash',
+      payment_method: 'cash',
+      payment_transaction_id: typeof payment_transaction_id === 'string' ? payment_transaction_id.trim() : '',
       payment_status: 'pending',
-      notes: notes || ''
+      notes: cleanNotes
     });
-
-    // Build standard NPCI Direct UPI Deep-Link
-    let upiString = '';
-    if (cafe.upi_id) {
-      const cleanCafeName = (cafe.name || 'Cafe').replace(/&/g, 'and').replace(/[^a-zA-Z0-9\s-]/g, '').trim().substring(0, 25);
-      const cleanNote = `Order ${tokenNumber} ${cleanCafeName}`.trim().substring(0, 30);
-      upiString = `upi://pay?pa=${encodeURIComponent(cafe.upi_id.trim())}&pn=${encodeURIComponent(cleanCafeName)}&am=${finalTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent(cleanNote)}&tr=ORD_${order.order_number}`;
-    }
 
     // Emit real-time notification to café owner
     const io = req.app.get('io');
@@ -223,11 +224,7 @@ const placeOrder = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      data: {
-        ...order.toObject(),
-        upi_string: upiString,
-        cafe_upi_id: cafe.upi_id || ''
-      }
+      data: order.toObject ? order.toObject() : order
     });
   } catch (error) {
     next(error);
@@ -238,8 +235,9 @@ const placeOrder = async (req, res, next) => {
 // @route   GET /api/orders/:orderNumber/track
 const trackOrder = async (req, res, next) => {
   try {
+    const rawOrderNumber = typeof req.params?.orderNumber === 'string' ? req.params.orderNumber.trim() : '';
     const order = await Order.findOne({
-      order_number: req.params.orderNumber
+      order_number: rawOrderNumber
     }).lean();
 
     if (!order) {
@@ -272,8 +270,9 @@ const trackOrder = async (req, res, next) => {
 const submitFeedback = async (req, res, next) => {
   try {
     const { order_number, rating, review } = req.body;
+    const cleanOrderNumber = typeof order_number === 'string' ? order_number.trim() : '';
 
-    const order = await Order.findOne({ order_number }).lean();
+    const order = await Order.findOne({ order_number: cleanOrderNumber }).lean();
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
@@ -289,8 +288,8 @@ const submitFeedback = async (req, res, next) => {
     const feedback = await Feedback.create({
       order_id: order._id,
       cafe_id: order.cafe_id,
-      rating,
-      review: review || '',
+      rating: Math.min(5, Math.max(1, parseInt(rating, 10) || 5)),
+      review: typeof review === 'string' ? review.trim().substring(0, 500) : '',
       customer_name: order.customer_name || 'Guest'
     });
 
@@ -300,16 +299,44 @@ const submitFeedback = async (req, res, next) => {
   }
 };
 
-// @desc    Trigger staff alert (Call Waiter / Bill Request)
+// @desc    Trigger staff alert (Call Waiter / Bill Request with anti-spam throttling)
 // @route   POST /api/orders/:orderNumber/alert
 const triggerStaffAlert = async (req, res, next) => {
   try {
     const { orderNumber } = req.params;
     const { type } = req.body; // 'waiter' or 'bill'
 
-    const order = await Order.findOne({ order_number: orderNumber }).lean();
+    if (!type || !['waiter', 'bill'].includes(type)) {
+      return res.status(400).json({ success: false, message: 'Invalid alert type. Allowed: waiter, bill' });
+    }
+
+    const cleanOrderNum = typeof orderNumber === 'string' ? orderNumber.trim() : '';
+    const order = await Order.findOne({ order_number: cleanOrderNum }).lean();
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Rate-limit staff alerts: at most 1 alert every 30 seconds per order
+    const now = Date.now();
+    const lastAlertTime = staffAlertTimestamps.get(cleanOrderNum);
+    if (lastAlertTime && (now - lastAlertTime) < 30 * 1000) {
+      const waitSeconds = Math.ceil((30 * 1000 - (now - lastAlertTime)) / 1000);
+      return res.status(429).json({
+        success: false,
+        message: `Please wait ${waitSeconds}s before requesting staff assistance again.`,
+        code: 'RATE_LIMIT_EXCEEDED',
+        retryAfterSeconds: waitSeconds,
+        request_id: req.id
+      });
+    }
+    staffAlertTimestamps.set(cleanOrderNum, now);
+
+    // Housekeeping: clean map if too large
+    if (staffAlertTimestamps.size > 2000) {
+      const twoHoursAgo = now - 2 * 60 * 60 * 1000;
+      for (const [key, timestamp] of staffAlertTimestamps.entries()) {
+        if (timestamp < twoHoursAgo) staffAlertTimestamps.delete(key);
+      }
     }
 
     const io = req.app.get('io');
@@ -323,7 +350,7 @@ const triggerStaffAlert = async (req, res, next) => {
       });
     }
 
-    res.json({ success: true, message: `Alert sent successfully` });
+    res.json({ success: true, message: `Staff alert sent successfully` });
   } catch (error) {
     next(error);
   }

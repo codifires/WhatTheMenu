@@ -8,21 +8,25 @@ const subscriptionRequestSchema = new mongoose.Schema({
   },
   amount: {
     type: Number,
-    required: true
+    required: true,
+    min: 0
   },
   session_id: {
     type: String,
     trim: true,
+    maxlength: 100,
     index: true
   },
   utr_number: {
     type: String,
     trim: true,
+    maxlength: 100,
     default: ''
   },
   payment_method: {
     type: String,
-    default: 'upi'
+    default: 'upi',
+    maxlength: 30
   },
   status: {
     type: String,
@@ -31,16 +35,19 @@ const subscriptionRequestSchema = new mongoose.Schema({
   },
   plan_name: {
     type: String,
-    default: 'pro_plus'
+    default: 'pro_plus',
+    maxlength: 30
   },
   notes: {
     type: String,
-    default: ''
+    default: '',
+    trim: true,
+    maxlength: 500
   }
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
 });
 
-subscriptionRequestSchema.index({ cafe_id: 1, status: 1 });
+subscriptionRequestSchema.index({ cafe_id: 1, status: 1, created_at: -1 });
 
 module.exports = mongoose.model('SubscriptionRequest', subscriptionRequestSchema);
